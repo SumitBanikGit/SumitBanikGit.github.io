@@ -729,6 +729,10 @@ PAGES = [
     ("contact.html",      "Contact",      "Contact",               "Feel free to get in touch. I am always happy to hear from you.", ["reach"]),
 ]
 
+# Opening reveal: a brass monogram on Oxford green (shown once per visit, see <head>).
+INTRO = ('<div class="intro" aria-hidden="true"><svg viewBox="0 0 100 100">'
+         '<circle cx="50" cy="50" r="46" pathLength="1"/><text x="50" y="61" text-anchor="middle">SB</text></svg></div>\n')
+
 # Where each old in-page anchor now lives.
 LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research": "research.html", "#publications": "publications.html",
             "#software": "research.html#software", "#talks": "talks.html", "#funding": "funding.html",
@@ -745,9 +749,10 @@ def render_explore(n_articles, n_proc):
         ("cv.html", "CV", "Curriculum vitae", "Positions, education and skills"),
     ]
     items = "\n".join(
-        f'<a class="ex-card" href="{href}"><span class="kicker">{kick}</span><span class="ex-title">{title}</span>'
+        f'<a class="ex-card" href="{href}"><span class="ex-num" aria-hidden="true">{n:02d}</span>'
+        f'<span class="kicker">{kick}</span><span class="ex-title">{title}</span>'
         f'<span class="ex-meta">{meta}</span><span class="ex-go" aria-hidden="true">→</span></a>'
-        for href, kick, title, meta in cards)
+        for n, (href, kick, title, meta) in enumerate(cards, 1))
     return ('<section class="chapter" id="explore">\n<h2 class="chapter-title">Explore</h2>\n'
             f'<div class="explore">\n{items}\n</div>\n</section>')
 
@@ -798,11 +803,19 @@ def write_pages(html, n_articles, n_proc):
                 f'    <a class="brand" href="index.html">{P["name"]}</a>\n'
                 f'    <nav aria-label="Pages">{links}</nav>\n  </div>\n</div>\n')
 
+    def letters(text):
+        out, i = [], 0
+        for word in text.split():
+            out.append('<span class="w" aria-hidden="true">' + "".join(
+                f'<span class="ch" style="--i:{i + k}">{c}</span>' for k, c in enumerate(word)) + '</span>')
+            i += len(word) + 1
+        return " ".join(out)
+
     def page_hero(label, title, sub):
         return (f'<header class="masthead hero page-hero">\n  <canvas class="field" aria-hidden="true"></canvas>\n'
                 f'  <div class="wrap hero-inner">\n   <div class="hero-text">\n'
                 f'    <p class="crumb"><a href="index.html">{P["name"]}</a><span aria-hidden="true">/</span>{label}</p>\n'
-                f'    <h1 class="page-title">{title}</h1>\n    <p class="page-sub">{sub}</p>\n   </div>\n'
+                f'    <h1 class="page-title" aria-label="{title}">{letters(title)}</h1>\n    <p class="page-sub">{sub}</p>\n   </div>\n'
                 f'   <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>\n  </div>\n</header>\n')
 
     def relink(body, current):
@@ -833,7 +846,7 @@ def write_pages(html, n_articles, n_proc):
             if file != "index.html" and i == 0:           # the page header already carries the title
                 block = re.sub(r'<h2 class="chapter-title">.*?</h2>\n?', "", block, count=1, flags=re.S)
             parts.append(block)
-        body = (f'<body id="top" class="page-{slug}">\n<a class="skip" href="#main">Skip to content</a>\n\n'
+        body = (f'<body id="top" class="page-{slug}">\n{INTRO}<a class="skip" href="#main">Skip to content</a>\n\n'
                 + (hero if file == "index.html" else page_hero(label, title, sub))
                 + navbar(file)
                 + (ticker if file == "index.html" else "")
@@ -843,7 +856,7 @@ def write_pages(html, n_articles, n_proc):
 
     # a friendly 404 page for mistyped addresses
     nf = (head.replace("<title>Sumit Banik | Theoretical Particle Physics</title>", "<title>Page not found | Sumit Banik</title>")
-          + '<body id="top" class="page-404">\n' + page_hero("Not found", "Page not found",
+          + '<body id="top" class="page-404">\n' + INTRO + page_hero("Not found", "Page not found",
             "The page you are looking for does not exist. It may have moved.")
           + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
           '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
@@ -875,7 +888,7 @@ def main():
     hero_portrait = (f'<figure class="hero-portrait"><div class="arch"><img src="{P["portrait"]}?v={_ver(P["portrait"])}" '
                      f'alt="Portrait of Sumit Banik" width="560" height="700"></div></figure>'
                      if P["portrait"] and Path(P["portrait"]).exists() else "")
-    portrait = (f'<figure class="portrait-frame"><img class="portrait" src="{P["portrait"]}?v={_ver(P["portrait"])}" alt="Portrait of Sumit Banik" width="560" height="700"></figure>'
+    portrait = (f'<figure class="portrait-frame" data-hold="1500"><img class="portrait" src="{P["portrait"]}?v={_ver(P["portrait"])}" alt="Portrait of Sumit Banik" width="560" height="700"></figure>'
                 if P["portrait"] and Path(P["portrait"]).exists()
                 else '')
     desc = ("Sumit Banik, theoretical particle physicist at SLAC and Stanford: "
@@ -907,7 +920,7 @@ TEMPLATE = """<!doctype html>
 <meta name="author" content="Sumit Banik">
 <link rel="canonical" href="{url}">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#3a2a1f">
+<meta name="theme-color" content="#1c352f">
 <meta property="og:type" content="profile">
 <meta property="og:title" content="Sumit Banik">
 <meta property="og:description" content="{desc}">
@@ -920,7 +933,7 @@ TEMPLATE = """<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
 <link rel="stylesheet" href="assets/style.css?v={v_css}">
 <script type="application/ld+json">{jsonld}</script>
-<script>document.documentElement.classList.add("js")</script>
+<script>document.documentElement.classList.add("js");try{{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){{document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}}}catch(e){{}}</script>
 </head>
 <body id="top">
 <a class="skip" href="#main">Skip to content</a>
@@ -1228,12 +1241,22 @@ Collider at CERN.</p>
       el.style.setProperty('--d', (n % 6) * 70 + 'ms');
       el.classList.add('reveal');
     }});
+    // Elements revealed with a clip mask have zero visible area while hidden, so the
+    // observer would never see them: watch their parent instead.
+    var owners = new Map();
     var io = new IntersectionObserver(function (entries) {{
       entries.forEach(function (e) {{
-        if (e.isIntersecting) {{ reveal(e.target); io.unobserve(e.target); }}
+        if (!e.isIntersecting) return;
+        (owners.get(e.target) || [e.target]).forEach(reveal);
+        io.unobserve(e.target);
       }});
-    }}, {{ rootMargin: '0px 0px -8% 0px', threshold: 0.08 }});
-    Array.prototype.forEach.call(items, function (el) {{ io.observe(el); }});
+    }}, {{ rootMargin: '0px 0px -8% 0px', threshold: 0.02 }});
+    Array.prototype.forEach.call(items, function (el) {{
+      if (el.matches('.chapter-title, .portrait-frame')) {{
+        var host = el.parentElement, list = owners.get(host);
+        if (list) list.push(el); else {{ owners.set(host, [el]); io.observe(host); }}
+      }} else io.observe(el);
+    }});
   }}
 
   /* ---------- counters in the number boxes ---------- */
@@ -1256,6 +1279,34 @@ Collider at CERN.</p>
     }}, {{ threshold: 0.6 }});
     Array.prototype.forEach.call(counters, function (el) {{ co.observe(el); }});
   }}
+
+  /* ---------- opening reveal: lift the curtain, then let the page animations run ---------- */
+  if (document.documentElement.classList.contains('intro-on')) {{
+    setTimeout(function () {{ document.documentElement.classList.remove('intro-on'); }}, 2450);
+  }}
+
+  /* ---------- magnetic buttons: they lean gently towards the pointer ---------- */
+  if (!reduce && window.matchMedia('(hover: hover)').matches) {{
+    Array.prototype.forEach.call(document.querySelectorAll('.btn, .button, .pub-more'), function (b) {{
+      b.addEventListener('mousemove', function (e) {{
+        var r = b.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+        b.style.transform = 'translate(' + (x * 10).toFixed(1) + 'px,' + (y * 7).toFixed(1) + 'px)';
+      }});
+      b.addEventListener('mouseleave', function () {{ b.style.transform = ''; }});
+    }});
+  }}
+
+  /* ---------- hero parallax: text and detector drift apart as the page scrolls ---------- */
+  var heroEl = document.querySelector('.hero'), heroText = heroEl && heroEl.querySelector('.hero-text'),
+      heroField = heroEl && heroEl.querySelector('.field');
+  function parallax() {{
+    if (reduce || !heroEl) return;
+    var y = window.scrollY, h = heroEl.offsetHeight;
+    if (y > h) return;
+    if (heroText) {{ heroText.style.transform = 'translateY(' + (y * 0.2).toFixed(1) + 'px)'; heroText.style.opacity = (1 - 0.85 * y / h).toFixed(3); }}
+    if (heroField) heroField.style.transform = 'translateY(' + (y * 0.38).toFixed(1) + 'px)';
+  }}
+  window.addEventListener('scroll', parallax, {{ passive: true }});
 
   /* ---------- progress bar, back-to-top, current page in the menu ---------- */
   var nav = document.querySelector('.navbar nav'), here = nav && nav.querySelector('.here');
@@ -1351,7 +1402,7 @@ Collider at CERN.</p>
       return [cx - cx * c + cy * sn, cy - cx * sn - cy * c];
     }}
     function ring(r, alpha, width) {{
-      ctx.lineWidth = width; ctx.strokeStyle = 'rgba(176,141,87,' + alpha + ')';
+      ctx.lineWidth = width; ctx.strokeStyle = 'rgba(168,137,79,'+alpha+')';
       ctx.beginPath(); ctx.arc(CX, CY, r, 0, TAU); ctx.stroke();
     }}
     function frame(now) {{
@@ -1360,12 +1411,12 @@ Collider at CERN.</p>
       // detector: beam pipe, tracker layers, calorimeter band, muon chambers
       ring(RO * 0.05, 0.45, 1);
       [0.13, 0.19, 0.25, 0.31, 0.37].forEach(function (k) {{ ring(RO * k, 0.16, 0.7); }});
-      ctx.fillStyle = 'rgba(176,141,87,0.06)';
+      ctx.fillStyle = 'rgba(168,137,79,0.06)';
       ctx.beginPath(); ctx.arc(CX, CY, RO * 0.72, 0, TAU); ctx.arc(CX, CY, RO * 0.5, 0, TAU, true); ctx.fill();
       ring(RO * 0.5, 0.3, 0.9); ring(RO * 0.72, 0.3, 0.9);
       [0.84, 0.92].forEach(function (k) {{ ring(RO * k, 0.2, 0.8); }});
       var spin = reduce ? 0 : t * 0.03;
-      ctx.strokeStyle = 'rgba(138,90,43,0.26)'; ctx.lineWidth = 0.8;
+      ctx.strokeStyle = 'rgba(46,92,78,0.26)'; ctx.lineWidth = 0.8;
       for (var i = 0; i < 160; i++) {{
         var a = spin + i * TAU / 160, len = i % 20 === 0 ? 12 : (i % 4 === 0 ? 6 : 3);
         ctx.beginPath();
@@ -1378,10 +1429,10 @@ Collider at CERN.</p>
       var fl = (now - flashAt) / 700;
       if (fl >= 0 && fl < 1) {{
         var g = ctx.createRadialGradient(CX, CY, 0, CX, CY, RO * 0.16);
-        g.addColorStop(0, 'rgba(240,217,168,' + (0.9 * (1 - fl)) + ')'); g.addColorStop(1, 'rgba(240,217,168,0)');
+        g.addColorStop(0, 'rgba(220,197,143,'+(0.9*(1-fl)) + ')'); g.addColorStop(1, 'rgba(220,197,143,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(CX, CY, RO * 0.16, 0, TAU); ctx.fill();
       }}
-      ctx.fillStyle = 'rgba(138,90,43,0.7)'; ctx.beginPath(); ctx.arc(CX, CY, 2.2, 0, TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(46,92,78,0.7)'; ctx.beginPath(); ctx.arc(CX, CY, 2.2, 0, TAU); ctx.fill();
       var r0 = RO * 0.05, rCal = RO * 0.5, rMu = RO * 0.97;
       tracks = tracks.filter(function (tr) {{ return now - tr.born < 4800; }});
       tracks.forEach(function (tr) {{
@@ -1392,9 +1443,9 @@ Collider at CERN.</p>
         var sMax = tr.q ? Math.min(Math.PI * tr.rc, reach * 1.7) : reach;
         var s = reduce ? sMax : Math.min(sMax, age * 700);
         ctx.lineWidth = tr.kind === 'muon' ? 1.7 : (tr.kind === 'photon' ? 1 : 0.9);
-        ctx.strokeStyle = tr.kind === 'muon' ? 'rgba(138,90,43,' + (0.85 * fade) + ')'
-                        : tr.kind === 'photon' ? 'rgba(176,141,87,' + (0.6 * fade) + ')'
-                        : 'rgba(176,141,87,' + (0.7 * fade) + ')';
+        ctx.strokeStyle = tr.kind === 'muon' ? 'rgba(46,92,78,'+(0.85*fade) + ')'
+                        : tr.kind === 'photon' ? 'rgba(168,137,79,'+(0.6*fade) + ')'
+                        : 'rgba(168,137,79,'+(0.7*fade) + ')';
         ctx.setLineDash(tr.kind === 'photon' ? [4, 4] : []);
         ctx.beginPath();
         var drawing = false, last = -1, hit = false, d;
@@ -1409,7 +1460,7 @@ Collider at CERN.</p>
         ctx.stroke(); ctx.setLineDash([]);
         if (hit && tr.kind !== 'muon') {{               // calorimeter deposit
           var pe = point(tr, Math.max(0, d - 4)), ang = Math.atan2(pe[1], pe[0]), h = RO * (0.04 + tr.e * 0.18);
-          ctx.lineWidth = 3.2; ctx.strokeStyle = 'rgba(138,90,43,' + (0.5 * fade) + ')';
+          ctx.lineWidth = 3.2; ctx.strokeStyle = 'rgba(46,92,78,'+(0.5*fade) + ')';
           ctx.beginPath();
           ctx.moveTo(CX + Math.cos(ang) * rCal, CY + Math.sin(ang) * rCal);
           ctx.lineTo(CX + Math.cos(ang) * (rCal + h), CY + Math.sin(ang) * (rCal + h));
