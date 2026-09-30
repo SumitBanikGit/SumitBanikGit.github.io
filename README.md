@@ -25,6 +25,13 @@ git add -A && git commit -m "Update site" && git push   # publishes in about a m
 - **Logos:** `assets/logos/*.png`.
 - **World map:** generated once by `python3 tools/make_world_dots.py`
   from Natural Earth data (public domain).
+- **Header animations:** the home page draws a collider event display
+  (inside `build.py`). Every inner page has its own scene in
+  `assets/scenes.js`: triangulations (Research), a constellation of the
+  papers (Publications), talks on a world map (Talks), a toy di-photon
+  spectrum (Funding), a blackboard (Teaching), a bubble chamber (CV) and
+  two-source interference (Contact). The captions and hints are set in
+  `page_scenes()` in `build.py`, and talk cities in `CITY_GEO`.
 
 ## Custom domain (optional)
 Buy a domain, add a `CNAME` file containing it, point its DNS at GitHub

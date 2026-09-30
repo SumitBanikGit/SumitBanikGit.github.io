@@ -19,14 +19,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abd8f3b">
+<link rel="stylesheet" href="assets/style.css?v=6abd9968">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}</script>
 </head>
 <body id="top" class="page-teaching">
 <div class="intro" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="1"/><text x="50" y="61" text-anchor="middle">SB</text></svg></div>
 <a class="skip" href="#main">Skip to content</a>
 
-<header class="masthead hero page-hero">
+<header class="masthead hero page-hero" data-scene="chalkboard">
   <canvas class="field" aria-hidden="true"></canvas>
   <div class="wrap hero-inner">
    <div class="hero-text">
@@ -34,7 +34,9 @@
     <h1 class="page-title" aria-label="Teaching and Mentoring"><span class="w" aria-hidden="true"><span class="ch" style="--i:0">T</span><span class="ch" style="--i:1">e</span><span class="ch" style="--i:2">a</span><span class="ch" style="--i:3">c</span><span class="ch" style="--i:4">h</span><span class="ch" style="--i:5">i</span><span class="ch" style="--i:6">n</span><span class="ch" style="--i:7">g</span></span> <span class="w" aria-hidden="true"><span class="ch" style="--i:9">a</span><span class="ch" style="--i:10">n</span><span class="ch" style="--i:11">d</span></span> <span class="w" aria-hidden="true"><span class="ch" style="--i:13">M</span><span class="ch" style="--i:14">e</span><span class="ch" style="--i:15">n</span><span class="ch" style="--i:16">t</span><span class="ch" style="--i:17">o</span><span class="ch" style="--i:18">r</span><span class="ch" style="--i:19">i</span><span class="ch" style="--i:20">n</span><span class="ch" style="--i:21">g</span></span></h1>
     <p class="page-sub">Courses I have taught and students I have supervised.</p>
    </div>
-   <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>
+   <div class="hero-stage" aria-hidden="true">
+    <div class="scene-meta"><p class="scene-cap">From the blackboard</p><p class="scene-hint">Click for the next equation</p></div>
+   </div>
   </div>
 </header>
 <div class="navbar">
@@ -200,7 +202,7 @@
 
   /* ---------- hero parallax: text and detector drift apart as the page scrolls ---------- */
   var heroEl = document.querySelector('.hero'), heroText = heroEl && heroEl.querySelector('.hero-text'),
-      heroField = heroEl && heroEl.querySelector('.field');
+      heroField = heroEl && !heroEl.hasAttribute('data-scene') && heroEl.querySelector('.field');
   function parallax() {
     if (reduce || !heroEl) return;
     var y = window.scrollY, h = heroEl.offsetHeight;
@@ -264,7 +266,7 @@
      the solenoid field, gluons as curls that shower into jets, photons as waves,
      electrons in crimson, muons reaching the outer chambers, neutrinos as a dotted
      missing-momentum arrow, and b jets from displaced secondary vertices. */
-  var hero = document.querySelector('.hero'), cv = hero && hero.querySelector('.field');
+  var hero = document.querySelector('.hero:not([data-scene])'), cv = hero && hero.querySelector('.field');
   var stage = hero && hero.querySelector('.hero-stage'), evLabel = hero && hero.querySelector('.ev-label');
   if (cv && cv.getContext) {
     var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -487,5 +489,6 @@
   }
 })();
 </script>
+<script src="assets/scenes.js?v=6abd9918" defer></script>
 </body>
 </html>

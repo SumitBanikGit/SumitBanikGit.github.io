@@ -223,6 +223,18 @@ JOURNEY_GEO = [
     (37.7749, -122.4194, (0, 30, "middle")),    # San Francisco (label below: the name is long)
 ]
 
+# where the talks were given (latitude, longitude), for the map on the Talks page
+CITY_GEO = {
+    "Geneva": (46.234, 6.047), "Menlo Park": (37.42, -122.205), "Berlin": (52.52, 13.405),
+    "Warsaw": (52.2297, 21.0122), "Bonn": (50.7374, 7.0982), "Kathmandu": (27.7172, 85.324),
+    "Karlsruhe": (49.0069, 8.4037), "Uppsala": (59.8586, 17.6389), "Charlottesville": (38.0293, -78.4767),
+    "Cincinnati": (39.1031, -84.512), "Pittsburgh": (40.4406, -79.9959), "Paris": (48.8566, 2.3522),
+    "Zürich": (47.3769, 8.5417), "Lisbon": (38.7223, -9.1393), "Villigen": (47.5361, 8.2272),
+    "Wittenberg": (51.8661, 12.6466), "Chicago": (41.8781, -87.6298), "Traverse City": (44.7631, -85.6206),
+    "Sursee": (47.1714, 8.111), "Bhubaneswar": (20.2961, 85.8245), "Bengaluru": (13.0219, 77.5671),
+    "Mainz": (49.9929, 8.2473), "Prague": (50.0755, 14.4378), "Hyderabad": (17.385, 78.4867),
+}
+
 # Research areas scrolling in the band under the navigation.
 TICKER = ["Feynman integrals", "Special functions", "Mellin-Barnes integrals", "Effective field theories",
           "Renormalization group", "Higgs physics", "Collider phenomenology", "Beyond the Standard Model",
@@ -550,6 +562,88 @@ def _natural_earth(lon, lat):
     return x, y
 
 
+def _map_projector():
+    """The projection of the dotted world map: (lat, lon) to map units."""
+    import json
+    m = json.loads(Path("assets/map/world-dots.json").read_text())
+    x_min, _ = _natural_earth(-180, 0)
+    x_max, _ = _natural_earth(180, 0)
+    _, y_top = _natural_earth(0, m["lat_top"])
+    scale = m["width"] / (x_max - x_min)
+
+    def project(lat, lon):
+        x, y = _natural_earth(lon, lat)
+        return round((x - x_min) * scale, 1), round((y_top - y) * scale, 1)
+    return m, project
+
+
+def talk_scene_data():
+    """Talks in time order on the world map, with a view that frames them."""
+    import re
+    m, project = _map_projector()
+    talks = []
+    for year, event, city, *_ in reversed(TALKS):
+        x, y = project(*CITY_GEO[city])
+        talks.append(dict(y=int(year), c=city, x=x, v=y, o=int("online" in event.lower())))
+    xs, ys = [t["x"] for t in talks], [t["v"] for t in talks]
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    w, h = x1 - x0, y1 - y0
+    x0, x1, y0, y1 = x0 - 0.06 * w, x1 + 0.06 * w, y0 - 0.3 * h, y1 + 0.22 * h
+    w, h = x1 - x0, y1 - y0
+    if w / h > 2.2:                                   # grow the short side to a 2.2 : 1 frame
+        y0, h = y0 - (w / 2.2 - h) / 2, w / 2.2
+    else:
+        x0, w = x0 - (2.2 * h - w) / 2, 2.2 * h
+    y0 = min(max(y0, 0), m["height"] - h)             # and keep it on the map
+    keep = []
+    for ring in re.findall(r"M[^MZ]*Z", m["land"]):    # only the coastlines inside the frame
+        nums = [float(n) for n in re.findall(r"-?\d+(?:\.\d+)?", ring)]
+        rx, ry = nums[0::2], nums[1::2]
+        if max(rx) >= x0 and min(rx) <= x0 + w and max(ry) >= y0 and min(ry) <= y0 + h:
+            keep.append(ring)
+    grat = []
+    lines = ([[(lat, lon) for lon in range(-180, 181, 3)] for lat in range(-45, 76, 15)]
+             + [[(lat, lon) for lat in range(-51, 77, 4)] for lon in range(-180, 181, 15)])
+    for line in lines:                                # a graticule every 15 degrees
+        pts = [project(lat, lon) for lat, lon in line]
+        pts = [(round(x), round(y)) for x, y in pts if x0 - 20 <= x <= x0 + w + 20 and y0 - 20 <= y <= y0 + h + 20]
+        if len(pts) > 1:
+            grat.append("M" + "L".join(f"{x} {y}" for x, y in pts))
+    return dict(view=[round(x0, 1), round(y0, 1), round(w, 1), round(h, 1)], land="".join(keep),
+                grat="".join(grat), talks=talks)
+
+
+def pub_scene_data():
+    """Papers in time order, with the field, the kind and a link for each."""
+    pubs = []
+    for p in sorted(reversed(PUBS), key=lambda p: int(p["year"])):
+        link = (f"https://arxiv.org/abs/{p['arxiv']}" if p.get("arxiv") else
+                f"https://doi.org/{p['doi']}" if p.get("doi") else
+                f"https://inspirehep.net/literature/{p['inspire']}" if p.get("inspire") else "")
+        pubs.append(dict(y=int(p["year"]), t="pheno" if p["topic"] == "pheno" else "fi",
+                         k=p["kind"], n=p["title"], u=link))
+    return dict(pubs=pubs)
+
+
+def page_scenes():
+    """The animation in the header of each inner page: (scene, caption, hint, data)."""
+    years = [int(p["year"]) for p in PUBS]
+    cities = {t[2] for t in TALKS}
+    first_talk = min(int(t[0]) for t in TALKS)
+    return {
+        "research.html": ("triangulation", "Triangulations of a point configuration", "Click to add a point", None),
+        "publications.html": ("constellation", f"{len(PUBS)} publications from {min(years)} to {max(years)}",
+                              "Hover over a star to see the paper", pub_scene_data),
+        "talks.html": ("talkmap", f"{len(TALKS)} talks in {len(cities)} cities since {first_talk}",
+                       "Hollow circles mark online talks", talk_scene_data),
+        "funding.html": ("spectrum", "Toy di-photon spectrum with two excesses",
+                         "Click for a new pseudo-experiment", None),
+        "teaching.html": ("chalkboard", "From the blackboard", "Click for the next equation", None),
+        "cv.html": ("bubbles", "Tracks in a bubble chamber", "Click to make a collision", None),
+        "contact.html": ("waves", "Two-source interference", "Move the pointer to steer a source", None),
+    }
+
+
 def render_journey_map():
     import json
     m = json.loads(Path("assets/map/world-dots.json").read_text())
@@ -812,6 +906,7 @@ def render_reach():
 
 
 def write_pages(html, n_articles, n_proc):
+    import json
     import re
     P = PROFILE
     head = html[:html.index('<body id="top">')]
@@ -839,12 +934,27 @@ def write_pages(html, n_articles, n_proc):
             i += len(word) + 1
         return " ".join(out)
 
-    def page_hero(label, title, sub):
-        return (f'<header class="masthead hero page-hero">\n  <canvas class="field" aria-hidden="true"></canvas>\n'
+    scenes = page_scenes()
+
+    def page_hero(label, title, sub, file=""):
+        scene = scenes.get(file)
+        if scene:
+            name, caption, hint, data = scene
+            attr = f' data-scene="{name}"'
+            payload = ""
+            if data:
+                blob = json.dumps(data(), ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+                payload = f'    <script type="application/json" class="scene-data">{blob}</script>\n'
+            stage = (f'   <div class="hero-stage" aria-hidden="true">\n{payload}'
+                     f'    <div class="scene-meta"><p class="scene-cap">{caption}</p><p class="scene-hint">{hint}</p></div>\n'
+                     f'   </div>\n')
+        else:
+            attr, stage = "", '   <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>\n'
+        return (f'<header class="masthead hero page-hero"{attr}>\n  <canvas class="field" aria-hidden="true"></canvas>\n'
                 f'  <div class="wrap hero-inner">\n   <div class="hero-text">\n'
                 f'    <p class="crumb"><a href="index.html">{P["name"]}</a><span aria-hidden="true">/</span>{label}</p>\n'
                 f'    <h1 class="page-title" aria-label="{title}">{letters(title)}</h1>\n    <p class="page-sub">{sub}</p>\n   </div>\n'
-                f'   <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>\n  </div>\n</header>\n')
+                f'{stage}  </div>\n</header>\n')
 
     def relink(body, current):
         for anchor, target in LINK_MAP.items():
@@ -875,10 +985,12 @@ def write_pages(html, n_articles, n_proc):
                 block = re.sub(r'<h2 class="chapter-title">.*?</h2>\n?', "", block, count=1, flags=re.S)
             parts.append(block)
         body = (f'<body id="top" class="page-{slug}">\n{INTRO}<a class="skip" href="#main">Skip to content</a>\n\n'
-                + (hero if file == "index.html" else page_hero(label, title, sub))
+                + (hero if file == "index.html" else page_hero(label, title, sub, file))
                 + navbar(file)
                 + (ticker if file == "index.html" else "")
                 + '<main id="main" class="wrap">\n\n' + "\n\n".join(parts) + "\n\n" + tail)
+        if file in scenes:                                # the page scenes live in their own script
+            body = body.replace("</body>", f'<script src="assets/scenes.js?v={_ver("assets/scenes.js")}" defer></script>\n</body>', 1)
         Path(file).write_text(relink(h + body, file), encoding="utf-8")
         written.append(file)
 
@@ -1311,7 +1423,7 @@ Collider at CERN.</p>
 
   /* ---------- hero parallax: text and detector drift apart as the page scrolls ---------- */
   var heroEl = document.querySelector('.hero'), heroText = heroEl && heroEl.querySelector('.hero-text'),
-      heroField = heroEl && heroEl.querySelector('.field');
+      heroField = heroEl && !heroEl.hasAttribute('data-scene') && heroEl.querySelector('.field');
   function parallax() {{
     if (reduce || !heroEl) return;
     var y = window.scrollY, h = heroEl.offsetHeight;
@@ -1375,7 +1487,7 @@ Collider at CERN.</p>
      the solenoid field, gluons as curls that shower into jets, photons as waves,
      electrons in crimson, muons reaching the outer chambers, neutrinos as a dotted
      missing-momentum arrow, and b jets from displaced secondary vertices. */
-  var hero = document.querySelector('.hero'), cv = hero && hero.querySelector('.field');
+  var hero = document.querySelector('.hero:not([data-scene])'), cv = hero && hero.querySelector('.field');
   var stage = hero && hero.querySelector('.hero-stage'), evLabel = hero && hero.querySelector('.ev-label');
   if (cv && cv.getContext) {{
     var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);

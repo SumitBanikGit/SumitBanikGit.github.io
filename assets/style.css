@@ -1406,6 +1406,7 @@ main > #contact.chapter::before {
 .js .chapter-title.reveal.in { clip-path: inset(-10% 0 -30% 0); transform: none; }
 
 /* 4. page titles: letters rise one by one (split in build.py) */
+.page-title .w { display: inline-block; white-space: nowrap; }
 .page-title .ch { display: inline-block; }
 @media (prefers-reduced-motion: no-preference) {
   .page-title .ch { animation: letter .8s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(.15s + var(--i) * .035s); }
@@ -1502,3 +1503,36 @@ main > #contact.chapter::before {
 .theme.d4 { --c: #4a5a66; --bg: #e8ecee; }   /* computational tools: slate */
 .theme.d5 { --c: #2d5d63; --bg: #e3eeef; }   /* effective field theory: teal */
 .theme.d6 { --c: #6e2c34; --bg: #f3e8e6; }   /* exotic particles: crimson */
+
+/* =====================================================================
+   Page scenes: every inner page has its own animation in the header
+   (drawn by assets/scenes.js), with a caption and a hint beneath it
+   ===================================================================== */
+.hero[data-scene] .field { -webkit-mask-image: none; mask-image: none; }
+@media (min-width: 52.01rem) {
+  .page-hero[data-scene] .hero-inner { grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: 2.6rem; }
+  .page-hero[data-scene] .hero-stage { position: relative; min-height: 19.5rem; cursor: default;
+                                       display: flex; flex-direction: column; justify-content: flex-end; }
+}
+.scene-meta { min-width: 0; text-align: right; pointer-events: none; }
+.scene-cap { margin: 0; font-family: var(--display); font-style: italic; font-weight: 500; font-size: 1.16rem;
+             line-height: 1.3; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+             transition: opacity .22s ease, transform .22s ease; }
+.scene-cap.swap { opacity: 0; transform: translateY(3px); }
+.scene-hint { margin: .35rem 0 0; font-family: var(--sans); font-size: .58rem; font-weight: 500;
+              letter-spacing: .14em; text-transform: uppercase; color: var(--grey); }
+.scene-hint::before { content: ""; display: inline-block; vertical-align: middle; width: 1.6rem; height: 1px;
+                      margin: -.15rem .65rem 0 0; background: var(--gold); }
+.page-hero[data-scene="triangulation"] .hero-stage,
+.page-hero[data-scene="bubbles"] .hero-stage,
+.page-hero[data-scene="waves"] .hero-stage { cursor: crosshair; }
+.page-hero[data-scene="spectrum"] .hero-stage,
+.page-hero[data-scene="chalkboard"] .hero-stage { cursor: pointer; }
+@media (max-width: 52rem) {                         /* tablets and phones: the scene sits below the title */
+  .page-hero[data-scene] .field { display: block; }
+  .page-hero[data-scene] .hero-inner { grid-template-columns: minmax(0, 1fr); }
+  .page-hero[data-scene] .hero-stage { display: flex; flex-direction: column; justify-content: flex-end; order: 1;
+                                       position: relative; min-height: 15.5rem; }
+}
+@media (max-width: 30rem) { .page-hero[data-scene] .hero-stage { min-height: 14rem; } }
+@media print { .scene-meta, .page-hero[data-scene] .hero-stage { display: none; } }
