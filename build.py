@@ -969,6 +969,10 @@ TEMPLATE = """<!doctype html>
    <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>
   </div>
   <a class="scroll-cue" href="#about" aria-label="Scroll to the About section"><span></span></a>
+  <div class="ev" aria-hidden="true">
+    <p class="ev-label"></p>
+    <ul class="ev-legend"><li><svg viewBox="0 0 36 10"><path class="lg-q" d="M1 7 Q18 1 35 5"/></svg>Quark</li><li><svg viewBox="0 0 36 10"><path class="lg-g" d="M1.00 5.00 L1.18 5.93 L1.03 6.74 L0.62 7.32 L0.06 7.59 L-0.54 7.51 L-1.04 7.09 L-1.34 6.40 L-1.35 5.52 L-1.01 4.57 L-0.34 3.68 L0.64 2.96 L1.83 2.52 L3.12 2.41 L4.39 2.64 L5.52 3.19 L6.39 3.98 L6.95 4.91 L7.16 5.85 L7.04 6.67 L6.66 7.28 L6.10 7.58 L5.50 7.53 L4.99 7.15 L4.66 6.48 L4.62 5.61 L4.92 4.66 L5.57 3.76 L6.51 3.02 L7.69 2.55 L8.98 2.40 L10.26 2.60 L11.40 3.12 L12.30 3.90 L12.89 4.81 L13.14 5.76 L13.05 6.60 L12.69 7.23 L12.15 7.56 L11.55 7.55 L11.01 7.20 L10.67 6.55 L10.60 5.70 L10.86 4.75 L11.47 3.84 L12.39 3.08 L13.55 2.58 L14.83 2.40 L16.12 2.57 L17.28 3.06 L18.21 3.81 L18.84 4.72 L19.11 5.67 L19.05 6.53 L18.71 7.18 L18.19 7.54 L17.59 7.57 L17.04 7.25 L16.67 6.63 L16.57 5.79 L16.80 4.85 L17.38 3.92 L18.28 3.15 L19.41 2.61 L20.69 2.40 L21.98 2.54 L23.16 3.00 L24.12 3.73 L24.77 4.63 L25.08 5.58 L25.06 6.45 L24.74 7.13 L24.23 7.52 L23.63 7.58 L23.07 7.29 L22.68 6.70 L22.55 5.88 L22.75 4.94 L23.30 4.01 L24.16 3.21 L25.28 2.65 L26.55 2.41 L27.84 2.51 L29.04 2.94 L30.02 3.65 L30.71 4.54 L31.05 5.49 L31.06 6.37"/></svg>Gluon</li><li><svg viewBox="0 0 36 10"><path class="lg-a" d="M1 5 q2.25 -4 4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0"/></svg>Photon</li><li><svg viewBox="0 0 36 10"><path class="lg-e" d="M1 6 Q18 2 35 4"/></svg>Electron</li><li><svg viewBox="0 0 36 10"><path class="lg-m" d="M1 5 H35"/></svg>Muon</li><li><svg viewBox="0 0 36 10"><path class="lg-n" d="M1 5 H31"/><path class="lg-n-head" d="M30 2 L35 5 L30 8 Z"/></svg>Neutrino</li></ul>
+  </div>
 </header>
 
 <div class="navbar">
@@ -1024,6 +1028,7 @@ Collider at CERN.</p>
   <blockquote><p>A physical law must possess mathematical beauty.</p></blockquote>
   <figcaption>P. A. M. Dirac, 1955</figcaption>
 </figure>
+<h3 class="sect">Research domains</h3>
 <div class="themes">
   <div class="theme">
     <h4>Feynman integrals &amp; special functions</h4>
@@ -1356,18 +1361,20 @@ Collider at CERN.</p>
   }}
 
   /* ---------- hero: collider event display ----------
-     A detector cross-section on the right of the hero: beam pipe, tracker
-     layers, calorimeter and muon chambers. Every few seconds a collision at
-     the centre sends charged tracks spiralling outward in the solenoid field
-     (low-momentum ones curl up inside the tracker), with two back-to-back
-     jets, a muon pair reaching the outer chambers, dashed photons, and
-     energy deposits in the calorimeter. Click the stage for a new event. */
+     A detector cross-section: beam pipe, tracker, electromagnetic and hadronic
+     calorimeters, muon chambers. Real processes play in turn, each particle drawn
+     with its conventional line: quarks and charged hadrons as solid tracks bent by
+     the solenoid field, gluons as curls that shower into jets, photons as waves,
+     electrons in crimson, muons reaching the outer chambers, neutrinos as a dotted
+     missing-momentum arrow, and b jets from displaced secondary vertices. */
   var hero = document.querySelector('.hero'), cv = hero && hero.querySelector('.field');
-  var stage = hero && hero.querySelector('.hero-stage');
+  var stage = hero && hero.querySelector('.hero-stage'), evLabel = hero && hero.querySelector('.ev-label');
   if (cv && cv.getContext) {{
     var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var W = 0, H = 0, CX = 0, CY = 0, RO = 200, tracks = [], flashAt = -1e9, nextAt = 0, visible = true, raf = null;
-    var t0 = performance.now(), TAU = Math.PI * 2;
+    var W = 0, H = 0, CX = 0, CY = 0, RO = 200, parts = [], flashAt = -1e9, nextAt = 0, visible = true, raf = null;
+    var t0 = performance.now(), TAU = Math.PI * 2, evIndex = 0;
+    var COL = {{ hadron: 'rgba(168,137,79,', gluon: 'rgba(46,92,78,', photon: 'rgba(122,95,42,',
+                electron: 'rgba(110,44,52,', muon: 'rgba(28,53,47,', nu: 'rgba(74,90,102,' }};
     function size() {{
       var r = hero.getBoundingClientRect();
       W = r.width; H = r.height;
@@ -1381,43 +1388,112 @@ Collider at CERN.</p>
       }} else {{ CX = W * 0.72; CY = H / 2; RO = Math.min(W, H) * 0.38; }}
     }}
     function rnd(a, b) {{ return a + Math.random() * (b - a); }}
-    function spawn(now) {{
-      var jet = rnd(0, TAU), list = [];
-      for (var i = 0; i < 26; i++) {{
-        var inJet = i < 16, side = i % 2 ? Math.PI : 0;
-        list.push({{ phi: inJet ? jet + side + rnd(-0.3, 0.3) : rnd(0, TAU), q: Math.random() < 0.5 ? -1 : 1,
-                    rc: RO * (inJet ? rnd(0.7, 7) : rnd(0.12, 2.2)), kind: 'track' }});
-      }}
-      var mu = rnd(0, TAU);
-      list.push({{ phi: mu, q: 1, rc: RO * 9, kind: 'muon' }});
-      list.push({{ phi: mu + Math.PI + rnd(-0.35, 0.35), q: -1, rc: RO * 9, kind: 'muon' }});
-      for (var g = 0; g < 2; g++) list.push({{ phi: rnd(0, TAU), q: 0, rc: 0, kind: 'photon' }});
-      list.forEach(function (tr) {{ tr.born = now + rnd(40, 160); tr.e = rnd(0.25, 1); }});
-      tracks = tracks.concat(list);
-      flashAt = now;
+    function sign() {{ return Math.random() < 0.5 ? -1 : 1; }}
+
+    /* particle factories: angles in radians, curvature radii in units of RO */
+    function hadron(phi, o) {{
+      o = o || {{}};
+      return {{ kind: 'hadron', phi: phi, q: sign(), rc: RO * (o.rc || rnd(0.8, 6)), ox: o.ox || 0, oy: o.oy || 0,
+               delay: o.delay || 0, e: rnd(0.2, 0.8) }};
     }}
-    function point(tr, s) {{
-      if (!tr.q) return [Math.cos(tr.phi) * s, Math.sin(tr.phi) * s];
-      var cx = -Math.sin(tr.phi) * tr.q * tr.rc, cy = Math.cos(tr.phi) * tr.q * tr.rc;
-      var a = tr.q * s / tr.rc, c = Math.cos(a), sn = Math.sin(a);
-      return [cx - cx * c + cy * sn, cy - cx * sn - cy * c];
+    function jet(phi, n, o) {{                       // a parton that showers into charged hadrons
+      o = o || {{}};
+      var list = [], len = RO * (o.len || 0.2), sx, sy;
+      if (o.gluon === false) {{ sx = o.ox || 0; sy = o.oy || 0; }}
+      else {{ list.push({{ kind: 'gluon', phi: phi, len: len, delay: 0 }}); sx = Math.cos(phi) * len; sy = Math.sin(phi) * len; }}
+      for (var i = 0; i < n; i++) {{
+        list.push(hadron(phi + rnd(-0.24, 0.24), {{ ox: sx, oy: sy, rc: rnd(1.5, 9), delay: o.gluon === false ? 0 : 0.3 }}));
+      }}
+      return list;
+    }}
+    function photon(phi) {{ return {{ kind: 'photon', phi: phi, e: rnd(0.75, 1), delay: 0 }}; }}
+    function electron(phi, q) {{ return {{ kind: 'electron', phi: phi, q: q, rc: RO * rnd(3, 8), e: rnd(0.75, 1), delay: 0, ox: 0, oy: 0 }}; }}
+    function muon(phi, q) {{ return {{ kind: 'muon', phi: phi, q: q, rc: RO * rnd(5, 12), delay: 0, ox: 0, oy: 0 }}; }}
+    function neutrino(phi) {{ return {{ kind: 'nu', phi: phi, delay: 0.2 }}; }}
+    function soft(n) {{                                // the rest of the collision: soft, curling tracks
+      var l = [];
+      for (var i = 0; i < n; i++) l.push(hadron(rnd(0, TAU), {{ rc: rnd(0.12, 0.9) }}));
+      return l;
+    }}
+    var EVENTS = [
+      {{ label: 'H → γγ', make: function () {{
+          var a = rnd(0, TAU); return [photon(a), photon(a + Math.PI + rnd(-0.3, 0.3))].concat(soft(9)); }} }},
+      {{ label: 'Z → μ⁺μ⁻', make: function () {{
+          var a = rnd(0, TAU); return [muon(a, 1), muon(a + Math.PI + rnd(-0.25, 0.25), -1)].concat(soft(10)); }} }},
+      {{ label: 'pp → gg → two jets', make: function () {{
+          var a = rnd(0, TAU); return jet(a, 9).concat(jet(a + Math.PI + rnd(-0.2, 0.2), 8), soft(6)); }} }},
+      {{ label: 'W → eν', make: function () {{
+          var a = rnd(0, TAU); return [electron(a, sign()), neutrino(a + Math.PI + rnd(-0.3, 0.3))].concat(soft(10)); }} }},
+      {{ label: 't<span class="ov">t</span> → b <span class="ov">b</span> μ ν + jets', make: function () {{
+          var l = [], a = rnd(0, TAU);
+          [a, a + 2.3].forEach(function (p) {{          // two b jets from displaced secondary vertices
+            var ox = Math.cos(p) * RO * 0.04, oy = Math.sin(p) * RO * 0.04;
+            l.push({{ kind: 'sv', ox: ox, oy: oy, delay: 0 }});
+            l = l.concat(jet(p, 5, {{ gluon: false, ox: ox, oy: oy }}));
+          }});
+          l = l.concat(jet(a + 3.9, 6, {{ len: 0.16 }}), jet(a + 4.6, 5, {{ len: 0.14 }}));
+          l.push(muon(a + 1.2, 1), neutrino(a + 0.8));
+          return l.concat(soft(5)); }} }},
+      {{ label: 'H → ZZ* → 4ℓ', make: function () {{
+          var a = rnd(0, TAU);
+          return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); }} }}
+    ];
+    function spawn(now) {{
+      var ev = EVENTS[evIndex++ % EVENTS.length], list = ev.make();
+      list.forEach(function (p) {{ p.born = now + (p.delay || 0) * 1000 + rnd(20, 90); }});
+      parts = parts.concat(list); flashAt = now;
+      if (evLabel) {{ evLabel.classList.remove('on'); void evLabel.offsetWidth; evLabel.innerHTML = ev.label; evLabel.classList.add('on'); }}
+    }}
+    function helix(p, s) {{                           // transverse projection of a helix: a circle of radius rc
+      if (!p.q) return [p.ox + Math.cos(p.phi) * s, p.oy + Math.sin(p.phi) * s];
+      var cx = -Math.sin(p.phi) * p.q * p.rc, cy = Math.cos(p.phi) * p.q * p.rc;
+      var a = p.q * s / p.rc, c = Math.cos(a), sn = Math.sin(a);
+      return [p.ox + cx - cx * c + cy * sn, p.oy + cy - cx * sn - cy * c];
     }}
     function ring(r, alpha, width) {{
-      ctx.lineWidth = width; ctx.strokeStyle = 'rgba(168,137,79,'+alpha+')';
+      ctx.lineWidth = width; ctx.strokeStyle = 'rgba(168,137,79,' + alpha + ')';
       ctx.beginPath(); ctx.arc(CX, CY, r, 0, TAU); ctx.stroke();
+    }}
+    function band(r1, r2, fill) {{
+      ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(CX, CY, r2, 0, TAU); ctx.arc(CX, CY, r1, 0, TAU, true); ctx.fill();
+    }}
+    function tower(ang, r, depth, col, alpha) {{       // a calorimeter deposit
+      ctx.lineWidth = 3.4; ctx.strokeStyle = col + alpha + ')';
+      ctx.beginPath();
+      ctx.moveTo(CX + Math.cos(ang) * r, CY + Math.sin(ang) * r);
+      ctx.lineTo(CX + Math.cos(ang) * (r + depth), CY + Math.sin(ang) * (r + depth));
+      ctx.stroke();
+    }}
+    function drawTrack(p, s, reach, r0, col, alpha, width) {{
+      ctx.lineWidth = width; ctx.strokeStyle = col + alpha + ')'; ctx.setLineDash([]);
+      ctx.beginPath();
+      var drawing = false, last = -1, hit = false, d, pt;
+      for (d = 0; d <= s; d += 4) {{
+        pt = helix(p, d);
+        var rr = Math.hypot(pt[0], pt[1]);
+        if (rr > reach) {{ hit = true; break; }}
+        if (rr < last - 0.5) break;                   // curled back: the track stops inside the tracker
+        last = rr;
+        if (rr < r0) continue;
+        if (!drawing) {{ ctx.moveTo(CX + pt[0], CY + pt[1]); drawing = true; }} else ctx.lineTo(CX + pt[0], CY + pt[1]);
+      }}
+      ctx.stroke();
+      if (!hit) return null;
+      var pe = helix(p, Math.max(0, d - 4));
+      return Math.atan2(pe[1], pe[0]);
     }}
     function frame(now) {{
       ctx.clearRect(0, 0, W, H);
       var t = (now - t0) / 1000;
-      // detector: beam pipe, tracker layers, calorimeter band, muon chambers
+      // detector: beam pipe, tracker layers, ECAL and HCAL bands, muon chambers, rotating tick ring
       ring(RO * 0.05, 0.45, 1);
       [0.13, 0.19, 0.25, 0.31, 0.37].forEach(function (k) {{ ring(RO * k, 0.16, 0.7); }});
-      ctx.fillStyle = 'rgba(168,137,79,0.06)';
-      ctx.beginPath(); ctx.arc(CX, CY, RO * 0.72, 0, TAU); ctx.arc(CX, CY, RO * 0.5, 0, TAU, true); ctx.fill();
-      ring(RO * 0.5, 0.3, 0.9); ring(RO * 0.72, 0.3, 0.9);
-      [0.84, 0.92].forEach(function (k) {{ ring(RO * k, 0.2, 0.8); }});
+      band(RO * 0.5, RO * 0.6, 'rgba(168,137,79,0.08)');
+      band(RO * 0.6, RO * 0.74, 'rgba(46,92,78,0.055)');
+      ring(RO * 0.5, 0.32, 0.9); ring(RO * 0.6, 0.2, 0.7); ring(RO * 0.74, 0.32, 0.9);
+      [0.85, 0.92].forEach(function (k) {{ ring(RO * k, 0.2, 0.8); }});
       var spin = reduce ? 0 : t * 0.03;
-      ctx.strokeStyle = 'rgba(46,92,78,0.26)'; ctx.lineWidth = 0.8;
+      ctx.strokeStyle = 'rgba(46,92,78,0.24)'; ctx.lineWidth = 0.8;
       for (var i = 0; i < 160; i++) {{
         var a = spin + i * TAU / 160, len = i % 20 === 0 ? 12 : (i % 4 === 0 ? 6 : 3);
         ctx.beginPath();
@@ -1425,47 +1501,76 @@ Collider at CERN.</p>
         ctx.lineTo(CX + Math.cos(a) * (RO + len), CY + Math.sin(a) * (RO + len));
         ctx.stroke();
       }}
-      if (!reduce && now > nextAt) {{ spawn(now); nextAt = now + 3800; }}
-      // interaction flash
-      var fl = (now - flashAt) / 700;
+      if (!reduce && now > nextAt) {{ spawn(now); nextAt = now + 4400; }}
+      var fl = (now - flashAt) / 700;                  // interaction flash
       if (fl >= 0 && fl < 1) {{
         var g = ctx.createRadialGradient(CX, CY, 0, CX, CY, RO * 0.16);
-        g.addColorStop(0, 'rgba(220,197,143,'+(0.9*(1-fl)) + ')'); g.addColorStop(1, 'rgba(220,197,143,0)');
+        g.addColorStop(0, 'rgba(220,197,143,' + (0.9 * (1 - fl)) + ')'); g.addColorStop(1, 'rgba(220,197,143,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(CX, CY, RO * 0.16, 0, TAU); ctx.fill();
       }}
-      ctx.fillStyle = 'rgba(46,92,78,0.7)'; ctx.beginPath(); ctx.arc(CX, CY, 2.2, 0, TAU); ctx.fill();
-      var r0 = RO * 0.05, rCal = RO * 0.5, rMu = RO * 0.97;
-      tracks = tracks.filter(function (tr) {{ return now - tr.born < 4800; }});
-      tracks.forEach(function (tr) {{
-        var age = (now - tr.born) / 1000;
+      ctx.fillStyle = 'rgba(46,92,78,0.75)'; ctx.beginPath(); ctx.arc(CX, CY, 2.2, 0, TAU); ctx.fill();
+
+      var r0 = RO * 0.05, rE = RO * 0.5, rH = RO * 0.6, rMu = RO * 0.97;
+      parts = parts.filter(function (p) {{ return now - p.born < 5400; }});
+      parts.forEach(function (p) {{
+        var age = (now - p.born) / 1000;
         if (age < 0) return;
-        var fade = age < 1.5 ? 1 : Math.max(0, 1 - (age - 1.5) / 3.1);
-        var reach = tr.kind === 'muon' ? rMu : rCal;
-        var sMax = tr.q ? Math.min(Math.PI * tr.rc, reach * 1.7) : reach;
-        var s = reduce ? sMax : Math.min(sMax, age * 700);
-        ctx.lineWidth = tr.kind === 'muon' ? 1.7 : (tr.kind === 'photon' ? 1 : 0.9);
-        ctx.strokeStyle = tr.kind === 'muon' ? 'rgba(46,92,78,'+(0.85*fade) + ')'
-                        : tr.kind === 'photon' ? 'rgba(168,137,79,'+(0.6*fade) + ')'
-                        : 'rgba(168,137,79,'+(0.7*fade) + ')';
-        ctx.setLineDash(tr.kind === 'photon' ? [4, 4] : []);
-        ctx.beginPath();
-        var drawing = false, last = -1, hit = false, d;
-        for (d = 0; d <= s; d += 4) {{
-          var p = point(tr, d), rr = Math.hypot(p[0], p[1]);
-          if (rr > reach) {{ hit = true; break; }}
-          if (rr < last - 0.5) break;                   // curled back: the track stops inside the tracker
-          last = rr;
-          if (rr < r0) continue;
-          if (!drawing) {{ ctx.moveTo(CX + p[0], CY + p[1]); drawing = true; }} else ctx.lineTo(CX + p[0], CY + p[1]);
-        }}
-        ctx.stroke(); ctx.setLineDash([]);
-        if (hit && tr.kind !== 'muon') {{               // calorimeter deposit
-          var pe = point(tr, Math.max(0, d - 4)), ang = Math.atan2(pe[1], pe[0]), h = RO * (0.04 + tr.e * 0.18);
-          ctx.lineWidth = 3.2; ctx.strokeStyle = 'rgba(46,92,78,'+(0.5*fade) + ')';
+        var fade = age < 1.9 ? 1 : Math.max(0, 1 - (age - 1.9) / 3.1);
+        var grow = reduce ? 1e9 : age * 720, ang, dx, dy, nx, ny, u, s, k;
+        if (p.kind === 'sv') {{                          // displaced secondary vertex
+          ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(46,92,78,' + (0.8 * fade) + ')';
+          ctx.beginPath(); ctx.arc(CX + p.ox, CY + p.oy, 3, 0, TAU); ctx.stroke();
+        }} else if (p.kind === 'gluon') {{                // curly line
+          s = Math.min(p.len, grow); dx = Math.cos(p.phi); dy = Math.sin(p.phi); nx = -dy; ny = dx;
+          ctx.lineWidth = 1.1; ctx.strokeStyle = COL.gluon + (0.85 * fade) + ')'; ctx.setLineDash([]);
           ctx.beginPath();
-          ctx.moveTo(CX + Math.cos(ang) * rCal, CY + Math.sin(ang) * rCal);
-          ctx.lineTo(CX + Math.cos(ang) * (rCal + h), CY + Math.sin(ang) * (rCal + h));
+          for (u = 0; u <= s; u += 0.7) {{
+            var ph = u * 0.62, along = r0 + u + 3.3 * Math.cos(ph) - 3.3, side = 3.3 * Math.sin(ph);
+            var X = CX + dx * along + nx * side, Y = CY + dy * along + ny * side;
+            if (u === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
+          }}
           ctx.stroke();
+        }} else if (p.kind === 'photon') {{               // wavy line, ending in the electromagnetic calorimeter
+          s = Math.min(rE - r0, grow); dx = Math.cos(p.phi); dy = Math.sin(p.phi); nx = -dy; ny = dx;
+          ctx.lineWidth = 1.3; ctx.strokeStyle = COL.photon + (0.9 * fade) + ')'; ctx.setLineDash([]);
+          ctx.beginPath();
+          for (u = 0; u <= s; u += 1) {{
+            var w = 3 * Math.sin(u * 0.55), X2 = CX + dx * (r0 + u) + nx * w, Y2 = CY + dy * (r0 + u) + ny * w;
+            if (u === 0) ctx.moveTo(X2, Y2); else ctx.lineTo(X2, Y2);
+          }}
+          ctx.stroke();
+          if (s >= rE - r0 - 1) tower(p.phi, rE, RO * (0.05 + 0.05 * p.e), COL.photon, 0.75 * fade);
+        }} else if (p.kind === 'nu') {{                   // missing transverse momentum: a dotted arrow
+          s = Math.min(RO * 0.9, grow); dx = Math.cos(p.phi); dy = Math.sin(p.phi);
+          ctx.lineWidth = 1.5; ctx.strokeStyle = COL.nu + (0.8 * fade) + ')'; ctx.setLineDash([1.5, 5]); ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(CX + dx * r0, CY + dy * r0); ctx.lineTo(CX + dx * s, CY + dy * s); ctx.stroke();
+          ctx.setLineDash([]); ctx.lineCap = 'butt';
+          if (s >= RO * 0.9 - 1) {{
+            var hx = CX + dx * s, hy = CY + dy * s;
+            ctx.fillStyle = COL.nu + (0.8 * fade) + ')'; ctx.beginPath();
+            ctx.moveTo(hx + dx * 8, hy + dy * 8);
+            ctx.lineTo(hx - dy * 4, hy + dx * 4); ctx.lineTo(hx + dy * 4, hy - dx * 4); ctx.closePath(); ctx.fill();
+          }}
+        }} else if (p.kind === 'muon') {{                 // punches through everything to the muon chambers
+          ang = drawTrack(p, Math.min(rMu * 1.4, grow), rMu, r0, COL.muon, 0.9 * fade, 1.9);
+          [0.85, 0.92].forEach(function (kk) {{           // chamber hits
+            var dd = 0, q;
+            for (; dd < rMu * 1.4 && dd <= grow; dd += 4) {{ q = helix(p, dd); if (Math.hypot(q[0], q[1]) >= RO * kk) break; }}
+            if (q && Math.hypot(q[0], q[1]) >= RO * kk) {{
+              var aa = Math.atan2(q[1], q[0]);
+              ctx.lineWidth = 2; ctx.strokeStyle = COL.muon + (0.7 * fade) + ')';
+              ctx.beginPath();
+              ctx.moveTo(CX + q[0] - Math.sin(aa) * 5, CY + q[1] + Math.cos(aa) * 5);
+              ctx.lineTo(CX + q[0] + Math.sin(aa) * 5, CY + q[1] - Math.cos(aa) * 5);
+              ctx.stroke();
+            }}
+          }});
+        }} else if (p.kind === 'electron') {{             // stops in the electromagnetic calorimeter
+          ang = drawTrack(p, Math.min(rE * 1.5, grow), rE, r0, COL.electron, 0.9 * fade, 1.4);
+          if (ang !== null) tower(ang, rE, RO * (0.06 + 0.04 * p.e), COL.electron, 0.7 * fade);
+        }} else {{                                        // charged hadron: deposits in the hadronic calorimeter
+          ang = drawTrack(p, Math.min(Math.PI * p.rc, rE * 1.7, grow), rE, r0, COL.hadron, 0.72 * fade, 0.9);
+          if (ang !== null) tower(ang, rH, RO * (0.03 + 0.1 * p.e), COL.gluon, 0.45 * fade);
         }}
       }});
       raf = (!reduce && visible && !document.hidden) ? requestAnimationFrame(frame) : null;
@@ -1475,7 +1580,8 @@ Collider at CERN.</p>
     if (reduce) {{ spawn(performance.now() - 1600); frame(performance.now()); }} else start();
     window.addEventListener('resize', function () {{ size(); if (reduce) frame(performance.now()); }});
     if (stage) stage.addEventListener('click', function () {{
-      if (!reduce) {{ spawn(performance.now()); nextAt = performance.now() + 3800; }}
+      var now = performance.now();
+      if (!reduce && now - flashAt > 1000) {{ spawn(now); nextAt = now + 4400; }}   // one event at a time
     }});
     document.addEventListener('visibilitychange', function () {{ if (!document.hidden && visible) start(); }});
     if ('IntersectionObserver' in window) {{
