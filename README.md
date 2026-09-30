@@ -5,6 +5,11 @@ Live at **https://sumitbanikgit.github.io**
 A static site: `index.html` plus `assets/`. No framework and no external
 requests at runtime apart from Google Fonts.
 
+## Pages
+Home (`index.html`), Research, Publications, Talks, Funding, Teaching
+and CV, plus a 404 page, `sitemap.xml` and `robots.txt`. All of them are
+generated together; the page list is `PAGES` in `build.py`.
+
 ## Updating the content
 All text and data (papers, talks, funding, teaching, news, journey map
 stops, links) live in `build.py`.

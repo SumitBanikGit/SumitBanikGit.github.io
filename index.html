@@ -19,11 +19,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abd2525">
+<link rel="stylesheet" href="assets/style.css?v=6abd78c2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sumit Banik", "givenName": "Sumit", "familyName": "Banik", "honorificSuffix": "PhD", "jobTitle": "Postdoctoral Researcher", "worksFor": [{"@type": "Organization", "name": "SLAC National Accelerator Laboratory"}, {"@type": "CollegeOrUniversity", "name": "Stanford University"}], "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"}, {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}], "email": "mailto:banik@stanford.edu", "url": "https://sumitbanikgit.github.io/", "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "Higgs physics", "beyond the Standard Model", "collider phenomenology", "effective field theory"], "sameAs": ["https://orcid.org/0000-0002-5869-5293", "https://inspirehep.net/authors/1810309", "https://github.com/SumitBanikGit", "https://www.linkedin.com/in/waytosumitbanik"]}</script>
 <script>document.documentElement.classList.add("js")</script>
 </head>
-<body id="top">
+<body id="top" class="page-index">
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="masthead hero">
@@ -38,8 +38,8 @@
     </div>
     <p class="tagline">From the mathematics of Feynman integrals <br class="hero-br">to new physics beyond the Standard&nbsp;Model.</p>
     <div class="hero-cta">
-      <a class="btn solid" href="#research">Explore my research</a>
-      <a class="btn" href="#publications">Publications</a>
+      <a class="btn solid" href="research.html">Explore my research</a>
+      <a class="btn" href="publications.html">Publications</a>
       <a class="btn" href="assets/cv/Sumit_Banik_CV.pdf">Curriculum vitae</a>
     </div>
     <div class="contact">
@@ -60,13 +60,11 @@
 </header>
 
 <div class="navbar">
-  <div class="wrap">
-    <nav aria-label="Sections">
-      <a href="#about">About</a><a href="#research">Research</a><a href="#publications">Publications</a><a href="#software">Software</a><a href="#talks">Talks</a><a href="#funding">Funding</a><a href="#teaching">Teaching</a><a href="#refereeing">Refereeing</a><a href="#cv">CV</a><a href="#contact">Contact</a>
-    </nav>
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html">Sumit Banik</a>
+    <nav aria-label="Pages"><a href="research.html">Research</a><a href="publications.html">Publications</a><a href="talks.html">Talks</a><a href="funding.html">Funding</a><a href="teaching.html">Teaching</a><a href="cv.html">CV</a><a href="#contact">Contact</a></nav>
   </div>
 </div>
-
 <div class="ticker" aria-hidden="true"><div class="ticker-track"><span>Feynman integrals</span><i>✦</i><span>Special functions</span><i>✦</i><span>Mellin-Barnes integrals</span><i>✦</i><span>Effective field theories</span><i>✦</i><span>Renormalization group</span><i>✦</i><span>Higgs physics</span><i>✦</i><span>Collider phenomenology</span><i>✦</i><span>Beyond the Standard Model</span><i>✦</i><span>Computer algebra</span><i>✦</i><span>Feynman integrals</span><i>✦</i><span>Special functions</span><i>✦</i><span>Mellin-Barnes integrals</span><i>✦</i><span>Effective field theories</span><i>✦</i><span>Renormalization group</span><i>✦</i><span>Higgs physics</span><i>✦</i><span>Collider phenomenology</span><i>✦</i><span>Beyond the Standard Model</span><i>✦</i><span>Computer algebra</span><i>✦</i></div></div>
 
 <main id="main" class="wrap">
@@ -113,219 +111,15 @@ Collider at CERN.</p>
 </ul>
 </section>
 
-<section class="chapter" id="research">
-<h2 class="chapter-title">Research</h2>
-<figure class="epigraph">
-  <blockquote><p>A physical law must possess mathematical beauty.</p></blockquote>
-  <figcaption>P. A. M. Dirac, 1955</figcaption>
-</figure>
-<div class="themes">
-  <div class="theme">
-    <h4>Feynman integrals &amp; special functions</h4>
-    <p>Analytic evaluation of multi-loop and multi-scale Feynman integrals through
-    <i>N</i>-fold Mellin-Barnes representations, their geometry (conic hulls,
-    triangulations), GKZ hypergeometric systems and the method of brackets.</p>
-    <div class="keys">Mellin-Barnes · hypergeometric functions · conformal integrals</div>
-  </div>
-  <div class="theme pheno">
-    <h4>Higgs physics &amp; BSM phenomenology</h4>
-    <p>Extended scalar sectors (2HDM, N2HDM, Higgs triplets) confronted with LHC
-    data, including the di-photon excesses near 95 and 152 GeV, differential
-    top-quark distributions and correlations with EDMs.</p>
-    <div class="keys">collider phenomenology · new scalars · LHC anomalies</div>
-  </div>
-  <div class="theme soft">
-    <h4>EFTs &amp; computational tools</h4>
-    <p>Renormalization-group evolution in SMEFT and leptoquark models, two-loop
-    anomalous dimensions, and open-source Mathematica packages for precision
-    calculations.</p>
-    <div class="keys">SMEFT · RG evolution · computer algebra</div>
-  </div>
-</div>
-<h3 class="sect">Selected work</h3>
-<div class="picks">
-<a class="pick pheno" href="https://arxiv.org/abs/2510.08682"><span class="kicker">Phenomenology</span><span class="pick-title">Two-loop anomalous dimensions for baryon-number-violating operators in SMEFT</span><span class="pick-text">The two-loop running of baryon-number-violating operators in SMEFT, a key input for precise predictions of proton decay.</span><span class="pick-ref">JHEP (2026) <span aria-hidden="true">→</span></span></a>
-<a class="pick fi" href="https://arxiv.org/abs/2012.15108"><span class="kicker">Feynman integrals</span><span class="pick-title">Multiple series representations of <i>N</i>-fold Mellin-Barnes integrals</span><span class="pick-text">A general, geometric way to turn <i>N</i>-fold Mellin-Barnes integrals into convergent multivariable series using conic hulls.</span><span class="pick-ref">Phys. Rev. Lett. (2021) <span aria-hidden="true">→</span></span></a>
-<a class="pick pheno" href="https://arxiv.org/abs/2306.15722"><span class="kicker">Phenomenology</span><span class="pick-title"><i>SU</i>(2)<sub><i>L</i></sub> triplet scalar as the origin of the 95 GeV excess?</span><span class="pick-text">A Higgs-triplet explanation of the di-photon excess near 95 GeV, and its predictions for further LHC searches.</span><span class="pick-ref">Phys. Rev. D Letter (2023) <span aria-hidden="true">→</span></span></a>
-</div>
-</section>
-
-<section class="chapter" id="publications">
-<h2 class="chapter-title">Publications</h2>
-<p class="muted" style="margin-bottom:0">Complete and up-to-date records:
-<a href="https://inspirehep.net/authors/1810309">INSPIRE-HEP</a> · <a href="https://arxiv.org/search/?query=Banik%2C+Sumit&searchtype=author">arXiv</a> · <a href="https://orcid.org/0000-0002-5869-5293">ORCID</a>.</p>
-<div class="filters" role="group" aria-label="Filter publications by topic">
-  <button type="button" data-filter="all" aria-pressed="true">All (30)</button>
-  <button type="button" data-filter="fi" aria-pressed="false">Feynman integrals</button>
-  <button type="button" data-filter="pheno" aria-pressed="false">Phenomenology</button>
-  <button type="button" data-filter="soft" aria-pressed="false">Software</button>
-  <input class="pub-search" type="search" placeholder="Search publications" aria-label="Search publications">
-</div>
-<p class="pub-empty" hidden>No publications match your search.</p>
-<h3 class="sect" data-group="article">Journal articles</h3>
-<div class="entry pub" data-topic="fi"><div class="rail">[30]<br>2026</div><div class="body"><span class="title">Multiple Mellin-Barnes integrals with polygamma functions</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot</div><div class="detail"><span class="muted">Phys. Rev. D <b>114</b>, 056004 (2026)</span></div><div class="links"><a href="https://arxiv.org/abs/2512.19803">arXiv:2512.19803</a> <a href="https://doi.org/10.1103/yfvl-dfk2">DOI</a> <a href="https://inspirehep.net/literature/3095311">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="fi soft"><div class="rail">[29]<br>2026</div><div class="body"><span class="title">HyperPrecision: A Mathematica package for high-precision numerical evaluation of multivariate hypergeometric functions</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Bera</div><div class="detail"><span class="muted">Comput. Phys. Commun. <b>328</b>, 110328 (2026)</span></div><div class="links"><a href="https://arxiv.org/abs/2605.30216">arXiv:2605.30216</a> <a href="https://doi.org/10.1016/j.cpc.2026.110328">DOI</a> <a href="https://inspirehep.net/literature/3189851">INSPIRE</a> <a href="https://github.com/HyperPrecision/HyperPrecision">Code</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag soft">Software</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[28]<br>2026</div><div class="body"><span class="title">Sunset integrals with up to three mass scales in chiral perturbation theory: a comparative study of the Mellin-Barnes representation technique</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, V.&nbsp;Bernard, S.&nbsp;Friot, S.&nbsp;Ghosh, U.-G.&nbsp;Meißner</div><div class="detail"><span class="muted">Eur. Phys. J. Spec. Top. <b>235</b> (2026)</span></div><div class="links"><a href="https://arxiv.org/abs/2512.07727">arXiv:2512.07727</a> <a href="https://inspirehep.net/literature/3090403">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[27]<br>2026</div><div class="body"><span class="title">Two-loop anomalous dimensions for baryon-number-violating operators in SMEFT</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, A.&nbsp;Crivellin, L.&nbsp;Naterop, P.&nbsp;Stoffer</div><div class="detail"><span class="muted">JHEP <b>02</b> (2026) 017</span></div><div class="links"><a href="https://arxiv.org/abs/2510.08682">arXiv:2510.08682</a> <a href="https://doi.org/10.1007/JHEP02(2026)017">DOI</a> <a href="https://inspirehep.net/literature/3066755">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="fi pheno"><div class="rail">[26]<br>2025</div><div class="body"><span class="title">Some topics concerning the standard model, Feynman integrals and renormalization group methods: a review of some recent investigations and results</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Bera, A.&nbsp;B.&nbsp;Das, S.&nbsp;Datta, S.&nbsp;Friot, S.&nbsp;Ghosh, M.&nbsp;S.&nbsp;A.&nbsp;Alam&nbsp;Khan, T.&nbsp;Pathak, R.&nbsp;Sarkar, D.&nbsp;Wyler</div><div class="detail"><span class="muted">Eur. Phys. J. Spec. Top. <b>234</b>, 8005</span></div><div class="links"><a href="https://doi.org/10.1140/epjs/s11734-025-02019-7">DOI</a> <a href="https://inspirehep.net/literature/3081108">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[25]<br>2025</div><div class="body"><span class="title">Correlating EDMs and <i>A</i> → <i>γγ</i> in the 2HDM in light of the diphoton excesses at 95 GeV and 152 GeV</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, H.&nbsp;E.&nbsp;Haber</div><div class="detail"><span class="muted">Phys. Rev. D <b>111</b>, 075021 (2025)</span></div><div class="links"><a href="https://arxiv.org/abs/2412.00523">arXiv:2412.00523</a> <a href="https://doi.org/10.1103/PhysRevD.111.075021">DOI</a> <a href="https://inspirehep.net/literature/2854614">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[24]<br>2025</div><div class="body"><span class="title">Growing evidence for a Higgs triplet</span><div class="meta">A.&nbsp;Crivellin, S.&nbsp;Ashanujjaman, <span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, S.&nbsp;P.&nbsp;Maharathy, B.&nbsp;Mellado</div><div class="detail"><span class="muted">Chin. Phys. C <b>49</b>, 053107 (2025)</span></div><div class="links"><a href="https://arxiv.org/abs/2404.14492">arXiv:2404.14492</a> <a href="https://doi.org/10.1088/1674-1137/adbb5a">DOI</a> <a href="https://inspirehep.net/literature/2779998">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[23]<br>2025</div><div class="body"><span class="title">Anatomy of the real Higgs triplet model</span><div class="meta">S.&nbsp;Ashanujjaman, <span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, S.&nbsp;P.&nbsp;Maharathy, B.&nbsp;Mellado</div><div class="detail"><span class="muted">JHEP <b>04</b> (2025) 003</span></div><div class="links"><a href="https://arxiv.org/abs/2411.18618">arXiv:2411.18618</a> <a href="https://doi.org/10.1007/JHEP04(2025)003">DOI</a> <a href="https://inspirehep.net/literature/2853386">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[22]<br>2025</div><div class="body"><span class="title">Explaining the <i>γγ</i> + <i>X</i> excesses at ≈ 151.5 GeV via the Drell-Yan production of a Higgs triplet</span><div class="meta">S.&nbsp;Ashanujjaman, <span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, S.&nbsp;P.&nbsp;Maharathy, B.&nbsp;Mellado</div><div class="detail"><span class="muted">Phys. Lett. B <b>862</b>, 139298 (2025)</span></div><div class="links"><a href="https://arxiv.org/abs/2402.00101">arXiv:2402.00101</a> <a href="https://doi.org/10.1016/j.physletb.2025.139298">DOI</a> <a href="https://inspirehep.net/literature/2753881">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[21]<br>2025</div><div class="body"><span class="title">Uncovering new Higgses in the LHC analyses of differential <i>t</i><span class="ov"><i>t</i></span> cross sections</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, B.&nbsp;Mellado</div><div class="detail"><span class="muted">JHEP <b>01</b> (2025) 155</span></div><div class="links"><a href="https://arxiv.org/abs/2308.07953">arXiv:2308.07953</a> <a href="https://doi.org/10.1007/JHEP01(2025)155">DOI</a> <a href="https://inspirehep.net/literature/2688610">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[20]<br>2024</div><div class="body"><span class="title">Explanation of the excesses in associated di-photon production at 152 GeV in 2HDM</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, A.&nbsp;Crivellin</div><div class="detail"><span class="muted">JHEP <b>10</b> (2024) 203</span></div><div class="links"><a href="https://arxiv.org/abs/2407.06267">arXiv:2407.06267</a> <a href="https://doi.org/10.1007/JHEP10(2024)203">DOI</a> <a href="https://inspirehep.net/literature/2806093">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="fi soft"><div class="rail">[19]<br>2024</div><div class="body"><span class="title">Multiple Mellin-Barnes integrals and triangulations of point configurations</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot</div><div class="detail"><span class="muted">Phys. Rev. D <b>110</b>, 036002 (2024)</span></div><div class="links"><a href="https://arxiv.org/abs/2309.00409">arXiv:2309.00409</a> <a href="https://doi.org/10.1103/PhysRevD.110.036002">DOI</a> <a href="https://inspirehep.net/literature/2692835">INSPIRE</a> <a href="https://github.com/SumitBanikGit/MBConicHulls">Code</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag soft">Software</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[18]<br>2023</div><div class="body"><span class="title">Renormalization group evolution with scalar leptoquarks</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, A.&nbsp;Crivellin</div><div class="detail"><span class="muted">JHEP <b>11</b> (2023) 121</span></div><div class="links"><a href="https://arxiv.org/abs/2307.06800">arXiv:2307.06800</a> <a href="https://doi.org/10.1007/JHEP11(2023)121">DOI</a> <a href="https://inspirehep.net/literature/2676637">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[17]<br>2023</div><div class="body"><span class="title"><i>SU</i>(2)<sub><i>L</i></sub> triplet scalar as the origin of the 95 GeV excess?</span><div class="meta">S.&nbsp;Ashanujjaman, <span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, B.&nbsp;Mellado, A.&nbsp;Mulaudzi</div><div class="detail"><span class="muted">Phys. Rev. D <b>108</b>, L091704 (2023)</span></div><div class="links"><a href="https://arxiv.org/abs/2306.15722">arXiv:2306.15722</a> <a href="https://doi.org/10.1103/PhysRevD.108.L091704">DOI</a> <a href="https://inspirehep.net/literature/2672557">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[16]<br>2023</div><div class="body"><span class="title">Asymmetric di-Higgs signals of the next-to-minimal 2HDM with a <i>U</i>(1) symmetry</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, A.&nbsp;Crivellin, S.&nbsp;Iguro, T.&nbsp;Kitahara</div><div class="detail"><span class="muted">Phys. Rev. D <b>108</b>, 075011 (2023)</span></div><div class="links"><a href="https://arxiv.org/abs/2303.11351">arXiv:2303.11351</a> <a href="https://doi.org/10.1103/PhysRevD.108.075011">DOI</a> <a href="https://inspirehep.net/literature/2644520">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="fi soft"><div class="rail">[15]<br>2023</div><div class="body"><span class="title">Multiple Mellin-Barnes integrals with straight contours</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot</div><div class="detail"><span class="muted">Phys. Rev. D <b>107</b>, 016007 (2023)</span></div><div class="links"><a href="https://arxiv.org/abs/2212.11839">arXiv:2212.11839</a> <a href="https://doi.org/10.1103/PhysRevD.107.016007">DOI</a> <a href="https://inspirehep.net/literature/2617451">INSPIRE</a> <a href="https://github.com/SumitBanikGit/MBConicHulls">Code</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag soft">Software</span></span></div></div></div>
-<div class="entry pub" data-topic="fi soft"><div class="rail">[14]<br>2023</div><div class="body"><span class="title">FeynGKZ: a Mathematica package for solving Feynman integrals using GKZ hypergeometric systems</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Bera, S.&nbsp;Datta</div><div class="detail"><span class="muted">Comput. Phys. Commun. <b>287</b>, 108699 (2023)</span></div><div class="links"><a href="https://arxiv.org/abs/2211.01285">arXiv:2211.01285</a> <a href="https://doi.org/10.1016/j.cpc.2023.108699">DOI</a> <a href="https://inspirehep.net/literature/2175571">INSPIRE</a> <a href="https://github.com/anant-group/FeynGKZ">Code</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag soft">Software</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[13]<br>2023</div><div class="body"><span class="title">Method of brackets: revisiting a technique for calculating Feynman integrals and certain definite integrals</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot, T.&nbsp;Pathak</div><div class="detail"><span class="muted">Phys. Rev. D <b>108</b>, 085001 (2023)</span></div><div class="links"><a href="https://arxiv.org/abs/2112.09679">arXiv:2112.09679</a> <a href="https://doi.org/10.1103/PhysRevD.108.085001">DOI</a> <a href="https://inspirehep.net/literature/1992936">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="fi soft"><div class="rail">[12]<br>2021</div><div class="body"><span class="title">Multiple series representations of <i>N</i>-fold Mellin-Barnes integrals</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot, S.&nbsp;Ghosh</div><div class="detail"><span class="muted">Phys. Rev. Lett. <b>127</b>, 151601 (2021)</span></div><div class="links"><a href="https://arxiv.org/abs/2012.15108">arXiv:2012.15108</a> <a href="https://doi.org/10.1103/PhysRevLett.127.151601">DOI</a> <a href="https://inspirehep.net/literature/1838822">INSPIRE</a> <a href="https://github.com/SumitBanikGit/MBConicHulls">Code</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag soft">Software</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[11]<br>2021</div><div class="body"><span class="title">Massive one-loop conformal Feynman integrals and quadratic transformations of multiple hypergeometric series</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot, S.&nbsp;Ghosh</div><div class="detail"><span class="muted">Phys. Rev. D <b>103</b>, 096008 (2021)</span></div><div class="links"><a href="https://arxiv.org/abs/2012.15646">arXiv:2012.15646</a> <a href="https://doi.org/10.1103/PhysRevD.103.096008">DOI</a> <a href="https://inspirehep.net/literature/1838883">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[10]<br>2020</div><div class="body"><span class="title">Double box and hexagon conformal Feynman integrals</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot, S.&nbsp;Ghosh</div><div class="detail"><span class="muted">Phys. Rev. D <b>102</b>, 091901 (2020)</span></div><div class="links"><a href="https://arxiv.org/abs/2007.08360">arXiv:2007.08360</a> <a href="https://doi.org/10.1103/PhysRevD.102.091901">DOI</a> <a href="https://inspirehep.net/literature/1807471">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[9]<br>2019</div><div class="body"><span class="title">Quadratic and quartic integrals using the method of brackets</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Datta, T.&nbsp;Pathak</div><div class="detail"><span class="muted">Scientia <b>29</b>, 45 (2019)</span></div><div class="links"><a href="https://arxiv.org/abs/1909.00962">arXiv:1909.00962</a> <a href="https://inspirehep.net/literature/1752370">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<h3 class="sect" data-group="proceedings">Conference proceedings</h3>
-<div class="entry pub" data-topic="fi"><div class="rail">[8]<br>2026</div><div class="body"><span class="title">Automated computation of multiple Mellin-Barnes integrals having polygamma functions in their integrand</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot</div><div class="detail"><span class="muted">Acta Phys. Pol. B Proc. Suppl. <b>19</b>, 2-A8 (2026)</span> <span class="sep">·</span> MTTD 2025</div><div class="links"><a href="https://doi.org/10.5506/APhysPolBSupp.19.2-A8">DOI</a> <a href="https://inspirehep.net/literature/3153391">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[7]<br>2026</div><div class="body"><span class="title">Indications for new Higgs bosons</span><div class="meta">A.&nbsp;Crivellin, S.&nbsp;Ashanujjaman, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;P.&nbsp;Maharathy, G.&nbsp;Coloretti</div><div class="detail"><span class="muted">PoS CORFU2025, 064</span> <span class="sep">·</span> Corfu Summer Institute 2025</div><div class="links"><a href="https://arxiv.org/abs/2605.04233">arXiv:2605.04233</a> <a href="https://doi.org/10.22323/1.509.0064">DOI</a> <a href="https://inspirehep.net/literature/3152377">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[6]<br>2025</div><div class="body"><span class="title">New Higgses at the electroweak scale and differential <i>t</i><span class="ov"><i>t</i></span> distributions</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, S.&nbsp;Bhattacharya, B.&nbsp;Mellado</div><div class="detail"><span class="muted">PoS DIS2024, 125</span> <span class="sep">·</span> DIS 2024</div><div class="links"><a href="https://doi.org/10.22323/1.469.0125">DOI</a> <a href="https://inspirehep.net/literature/2865718">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[5]<br>2024</div><div class="body"><span class="title">Analytic evaluation of multiple Mellin-Barnes integrals</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot</div><div class="detail"><span class="muted">PoS LL2024, 039</span> <span class="sep">·</span> Loops and Legs 2024</div><div class="links"><a href="https://arxiv.org/abs/2407.20120">arXiv:2407.20120</a> <a href="https://doi.org/10.22323/1.467.0039">DOI</a> <a href="https://inspirehep.net/literature/2811746">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="fi soft"><div class="rail">[4]<br>2024</div><div class="body"><span class="title">Automated evaluation of Feynman integrals using GKZ hypergeometric systems</span><div class="meta">B.&nbsp;Ananthanarayan, <span class="me">S.&nbsp;Banik</span>, S.&nbsp;Bera, S.&nbsp;Datta</div><div class="detail"><span class="muted">Springer Proc. Phys. <b>304</b>, 124 (2024)</span> <span class="sep">·</span> DAE-BRNS HEP Symposium</div><div class="links"><a href="https://doi.org/10.1007/978-981-97-0289-3_26">DOI</a> <a href="https://inspirehep.net/literature/2809580">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span><span class="tag soft">Software</span></span></div></div></div>
-<div class="entry pub" data-topic="fi"><div class="rail">[3]<br>2024</div><div class="body"><span class="title">Geometrical methods for the analytic evaluation of multiple Mellin-Barnes integrals</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, S.&nbsp;Friot</div><div class="detail"><span class="muted">Acta Phys. Pol. B Proc. Suppl. <b>17</b>, 2-A12 (2024)</span> <span class="sep">·</span> MTTD 2023</div><div class="links"><a href="https://arxiv.org/abs/2402.04174">arXiv:2402.04174</a> <a href="https://doi.org/10.5506/APhysPolBSupp.17.2-A12">DOI</a> <a href="https://inspirehep.net/literature/2755993">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<div class="entry pub" data-topic="pheno"><div class="rail">[2]<br>2023</div><div class="body"><span class="title">Differential <i>eμbb</i> cross-sections and new Higgses at the electroweak scale</span><div class="meta"><span class="me">S.&nbsp;Banik</span>, G.&nbsp;Coloretti, A.&nbsp;Crivellin, B.&nbsp;Mellado</div><div class="detail"><span class="muted">TOP 2023 proceedings</span> <span class="sep">·</span> 16th Int. Workshop on Top Quark Physics</div><div class="links"><a href="https://arxiv.org/abs/2312.01458">arXiv:2312.01458</a> <a href="https://inspirehep.net/literature/2729959">INSPIRE</a> <span class="tags"><span class="tag pheno">Phenomenology</span></span></div></div></div>
-<h3 class="sect" data-group="thesis">Thesis</h3>
-<div class="entry pub" data-topic="fi"><div class="rail">[1]<br>2022</div><div class="body"><span class="title">On hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals with applications</span><div class="meta"><span class="me">S.&nbsp;Banik</span></div><div class="detail"><span class="muted">PhD thesis, Indian Institute of Science, Bengaluru (2022)</span></div><div class="links"><a href="https://inspirehep.net/literature/2614373">INSPIRE</a> <span class="tags"><span class="tag fi">Feynman integrals</span></span></div></div></div>
-<button class="pub-more" type="button">Show all 30 publications</button>
-</section>
-
-<section class="chapter" id="software">
-<h2 class="chapter-title">Software</h2>
-<p class="prose">Open-source <i>Mathematica</i> packages I have developed with my collaborators.</p>
-<div class="cards">
-<div class="card"><h4>MBConicHulls</h4><p>Analytic evaluation of <i>N</i>-fold Mellin-Barnes integrals as (multivariable) series, using conic hulls and triangulations of point configurations.</p><div class="links"><a href="https://github.com/SumitBanikGit/MBConicHulls">GitHub</a> <a href="https://arxiv.org/abs/2012.15108">arXiv:2012.15108</a></div></div>
-<div class="card"><h4>FeynGKZ</h4><p>Solving Feynman integrals via Gel’fand-Kapranov-Zelevinsky hypergeometric systems, producing series solutions valid in different kinematic regions.</p><div class="links"><a href="https://github.com/anant-group/FeynGKZ">GitHub</a> <a href="https://arxiv.org/abs/2211.01285">arXiv:2211.01285</a></div></div>
-<div class="card"><h4>HyperPrecision</h4><p>High-precision numerical evaluation of multivariate hypergeometric functions, including outside their region of convergence.</p><div class="links"><a href="https://github.com/HyperPrecision/HyperPrecision">GitHub</a> <a href="https://arxiv.org/abs/2605.30216">arXiv:2605.30216</a></div></div>
-</div>
-</section>
-
-<section class="chapter" id="talks">
-<h2 class="chapter-title">Talks</h2>
-<div class="talk-cards"><article class="talk-card"><div class="tc-top"><span>2026</span><span>Geneva</span></div><h4 class="tc-title">“Algorithms for analytic and numerical evaluation of multiple Mellin-Barnes integrals”</h4><div class="tc-event">FCC Precision Calculations WG Meeting, CERN</div><div class="tc-note">Invited by J. Gluza and M. Zaro</div></article>
-<article class="talk-card"><div class="tc-top"><span>2026</span><span>Menlo Park</span></div><h4 class="tc-title">“Geometrical techniques to compute Feynman integrals”</h4><div class="tc-event">EPP Theory Seminar, SLAC &amp; Stanford University</div></article>
-<article class="talk-card"><div class="tc-top"><span>2025</span><span>Berlin</span></div><h4 class="tc-title">“Analytic evaluation of Feynman integrals using the Mellin-Barnes representation”</h4><div class="tc-event">New Ways to Higher Points, Humboldt-Universität zu Berlin</div><div class="tc-note">Invited by B. Eden</div></article>
-<article class="talk-card"><div class="tc-top"><span>2025</span><span>Warsaw</span></div><h4 class="tc-title">“Indications for new Higgs bosons in associated di-photon searches”</h4><div class="tc-event">Scalars 2025, University of Warsaw</div></article>
-<article class="talk-card"><div class="tc-top"><span>2025</span><span>Bonn</span></div><h4 class="tc-title">“Algorithms for analytic evaluation of Feynman integrals using the MB representation”</h4><div class="tc-event">Amplitudes Seminar Series (Bonn)</div><div class="tc-note">Invited by F. Loebbert and C. Duhr</div></article>
-<article class="talk-card"><div class="tc-top"><span>2024</span><span>Kathmandu</span></div><h4 class="tc-title">“Accumulating evidence for new Higgs bosons at the LHC”</h4><div class="tc-event">BCVSPIN, Tribhuvan &amp; Kathmandu University</div></article></div>
-<details class="more"><summary>Show 25 earlier talks</summary>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Karlsruhe</span><span class="title">“Accumulating evidence for new Higgs bosons from associated di-photon searches”</span><div class="detail">Particle Physics Seminar, KIT</div><div class="meta">Hosted by U. Nierste</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Uppsala</span><span class="title">“Indications for new Higgs bosons in associated di-photon searches”</span><div class="detail">HIGGS 2024, Uppsala University</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Charlottesville</span><span class="title">“Accumulating evidence for new Higgs bosons from associated di-photon searches”</span><div class="detail">HEP Seminar, University of Virginia</div><div class="meta">Hosted by J. Heeck</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Cincinnati</span><span class="title">“Accumulating evidence for new Higgs bosons from associated di-photon searches”</span><div class="detail">HEP Seminar, University of Cincinnati</div><div class="meta">Hosted by J. Brod</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Pittsburgh</span><span class="title">“Accumulating evidence for new Higgs bosons from associated di-photon searches”</span><div class="detail">Pitt PACC Seminar, University of Pittsburgh</div><div class="meta">Hosted by T. Han and A. Bhoonah</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Paris</span><span class="title">“Hints for new Higgs bosons in associated di-photon production”</span><div class="detail">3rd ECFA Workshop on e<sup>+</sup>e<sup>−</sup> Higgs, Top &amp; Electroweak Factories</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Zürich</span><span class="title">“Hints for new Higgs bosons at the LHC”</span><div class="detail">SPS Annual Meeting (CHIPP)</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Lisbon</span><span class="title">“Accumulating evidence for new Higgs bosons at the LHC”</span><div class="detail">Workshop on Multi-Higgs Models</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Zürich</span><span class="title">“Recent progress in evaluating scalar Feynman integrals”</span><div class="detail">Theoretical Particle Physics Journal Club, UZH</div><div class="meta">Invited by O. Lara Crosas, C. Savoini and M. Pesut</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Villigen</span><span class="title">“Geometrical approaches to evaluate Feynman integrals”</span><div class="detail">LTP(izza)hD Seminar, Paul Scherrer Institut</div><div class="meta">Invited by S. Kollatzsch and T. D. Hume</div></div></div>
-<div class="entry"><div class="rail">2024</div><div class="body"><span class="where">Wittenberg</span><span class="title">“Analytic evaluation of multiple Mellin-Barnes integrals”</span><div class="detail">Loops and Legs in Quantum Field Theory 2024</div></div></div>
-<div class="entry"><div class="rail">2023</div><div class="body"><span class="where">Chicago</span><span class="title">“Hints for new Higgses at the electroweak scale”</span><div class="detail">HEP Group Lunch Seminar, University of Chicago &amp; Argonne</div><div class="meta">Hosted by C. Wagner and D. Miller</div></div></div>
-<div class="entry"><div class="rail">2023</div><div class="body"><span class="where">Traverse City</span><span class="title">“Uncovering new Higgses in the LHC analyses of differential <i>t</i><span class="ov"><i>t</i></span> cross sections”</span><div class="detail">16th Int. Workshop on Top Quark Physics (TOP 2023)</div></div></div>
-<div class="entry"><div class="rail">2023</div><div class="body"><span class="where">Warsaw</span><span class="title">“Asymmetric di-Higgs signals”</span><div class="detail">Scalars 2023, University of Warsaw</div></div></div>
-<div class="entry"><div class="rail">2023</div><div class="body"><span class="where">Warsaw</span><span class="title">“Triplet explanation of the 95 GeV excess”</span><div class="detail">Scalars 2023, University of Warsaw</div></div></div>
-<div class="entry"><div class="rail">2023</div><div class="body"><span class="where">Sursee</span><span class="title">“Asymmetric di-Higgs signals of the N2HDM”</span><div class="detail">CHIPP/CHART Workshop on Sustainability in Particle Physics</div></div></div>
-<div class="entry"><div class="rail">2023</div><div class="body"><span class="where">Bhubaneswar</span><span class="title">“Evaluating Feynman integrals using <i>N</i>-fold Mellin-Barnes integrals”</span><div class="detail">SPS HEP Seminar, NISER</div><div class="meta">Invited by N. Rana</div></div></div>
-<div class="entry"><div class="rail">2022</div><div class="body"><span class="where">Bengaluru</span><span class="title">“Triangulations, Mellin-Barnes and Feynman integrals”</span><div class="detail">CHEP In-House Symposium, Indian Institute of Science</div></div></div>
-<div class="entry"><div class="rail">2022</div><div class="body"><span class="where">Mainz</span><span class="title">“Hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals”</span><div class="detail">Elliptic Integrals in Fundamental Physics, MITP</div><div class="meta">Invited by J. Broedel, E. Chaubey, C. Duhr and S. Weinzierl</div></div></div>
-<div class="entry"><div class="rail">2022</div><div class="body"><span class="where">Zürich</span><span class="title">“Mellin-Barnes, conic hulls and triangulations”</span><div class="detail">Tropical and Convex Geometry and Feynman Integrals</div><div class="meta">Invited by M. Borinsky and E. Panzer</div></div></div>
-<div class="entry"><div class="rail">2022</div><div class="body"><span class="where">Prague</span><span class="title">“Multi-fold Mellin-Barnes with applications to Feynman integrals”</span><div class="detail">Amplitudes Summer School</div></div></div>
-<div class="entry"><div class="rail">2021</div><div class="body"><span class="where">Berlin</span><span class="title">“<i>N</i>-fold Mellin-Barnes integrals and applications to conformal Feynman integrals and multivariable hypergeometric functions”</span><div class="detail">Joint Bonn-Berlin Seminar (online)</div><div class="meta">Invited by C. Duhr and F. Loebbert</div></div></div>
-<div class="entry"><div class="rail">2021</div><div class="body"><span class="where">Hyderabad</span><span class="title">“Feynman integrals, hypergeometric functions and Mellin-Barnes representation”</span><div class="detail">HEP Remote Video Seminar Series (online)</div><div class="meta">Invited by A. Tripathi</div></div></div>
-<div class="entry"><div class="rail">2021</div><div class="body"><span class="where">Bengaluru</span><span class="title">“<i>N</i>-fold Mellin-Barnes representation and Feynman integrals”</span><div class="detail">CHEP In-House Symposium, Indian Institute of Science</div></div></div>
-<div class="entry"><div class="rail">2020</div><div class="body"><span class="where">Bengaluru</span><span class="title">“Decoding the divergences of the method of brackets”</span><div class="detail">CHEP In-House Symposium, Indian Institute of Science</div></div></div>
-</details>
-</section>
-
-<section class="chapter" id="funding">
-<h2 class="chapter-title">Research Funding</h2>
-<h3 class="sect">Postdoctoral fellowships and grants</h3><div class="funds two"><article class="fund"><div class="fund-top"><span>2026</span><span>Germany</span></div><h4 class="fund-name">Walter Benjamin Fellowship</h4><div class="fund-agency">Deutsche Forschungsgemeinschaft (DFG)</div><div class="fund-amount">€225,334</div><div class="fund-meta">≈ $262,300 <span class="sep">·</span> 2 years</div><div class="fund-tags"><span class="tag">awarded</span> <span class="tag grey">declined</span></div></article><article class="fund"><div class="fund-top"><span>2025</span><span>Switzerland</span></div><h4 class="fund-name">Postdoc.Mobility Fellowship</h4><div class="fund-agency">Swiss National Science Foundation (SNSF)</div><div class="fund-amount">CHF 136,000</div><div class="fund-meta">≈ $173,100 <span class="sep">·</span> 2 years</div><div class="fund-tags"><span class="tag">awarded</span></div></article><article class="fund"><div class="fund-top"><span>2025</span><span>Germany</span></div><h4 class="fund-name">Humboldt Postdoctoral Research Fellowship</h4><div class="fund-agency">Alexander von Humboldt Foundation</div><div class="fund-amount">€72,000</div><div class="fund-meta">≈ $83,800 <span class="sep">·</span> 2 years</div><div class="fund-tags"><span class="tag">awarded</span> <span class="tag grey">declined</span></div></article><article class="fund"><div class="fund-top"><span>2024</span><span>Switzerland</span></div><h4 class="fund-name">UZH Postdoc Grant</h4><div class="fund-agency">University of Zürich</div><div class="fund-amount">CHF 58,560</div><div class="fund-meta">≈ $74,500 <span class="sep">·</span> 6 months</div><div class="fund-tags"><span class="tag">awarded</span></div></article></div><h3 class="sect">Doctoral and master's fellowships</h3><div class="funds three"><article class="fund"><div class="fund-top"><span>2021</span><span>India</span></div><h4 class="fund-name">Senior Research Fellowship</h4><div class="fund-agency">Ministry of Human Resource Development</div><div class="fund-amount">₹1,260,000</div><div class="fund-meta">≈ $13,100 <span class="sep">·</span> 3 years</div><div class="fund-tags"><span class="tag">awarded</span></div></article><article class="fund"><div class="fund-top"><span>2019</span><span>India</span></div><h4 class="fund-name">Junior Research Fellowship</h4><div class="fund-agency">Ministry of Human Resource Development</div><div class="fund-amount">₹744,000</div><div class="fund-meta">≈ $7,700 <span class="sep">·</span> 2 years</div><div class="fund-tags"><span class="tag">awarded</span></div></article><article class="fund"><div class="fund-top"><span>2017</span><span>India</span></div><h4 class="fund-name">Master’s Fellowship</h4><div class="fund-agency">Ministry of Human Resource Development</div><div class="fund-amount">₹384,000</div><div class="fund-meta">≈ $4,000 <span class="sep">·</span> 2 years</div><div class="fund-tags"><span class="tag">awarded</span></div></article></div>
-</section>
-
-<section class="chapter" id="teaching">
-<h2 class="chapter-title">Teaching &amp; Mentoring</h2>
-<h3 class="sect">Teaching</h3>
-<div class="courses"><article class="course"><div class="kicker">2025 <span class="sep">·</span> Universität Zürich</div><h4 class="course-title">Proseminar Theoretische Physik</h4><div class="course-role">Teaching Assistant</div><p>Guided students in preparing seminar talks on a range of physics topics and assessed their weekly presentations.</p></article><article class="course"><div class="kicker">2024 <span class="sep">·</span> Universität Zürich</div><h4 class="course-title">Flavour Physics</h4><div class="course-role">Teaching Assistant</div><p>Taught weekly one-hour tutorials and assisted with the final oral examination.</p></article><article class="course"><div class="kicker">2023 <span class="sep">·</span> ETH Zürich</div><h4 class="course-title">Quantum Field Theory I</h4><div class="course-role">Teaching Assistant</div><p>Taught weekly two-hour tutorials and graded the final written examination.</p></article><article class="course"><div class="kicker">2020 <span class="sep">·</span> Indian Institute of Science</div><h4 class="course-title">Introductory Physics II</h4><div class="course-role">Teaching Assistant</div><p>Supervised weekly three-hour laboratory sessions, taught tutorials, and conducted and graded the final examinations.</p></article></div>
-<h3 class="sect">Supervision</h3>
-<div class="students"><article class="student"><div class="kicker">2025 <span class="sep">·</span> Master’s student</div><h4 class="student-name">Corentin Eggenspieler</h4><div class="student-inst">ENS Paris-Saclay</div><p class="student-thesis"><span>Thesis</span><i>Novel computation techniques for perturbative quantum field theory</i></p></article><article class="student"><div class="kicker">2024 <span class="sep">·</span> Bachelor’s student</div><h4 class="student-name">Banurega Shanmuganathan</h4><div class="student-inst">Universität Zürich</div><p class="student-thesis"><span>Thesis</span><i>Compendium of two-body decays</i></p></article><article class="student"><div class="kicker">2022 <span class="sep">·</span> Master’s student</div><h4 class="student-name">Mathieu Ferey</h4><div class="student-inst">Université Paris-Saclay</div><p class="student-thesis"><span>Thesis</span><i>Computation of Feynman diagrams and their transformation into Mellin-Barnes integrals for quantum field theory</i></p></article></div>
-</section>
-
-<section class="chapter" id="refereeing">
-<h2 class="chapter-title">Refereeing</h2>
-<p class="muted">Referee for the following journals.</p>
-<div class="journals">
-<a class="journal" href="https://jhep.sissa.it/"><span class="j-name">Journal of High Energy Physics</span><span class="j-pub">Springer</span><span class="j-go" aria-hidden="true">→</span></a>
-<a class="journal" href="https://www.sciencedirect.com/journal/physics-letters-b"><span class="j-name">Physics Letters B</span><span class="j-pub">Elsevier</span><span class="j-go" aria-hidden="true">→</span></a>
-<a class="journal" href="https://www.worldscientific.com/worldscinet/mpla"><span class="j-name">Modern Physics Letters A</span><span class="j-pub">World Scientific</span><span class="j-go" aria-hidden="true">→</span></a>
-<a class="journal" href="https://www.emis.de/journals/SIGMA/"><span class="j-name">SIGMA (Symmetry, Integrability and Geometry: Methods and Applications)</span><span class="j-pub">Open Access</span><span class="j-go" aria-hidden="true">→</span></a>
-<a class="journal" href="https://www.sciencedirect.com/journal/next-research"><span class="j-name">Next Research</span><span class="j-pub">Elsevier</span><span class="j-go" aria-hidden="true">→</span></a>
-<a class="journal" href="https://www.mdpi.com/journal/mathematics"><span class="j-name">Mathematics</span><span class="j-pub">MDPI</span><span class="j-go" aria-hidden="true">→</span></a>
-</div>
-</section>
-
-<section class="chapter" id="cv">
-<h2 class="chapter-title">Curriculum Vitae</h2>
-<p><a class="button" href="assets/cv/Sumit_Banik_CV.pdf">Download full CV (PDF)</a></p>
-
-<h3 class="sect">Positions</h3>
-<div class="positions work">
-<article class="blk"><div class="blk-logos"><img src="assets/logos/stanford.png?v=6abd17d5" alt="Stanford University" loading="lazy"><img src="assets/logos/slac.png?v=6abd17d5" alt="SLAC" loading="lazy"></div><div class="blk-body"><div class="blk-when">Since Jan 2026</div><h4 class="blk-title">Postdoctoral Researcher</h4><div class="blk-org"><a href="https://theory.slac.stanford.edu/">SLAC National Accelerator Laboratory</a> &amp; <a href="https://www.stanford.edu/">Stanford&nbsp;University</a></div><p class="blk-meta">Fundamental Physics Directorate</p><div class="blk-where">California, USA</div></div></article>
-<article class="blk"><div class="blk-logos"><img src="assets/logos/uzh.png?v=6abd17d5" alt="University of Zürich" loading="lazy"><img src="assets/logos/psi.png?v=6abd17d5" alt="Paul Scherrer Institut" loading="lazy"></div><div class="blk-body"><div class="blk-when">Mar 2023 to Dec 2025</div><h4 class="blk-title">Postdoctoral Researcher</h4><div class="blk-org"><a href="https://www.physik.uzh.ch/">University of Zürich</a> &amp; <a href="https://www.psi.ch/">Paul Scherrer Institut</a></div><p class="blk-meta">Research and teaching in theoretical particle physics</p><div class="blk-where">Zürich, Switzerland</div></div></article>
-</div>
-
-<h3 class="sect">Education</h3>
-<div class="positions study">
-<article class="blk"><div class="blk-logos"><img src="assets/logos/iisc.png?v=6abd1a9e" alt="Indian Institute of Science" loading="lazy"></div><div class="blk-body"><div class="blk-when">Aug 2019 to Feb 2023</div><h4 class="blk-title">PhD in High Energy Physics</h4><div class="blk-org"><a href="https://chep.iisc.ac.in/">Centre for High Energy Physics</a>, Indian Institute of Science</div><p class="blk-note">Thesis: <a href="https://inspirehep.net/literature/2614373"><i>On hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals with applications</i></a></p><dl class="blk-facts"><div><dt>Supervisor</dt><dd>Prof.&nbsp;B.&nbsp;Ananthanarayan</dd></div><div><dt>Defended</dt><dd>December 2022</dd></div><div><dt>Awarded</dt><dd>March 2023</dd></div></dl><div class="blk-where">Bengaluru, India</div></div></article>
-<article class="blk"><div class="blk-logos"><img src="assets/logos/iisc.png?v=6abd1a9e" alt="Indian Institute of Science" loading="lazy"></div><div class="blk-body"><div class="blk-when">Aug 2017 to Jul 2019</div><h4 class="blk-title">MS in Physics</h4><div class="blk-org">Department of Physical Sciences, Indian Institute of Science</div><dl class="blk-facts"><div><dt>Supervisor</dt><dd>Prof.&nbsp;B.&nbsp;Ananthanarayan</dd></div><div><dt>Awarded</dt><dd>March 2023, with the PhD</dd></div></dl><div class="blk-where">Bengaluru, India</div></div></article>
-<article class="blk"><div class="blk-logos"><img src="assets/logos/calcutta.png?v=6abd17d5" alt="University of Calcutta" loading="lazy"></div><div class="blk-body"><div class="blk-when">Aug 2014 to Jul 2017</div><h4 class="blk-title">BSc in Physics</h4><div class="blk-org">University of Calcutta</div><dl class="blk-facts"><div><dt>Awarded</dt><dd>June 2017</dd></div></dl><div class="blk-where">Kolkata, India</div></div></article>
-</div>
-
-<h3 class="sect">Research interests</h3>
-<div class="interests">
-  <div class="interest pheno">
-    <div class="kicker">Particle phenomenology</div>
-    <ul>
-      <li>Collider phenomenology</li>
-      <li>Beyond the Standard Model</li>
-      <li>Higgs physics</li>
-      <li>Effective field theory</li>
-    </ul>
-  </div>
-  <div class="interest fi">
-    <div class="kicker">Mathematical &amp; computational methods</div>
-    <ul>
-      <li>Multi-loop Feynman integrals</li>
-      <li>Hypergeometric functions</li>
-      <li>Mellin-Barnes representation</li>
-      <li>Computer algebra</li>
-    </ul>
-  </div>
-</div>
-
-<h3 class="sect">Computing</h3>
-<div class="toolkit">
-<div class="tool"><div class="kicker">Programming</div><ul><li>Wolfram Language</li><li>Python</li><li>C++</li><li>Fortran</li><li>Java</li></ul></div>
-<div class="tool"><div class="kicker">Event generation &amp; simulation</div><ul><li>MadGraph</li><li>Pythia</li><li>Delphes</li></ul></div>
-<div class="tool"><div class="kicker">Analysis</div><ul><li>ROOT</li><li>MadAnalysis</li></ul></div>
-<div class="tool"><div class="kicker">Model building &amp; spectra</div><ul><li>FeynRules</li><li>SARAH</li><li>SPheno</li></ul></div>
-<div class="tool"><div class="kicker">Diagrams &amp; amplitudes</div><ul><li>FeynArts</li><li>FeynCalc</li></ul></div>
-<div class="tool"><div class="kicker">Loop integrals &amp; reduction</div><ul><li>FIESTA</li><li>AMBRE</li><li>MB</li><li>Kira</li><li>FIRE</li><li>TOPCOM</li></ul></div>
-</div>
-
-<h3 class="sect">Languages</h3>
-<div class="tongues">
-<div class="tongue"><span class="t-name">English</span><span class="t-level">Professional</span></div>
-<div class="tongue"><span class="t-name">Bengali</span><span class="t-level">Native</span></div>
-<div class="tongue"><span class="t-name">Hindi</span><span class="t-level">Fluent</span></div>
-<div class="tongue"><span class="t-name">German</span><span class="t-level">Beginner</span></div>
+<section class="chapter" id="explore">
+<h2 class="chapter-title">Explore</h2>
+<div class="explore">
+<a class="ex-card" href="research.html"><span class="kicker">Research</span><span class="ex-title">Feynman integrals, EFTs and Higgs physics</span><span class="ex-meta">3 research themes · 3 software packages</span><span class="ex-go" aria-hidden="true">→</span></a>
+<a class="ex-card" href="publications.html"><span class="kicker">Publications</span><span class="ex-title">Articles, proceedings and thesis</span><span class="ex-meta">22 journal articles · 7 proceedings</span><span class="ex-go" aria-hidden="true">→</span></a>
+<a class="ex-card" href="talks.html"><span class="kicker">Talks</span><span class="ex-title">Seminars and conference talks</span><span class="ex-meta">31 talks since 2020</span><span class="ex-go" aria-hidden="true">→</span></a>
+<a class="ex-card" href="funding.html"><span class="kicker">Funding</span><span class="ex-title">Fellowships and grants</span><span class="ex-meta">7 fellowships and grants</span><span class="ex-go" aria-hidden="true">→</span></a>
+<a class="ex-card" href="teaching.html"><span class="kicker">Teaching</span><span class="ex-title">Courses and supervision</span><span class="ex-meta">4 courses · 3 students</span><span class="ex-go" aria-hidden="true">→</span></a>
+<a class="ex-card" href="cv.html"><span class="kicker">CV</span><span class="ex-title">Curriculum vitae</span><span class="ex-meta">Positions, education and skills</span><span class="ex-go" aria-hidden="true">→</span></a>
 </div>
 </section>
 
@@ -410,7 +204,7 @@ Collider at CERN.</p>
   /* ---------- scroll reveal (staggered within each group) ---------- */
   var sel = ['.chapter-title', '.epigraph', '.prose > p', '.portrait-frame', '.statement', '.about-links', '.journey', '.news li', '.stat',
              '.theme', '.pick', '.card', '.pub', '.talk-card', '.fund', '.course', '.student',
-             '.journal', '.blk', '.interest', '.tool', '.tongues', '.contact-card', '.filters', '.sect'];
+             '.journal', '.blk', '.interest', '.tool', '.tongues', '.contact-card', '.filters', '.sect', '.ex-card'];
   var items = document.querySelectorAll(sel.join(','));
   if (!reduce && 'IntersectionObserver' in window) {
     var seen = new WeakMap();
@@ -449,28 +243,16 @@ Collider at CERN.</p>
     Array.prototype.forEach.call(counters, function (el) { co.observe(el); });
   }
 
-  /* ---------- navigation highlight, progress bar, back-to-top ---------- */
-  var links = document.querySelectorAll('.navbar nav a');
-  var chapters = Array.prototype.slice.call(document.querySelectorAll('main .chapter'));
-  var nav = document.querySelector('.navbar nav'), lastId;
+  /* ---------- progress bar, back-to-top, current page in the menu ---------- */
+  var nav = document.querySelector('.navbar nav'), here = nav && nav.querySelector('.here');
+  if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {
+    nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
+  }
   var bar = document.querySelector('.progress'), top = document.querySelector('.to-top');
   function update() {
-    var doc = document.documentElement, max = doc.scrollHeight - window.innerHeight;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
     if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
     if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9);
-    var line = window.scrollY + window.innerHeight * 0.35, current = null;
-    chapters.forEach(function (c) { if (c.offsetTop <= line) current = c; });
-    if (window.innerHeight + window.scrollY >= doc.scrollHeight - 4) current = chapters[chapters.length - 1];
-    var id = current ? current.id : null;
-    if (id === lastId) return;
-    lastId = id;
-    links.forEach(function (a) {
-      var on = !!id && a.getAttribute('href') === '#' + id;
-      a.classList.toggle('here', on);
-      if (on && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {
-        nav.scrollTo({ left: Math.max(0, a.offsetLeft - 24), behavior: 'smooth' });
-      }
-    });
   }
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);

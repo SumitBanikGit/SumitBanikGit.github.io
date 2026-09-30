@@ -712,6 +712,124 @@ def jsonld():
     }, ensure_ascii=False)
 
 
+# --------------------------------------------------------------------------
+# Pages. Each page reuses blocks of the rendered template: the home page gets
+# the full hero, the others a compact page header. Every page ends with the
+# contact band and the footer.
+# --------------------------------------------------------------------------
+PAGES = [
+    # file,              menu label,     page title,              subtitle,                                                         sections
+    ("index.html",        None,           None,                    None,                                                             ["about", "explore"]),
+    ("research.html",     "Research",     "Research",              "Feynman integrals, effective field theories and physics beyond the Standard Model.", ["research", "software"]),
+    ("publications.html", "Publications", "Publications",          "Journal articles, conference proceedings and my PhD thesis.",   ["publications"]),
+    ("talks.html",        "Talks",        "Talks",                 "Invited seminars and conference talks since 2020.",             ["talks"]),
+    ("funding.html",      "Funding",      "Research Funding",      "Fellowships and grants awarded for my research.",               ["funding"]),
+    ("teaching.html",     "Teaching",     "Teaching and Mentoring", "Courses I have taught and students I have supervised.",        ["teaching"]),
+    ("cv.html",           "CV",           "Curriculum Vitae",      "Positions, education, skills and service to the community.",   ["cv", "refereeing"]),
+]
+
+# Where each old in-page anchor now lives.
+LINK_MAP = {"#about": "index.html#about", "#research": "research.html", "#publications": "publications.html",
+            "#software": "research.html#software", "#talks": "talks.html", "#funding": "funding.html",
+            "#teaching": "teaching.html", "#refereeing": "cv.html#refereeing", "#cv": "cv.html"}
+
+
+def render_explore(n_articles, n_proc):
+    cards = [
+        ("research.html", "Research", "Feynman integrals, EFTs and Higgs physics", f"3 research themes · {len(SOFTWARE)} software packages"),
+        ("publications.html", "Publications", "Articles, proceedings and thesis", f"{n_articles} journal articles · {n_proc} proceedings"),
+        ("talks.html", "Talks", "Seminars and conference talks", f"{len(TALKS)} talks since {min(t[0] for t in TALKS)}"),
+        ("funding.html", "Funding", "Fellowships and grants", f"{len(FUNDING)} fellowships and grants"),
+        ("teaching.html", "Teaching", "Courses and supervision", f"{len(TEACHING)} courses · {len(SUPERVISION)} students"),
+        ("cv.html", "CV", "Curriculum vitae", "Positions, education and skills"),
+    ]
+    items = "\n".join(
+        f'<a class="ex-card" href="{href}"><span class="kicker">{kick}</span><span class="ex-title">{title}</span>'
+        f'<span class="ex-meta">{meta}</span><span class="ex-go" aria-hidden="true">→</span></a>'
+        for href, kick, title, meta in cards)
+    return ('<section class="chapter" id="explore">\n<h2 class="chapter-title">Explore</h2>\n'
+            f'<div class="explore">\n{items}\n</div>\n</section>')
+
+
+def write_pages(html, n_articles, n_proc):
+    import re
+    P = PROFILE
+    head = html[:html.index('<body id="top">')]
+    hero = html[html.index('<header class="masthead hero">'):html.index('<div class="navbar">')]
+    ticker = html[html.index('<div class="ticker"'):html.index('<main id="main"')]
+    tail = html[html.index('</main>'):]
+    sections = {m.group(1): m.group(0) for m in
+                re.finditer(r'<section class="chapter" id="([a-z]+)">.*?</section>', html, re.S)}
+    sections["explore"] = render_explore(n_articles, n_proc)
+
+    def navbar(current):
+        here = ' class="here" aria-current="page"'
+        links = "".join(f'<a href="{f}"{here if f == current else ""}>{label}</a>'
+                        for f, label, *_ in PAGES if label) + '<a href="#contact">Contact</a>'
+        return (f'<div class="navbar">\n  <div class="wrap nav-inner">\n'
+                f'    <a class="brand" href="index.html">{P["name"]}</a>\n'
+                f'    <nav aria-label="Pages">{links}</nav>\n  </div>\n</div>\n')
+
+    def page_hero(label, title, sub):
+        return (f'<header class="masthead hero page-hero">\n  <canvas class="field" aria-hidden="true"></canvas>\n'
+                f'  <div class="wrap hero-inner">\n   <div class="hero-text">\n'
+                f'    <p class="crumb"><a href="index.html">{P["name"]}</a><span aria-hidden="true">/</span>{label}</p>\n'
+                f'    <h1 class="page-title">{title}</h1>\n    <p class="page-sub">{sub}</p>\n   </div>\n'
+                f'   <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>\n  </div>\n</header>\n')
+
+    def relink(body, current):
+        for anchor, target in LINK_MAP.items():
+            file, _, frag = target.partition("#")
+            local = ("#" + frag) if frag else "#top"
+            body = body.replace(f'href="{anchor}"', f'href="{local if file == current else target}"')
+        return body
+
+    written = []
+    for file, label, title, sub, secs in PAGES:
+        url = P["url"] + ("" if file == "index.html" else file)
+        h = head
+        if file != "index.html":
+            desc = f"{title} of Sumit Banik, theoretical particle physicist at SLAC and Stanford. {sub}"
+            h = re.sub(r"<title>.*?</title>", f"<title>{title} | Sumit Banik</title>", h)
+            h = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{desc}">', h)
+            h = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{desc}">', h)
+            h = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{title} | Sumit Banik">', h)
+            h = re.sub(r'<script type="application/ld\+json">.*?</script>\n', "", h, flags=re.S)
+        h = re.sub(r'<link rel="canonical" href="[^"]*">', f'<link rel="canonical" href="{url}">', h)
+        h = re.sub(r'<meta property="og:url" content="[^"]*">', f'<meta property="og:url" content="{url}">', h)
+
+        slug = file.replace(".html", "")
+        parts = []
+        for i, s in enumerate(secs + ["contact"]):
+            block = sections[s]
+            if file != "index.html" and i == 0:           # the page header already carries the title
+                block = re.sub(r'<h2 class="chapter-title">.*?</h2>\n?', "", block, count=1, flags=re.S)
+            parts.append(block)
+        body = (f'<body id="top" class="page-{slug}">\n<a class="skip" href="#main">Skip to content</a>\n\n'
+                + (hero if file == "index.html" else page_hero(label, title, sub))
+                + navbar(file)
+                + (ticker if file == "index.html" else "")
+                + '<main id="main" class="wrap">\n\n' + "\n\n".join(parts) + "\n\n" + tail)
+        Path(file).write_text(relink(h + body, file), encoding="utf-8")
+        written.append(file)
+
+    # a friendly 404 page for mistyped addresses
+    nf = (head.replace("<title>Sumit Banik | Theoretical Particle Physics</title>", "<title>Page not found | Sumit Banik</title>")
+          + '<body id="top" class="page-404">\n' + page_hero("Not found", "Page not found",
+            "The page you are looking for does not exist. It may have moved.")
+          + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
+          '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
+          + sections["contact"] + "\n\n" + tail)
+    Path("404.html").write_text(relink(nf, "404.html"), encoding="utf-8")
+
+    # sitemap for search engines
+    urls = "".join(f"<url><loc>{P['url'] + ('' if f == 'index.html' else f)}</loc></url>" for f, *_ in PAGES)
+    Path("sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
+                                   f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>\n')
+    Path("robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {P['url']}sitemap.xml\n")
+    print(f"wrote {', '.join(written)}, 404.html, sitemap.xml  ({len(PUBS)} publications, {len(TALKS)} talks)")
+
+
 def _ver(path):
     """Short version tag from the file's modification time, so browsers never show a stale copy."""
     return format(int(Path(path).stat().st_mtime), "x")
@@ -748,8 +866,7 @@ def main():
         n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
         updated=date.today().strftime("%B %Y"), year=date.today().year,
     )
-    Path("index.html").write_text(html, encoding="utf-8")
-    print(f"wrote index.html  ({len(PUBS)} publications, {len(TALKS)} talks)")
+    write_pages(html, n_articles, n_proc)
 
 
 TEMPLATE = """<!doctype html>
@@ -1073,7 +1190,7 @@ Collider at CERN.</p>
   /* ---------- scroll reveal (staggered within each group) ---------- */
   var sel = ['.chapter-title', '.epigraph', '.prose > p', '.portrait-frame', '.statement', '.about-links', '.journey', '.news li', '.stat',
              '.theme', '.pick', '.card', '.pub', '.talk-card', '.fund', '.course', '.student',
-             '.journal', '.blk', '.interest', '.tool', '.tongues', '.contact-card', '.filters', '.sect'];
+             '.journal', '.blk', '.interest', '.tool', '.tongues', '.contact-card', '.filters', '.sect', '.ex-card'];
   var items = document.querySelectorAll(sel.join(','));
   if (!reduce && 'IntersectionObserver' in window) {{
     var seen = new WeakMap();
@@ -1112,28 +1229,16 @@ Collider at CERN.</p>
     Array.prototype.forEach.call(counters, function (el) {{ co.observe(el); }});
   }}
 
-  /* ---------- navigation highlight, progress bar, back-to-top ---------- */
-  var links = document.querySelectorAll('.navbar nav a');
-  var chapters = Array.prototype.slice.call(document.querySelectorAll('main .chapter'));
-  var nav = document.querySelector('.navbar nav'), lastId;
+  /* ---------- progress bar, back-to-top, current page in the menu ---------- */
+  var nav = document.querySelector('.navbar nav'), here = nav && nav.querySelector('.here');
+  if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
+    nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
+  }}
   var bar = document.querySelector('.progress'), top = document.querySelector('.to-top');
   function update() {{
-    var doc = document.documentElement, max = doc.scrollHeight - window.innerHeight;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
     if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
     if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9);
-    var line = window.scrollY + window.innerHeight * 0.35, current = null;
-    chapters.forEach(function (c) {{ if (c.offsetTop <= line) current = c; }});
-    if (window.innerHeight + window.scrollY >= doc.scrollHeight - 4) current = chapters[chapters.length - 1];
-    var id = current ? current.id : null;
-    if (id === lastId) return;
-    lastId = id;
-    links.forEach(function (a) {{
-      var on = !!id && a.getAttribute('href') === '#' + id;
-      a.classList.toggle('here', on);
-      if (on && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
-        nav.scrollTo({{ left: Math.max(0, a.offsetLeft - 24), behavior: 'smooth' }});
-      }}
-    }});
   }}
   window.addEventListener('scroll', update, {{ passive: true }});
   window.addEventListener('resize', update);
