@@ -1,0 +1,5 @@
+# local tooling and duplicates, not part of the site
+.claude/
+tools/__pycache__/
+CV_Publication_List.pdf
+.DS_Store
