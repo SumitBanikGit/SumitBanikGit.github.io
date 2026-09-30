@@ -228,6 +228,28 @@ TICKER = ["Feynman integrals", "Special functions", "Mellin-Barnes integrals", "
           "Renormalization group", "Higgs physics", "Collider phenomenology", "Beyond the Standard Model",
           "Computer algebra"]
 
+# Research domains on the Research page (one card each).
+DOMAINS = [
+    ("Mathematical physics",
+     "Multivariable hypergeometric functions and their analytic continuation, GKZ systems, convex geometry of conic hulls and triangulations, and the method of brackets.",
+     "Hypergeometric functions · GKZ systems · Convex geometry"),
+    ("Feynman integrals",
+     "Analytic and numerical evaluation of multi-loop and multi-scale Feynman integrals through <i>N</i>-fold Mellin-Barnes representations, including conformal and sunset integrals.",
+     "Mellin-Barnes · Conformal integrals · Multi-loop"),
+    ("Multi-Higgs physics",
+     "Extended scalar sectors such as the 2HDM, the N2HDM and Higgs triplets confronted with LHC data, the di-photon excesses near 95 and 152 GeV, and correlations with EDMs.",
+     "2HDM · Higgs triplets · LHC excesses"),
+    ("Computational tools",
+     "Open-source <i>Mathematica</i> packages for precision calculations: MBConicHulls, FeynGKZ and HyperPrecision.",
+     "Mathematica · Computer algebra · High precision"),
+    ("Effective field theory",
+     "The Standard Model effective field theory, two-loop anomalous dimensions of baryon-number-violating operators, and renormalization group evolution.",
+     "SMEFT · RG evolution · Proton decay"),
+    ("Exotic particles",
+     "Leptoquarks and new scalars beyond the Standard Model, their signatures at the LHC, and their imprint on low-energy observables.",
+     "Leptoquarks · New scalars · LHC signatures"),
+]
+
 # Papers highlighted under "Selected work" (arXiv id, one-line pitch).
 SELECTED = [
     ("pheno", "Two-loop anomalous dimensions for baryon-number-violating operators in SMEFT",
@@ -496,6 +518,12 @@ def render_pubs():
     return "\n".join(out)
 
 
+def render_domains():
+    return "\n".join(
+        f'<div class="theme d{i}"><h4>{name}</h4><p>{text}</p><div class="keys">{keys}</div></div>'
+        for i, (name, text, keys) in enumerate(DOMAINS, 1))
+
+
 def render_journey():
     out = []
     last = len(JOURNEY) - 1
@@ -741,7 +769,7 @@ LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research":
 
 def render_explore(n_articles, n_proc):
     cards = [
-        ("research.html", "Research", "Feynman integrals, EFTs and Higgs physics", f"3 research themes · {len(SOFTWARE)} software packages"),
+        ("research.html", "Research", "Feynman integrals, EFTs and Higgs physics", f"{len(DOMAINS)} research domains · {len(SOFTWARE)} software packages"),
         ("publications.html", "Publications", "Articles, proceedings and thesis", f"{n_articles} journal articles · {n_proc} proceedings"),
         ("talks.html", "Talks", "Seminars and conference talks", f"{len(TALKS)} talks since {min(t[0] for t in TALKS)}"),
         ("funding.html", "Funding", "Fellowships and grants", f"{len(FUNDING)} fellowships and grants"),
@@ -900,7 +928,7 @@ def main():
         email=P["email"], orcid=P["orcid"], inspire=P["inspire"], scholar=P["scholar"],
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_invited=n_invited,
-        pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
+        pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
@@ -1029,28 +1057,8 @@ Collider at CERN.</p>
   <figcaption>P. A. M. Dirac, 1955</figcaption>
 </figure>
 <h3 class="sect">Research domains</h3>
-<div class="themes">
-  <div class="theme">
-    <h4>Feynman integrals &amp; special functions</h4>
-    <p>Analytic evaluation of multi-loop and multi-scale Feynman integrals through
-    <i>N</i>-fold Mellin-Barnes representations, their geometry (conic hulls,
-    triangulations), GKZ hypergeometric systems and the method of brackets.</p>
-    <div class="keys">Mellin-Barnes · hypergeometric functions · conformal integrals</div>
-  </div>
-  <div class="theme pheno">
-    <h4>Higgs physics &amp; BSM phenomenology</h4>
-    <p>Extended scalar sectors (2HDM, N2HDM, Higgs triplets) confronted with LHC
-    data, including the di-photon excesses near 95 and 152 GeV, differential
-    top-quark distributions and correlations with EDMs.</p>
-    <div class="keys">collider phenomenology · new scalars · LHC anomalies</div>
-  </div>
-  <div class="theme soft">
-    <h4>EFTs &amp; computational tools</h4>
-    <p>Renormalization-group evolution in SMEFT and leptoquark models, two-loop
-    anomalous dimensions, and open-source Mathematica packages for precision
-    calculations.</p>
-    <div class="keys">SMEFT · RG evolution · computer algebra</div>
-  </div>
+<div class="themes six">
+{domains}
 </div>
 <h3 class="sect">Selected work</h3>
 <div class="picks">

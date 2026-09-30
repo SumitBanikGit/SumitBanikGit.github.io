@@ -1491,3 +1491,14 @@ main > #contact.chapter::before {
 .ev-legend .lg-n-head { fill: rgba(74, 90, 102, .95); stroke: none; }
 @media (max-width: 52rem) { .hero > .ev { display: none; } }
 @media print { .hero > .ev { display: none; } }
+
+/* Six research domains: one accent each, three across, two on tablets, one on phones */
+.themes.six { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 60rem) { .themes.six { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 40rem) { .themes.six { grid-template-columns: 1fr; } }
+.theme.d1 { --c: #7a5f2a; --bg: #f3ecd9; }   /* mathematical physics: brass */
+.theme.d2 { --c: #5a3d55; --bg: #efe7ec; }   /* Feynman integrals: aubergine */
+.theme.d3 { --c: #2f5d52; --bg: #e5eee9; }   /* multi-Higgs physics: pine */
+.theme.d4 { --c: #4a5a66; --bg: #e8ecee; }   /* computational tools: slate */
+.theme.d5 { --c: #2d5d63; --bg: #e3eeef; }   /* effective field theory: teal */
+.theme.d6 { --c: #6e2c34; --bg: #f3e8e6; }   /* exotic particles: crimson */
