@@ -726,10 +726,11 @@ PAGES = [
     ("funding.html",      "Funding",      "Research Funding",      "Fellowships and grants awarded for my research.",               ["funding"]),
     ("teaching.html",     "Teaching",     "Teaching and Mentoring", "Courses I have taught and students I have supervised.",        ["teaching"]),
     ("cv.html",           "CV",           "Curriculum Vitae",      "Positions, education, skills and service to the community.",   ["cv", "refereeing"]),
+    ("contact.html",      "Contact",      "Contact",               "Feel free to get in touch. I am always happy to hear from you.", ["reach"]),
 ]
 
 # Where each old in-page anchor now lives.
-LINK_MAP = {"#about": "index.html#about", "#research": "research.html", "#publications": "publications.html",
+LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research": "research.html", "#publications": "publications.html",
             "#software": "research.html#software", "#talks": "talks.html", "#funding": "funding.html",
             "#teaching": "teaching.html", "#refereeing": "cv.html#refereeing", "#cv": "cv.html"}
 
@@ -751,6 +752,32 @@ def render_explore(n_articles, n_proc):
             f'<div class="explore">\n{items}\n</div>\n</section>')
 
 
+def render_reach():
+    P = PROFILE
+    profiles = [("ORCID", f"https://orcid.org/{P['orcid']}", "i_orcid"), ("INSPIRE", P["inspire"], "i_inspire"),
+                ("Google Scholar", P["scholar"], "i_scholar"), ("arXiv", P["arxiv"], "i_arxiv"),
+                ("GitHub", P["github"], "i_github"), ("LinkedIn", P["linkedin"], "i_linkedin")]
+    links = "".join(f'<li><a href="{url}">{ICONS[icon]}{name}</a></li>' for name, url, icon in profiles)
+    return f'''<section class="chapter" id="reach">
+<div class="reach">
+  <article class="reach-card">
+    <div class="kicker">Email</div>
+    <a class="reach-big" href="mailto:{P["email"]}">{P["email"]}</a>
+    <p>Email is the best way to reach me.</p>
+    <p><a class="button" href="mailto:{P["email"]}">Send an email</a></p>
+  </article>
+  <article class="reach-card">
+    <div class="kicker">Address</div>
+    <p class="reach-addr">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory<br>2575 Sand Hill Road<br>Menlo Park, CA 94025<br>United States</p>
+  </article>
+  <article class="reach-card">
+    <div class="kicker">Profiles</div>
+    <ul class="reach-links">{links}</ul>
+  </article>
+</div>
+</section>'''
+
+
 def write_pages(html, n_articles, n_proc):
     import re
     P = PROFILE
@@ -761,11 +788,12 @@ def write_pages(html, n_articles, n_proc):
     sections = {m.group(1): m.group(0) for m in
                 re.finditer(r'<section class="chapter" id="([a-z]+)">.*?</section>', html, re.S)}
     sections["explore"] = render_explore(n_articles, n_proc)
+    sections["reach"] = render_reach()
 
     def navbar(current):
         here = ' class="here" aria-current="page"'
         links = "".join(f'<a href="{f}"{here if f == current else ""}>{label}</a>'
-                        for f, label, *_ in PAGES if label) + '<a href="#contact">Contact</a>'
+                        for f, label, *_ in PAGES if label)
         return (f'<div class="navbar">\n  <div class="wrap nav-inner">\n'
                 f'    <a class="brand" href="index.html">{P["name"]}</a>\n'
                 f'    <nav aria-label="Pages">{links}</nav>\n  </div>\n</div>\n')
@@ -800,7 +828,7 @@ def write_pages(html, n_articles, n_proc):
 
         slug = file.replace(".html", "")
         parts = []
-        for i, s in enumerate(secs + ["contact"]):
+        for i, s in enumerate(secs + ([] if file == "contact.html" else ["contact"])):
             block = sections[s]
             if file != "index.html" and i == 0:           # the page header already carries the title
                 block = re.sub(r'<h2 class="chapter-title">.*?</h2>\n?', "", block, count=1, flags=re.S)
@@ -954,7 +982,7 @@ effective field theories, renormalization group evolution,
 Higgs physics and the search for new phenomena at the Large Hadron
 Collider at CERN.</p>
 <p class="about-links"><a href="assets/cv/Sumit_Banik_CV.pdf">Read the full CV <span aria-hidden="true">→</span></a>
-<a href="#contact">Get in touch <span aria-hidden="true">→</span></a></p>
+<a href="contact.html">Get in touch <span aria-hidden="true">→</span></a></p>
 </div>
 </div>
 

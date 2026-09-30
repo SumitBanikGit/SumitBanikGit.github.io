@@ -1334,3 +1334,23 @@ main > #contact.chapter::before {
   .ex-card:hover { transform: translateY(-3px); box-shadow: var(--lift); border-color: rgba(176, 141, 87, .35); }
   .ex-card:hover .ex-go { transform: translateX(4px); color: var(--c); }
 }
+
+/* Contact page */
+#reach { --sec: #8a5a2b; }
+.reach { display: grid; grid-template-columns: 1.15fr 1fr 1fr; gap: 1rem; }
+@media (max-width: 52rem) { .reach { grid-template-columns: 1fr; } }
+.reach-card { padding: 1.3rem 1.4rem 1.4rem; background: #fffdf9; border: 1px solid var(--hair);
+              border-top: 2px solid var(--sec); border-radius: 6px;
+              transition: transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s; }
+.reach-card .kicker { color: var(--sec); margin-bottom: .7rem; }
+.reach-card p { margin: .7rem 0 0; font-size: .96rem; }
+.reach-big { display: inline-block; font-family: var(--display); font-weight: 600; font-size: 1.55rem;
+             color: var(--navy); text-decoration: none; border-bottom: 1px solid var(--rule); }
+.reach-big:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.reach-addr { line-height: 1.6; }
+.reach-links { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.reach-links a { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--navy); }
+.reach-links a:hover { color: var(--accent); }
+.reach-links .ico { width: 1.9rem; height: 1.9rem; padding: .4rem; border-radius: 50%;
+                    border: 1px solid rgba(176, 141, 87, .55); color: var(--accent); background: #fff; }
+@media (hover: hover) { .reach-card:hover { transform: translateY(-3px); box-shadow: var(--lift); } }
