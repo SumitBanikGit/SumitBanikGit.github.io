@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abd83ef">
+<link rel="stylesheet" href="assets/style.css?v=6abd8bfc">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}</script>
 </head>
 <body id="top" class="page-funding">
@@ -70,7 +70,7 @@
   </div>
   <div class="foot-meta">
     <a href="#top">Back to top ↑</a>
-    <span>© 2026 Sumit Banik · Last updated September 2026</span>
+    <span>© 2026 Sumit Banik · Last updated October 2026</span>
   </div>
 </div>
 </footer>
@@ -275,7 +275,8 @@
       if (stage && stage.offsetWidth) {
         var p = stage.getBoundingClientRect();
         CX = p.left - r.left + p.width / 2; CY = p.top - r.top + p.height / 2;
-        RO = Math.min(p.width * 0.6, H * 0.44);
+        var stacked = window.matchMedia('(max-width: 52rem)').matches;   // phones and tablets: detector above the name
+        RO = stacked ? Math.min(p.width * 0.4, p.height * 0.62, 240) : Math.min(p.width * 0.6, H * 0.44);
       } else { CX = W * 0.72; CY = H / 2; RO = Math.min(W, H) * 0.38; }
     }
     function rnd(a, b) { return a + Math.random() * (b - a); }

@@ -1458,3 +1458,11 @@ main > #contact.chapter::before {
   .js .chapter-title.reveal, .js .portrait-frame.reveal { clip-path: none; transform: none; }
 }
 @media print { .intro { display: none !important; } }
+
+/* stacked layouts: keep the event display inside its stage, clear of the name */
+@media (max-width: 52rem) {
+  .hero:not(.page-hero) .field {
+    -webkit-mask-image: radial-gradient(circle at 50% 12rem, #000 0%, #000 30%, transparent 46%);
+            mask-image: radial-gradient(circle at 50% 12rem, #000 0%, #000 30%, transparent 46%);
+  }
+}

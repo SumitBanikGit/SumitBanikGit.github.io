@@ -1376,7 +1376,8 @@ Collider at CERN.</p>
       if (stage && stage.offsetWidth) {{
         var p = stage.getBoundingClientRect();
         CX = p.left - r.left + p.width / 2; CY = p.top - r.top + p.height / 2;
-        RO = Math.min(p.width * 0.6, H * 0.44);
+        var stacked = window.matchMedia('(max-width: 52rem)').matches;   // phones and tablets: detector above the name
+        RO = stacked ? Math.min(p.width * 0.4, p.height * 0.62, 240) : Math.min(p.width * 0.6, H * 0.44);
       }} else {{ CX = W * 0.72; CY = H / 2; RO = Math.min(W, H) * 0.38; }}
     }}
     function rnd(a, b) {{ return a + Math.random() * (b - a); }}
