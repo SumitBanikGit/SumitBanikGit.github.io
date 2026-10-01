@@ -275,13 +275,14 @@
       var nd = nodes[n];
       if (nd.k === 'sp') { x += nd.w * S; continue; }
       if (nd.k === 'g' || nd.k === 'big') {
-        var big = nd.k === 'big', sz = big ? S * (nd.sum ? 1.45 : 1.85) : S;
+        var big = nd.k === 'big', sz = big ? S * (nd.sum ? 1.45 : 1.85) : nd.s === '∝' ? S * 1.3 : S;
         var it = !big && st !== 'rm' && st !== 'bf' && ITALIC.test(nd.s);
-        var op = !script && !big && (nd.op || '=+−≠'.indexOf(nd.s) >= 0) && (prev === 'x' || nd.s === '→' || (nd.s === '=' && prev === 'start'));
-        var pad = nd.s === '=' || nd.s === '→' || nd.s === '≠' ? 0.3 * S : nd.s === '·' ? 0.14 * S : 0.22 * S;
+        var op = !script && !big && (nd.op || '=+−≠∝'.indexOf(nd.s) >= 0) && (prev === 'x' || nd.s === '→' || (nd.s === '=' && prev === 'start'));
+        var pad = '=→≠∝'.indexOf(nd.s) >= 0 ? 0.3 * S : nd.s === '·' ? 0.14 * S : 0.22 * S;
         if (op) x += pad;
         var f = font(sz, SERIF, st === 'bf' ? 700 : 400, it), m = measure(ctx, nd.s, f, sz), y = 0;
         if (big) y = -0.27 * S + (m.a - m.d) / 2;     // centre the big operator on the maths axis
+        else if (sz !== S) y = 0.07 * S;               // and a larger proportional sign too
         prims.push({ t: 'txt', s: nd.s, f: f, x: x, y: y, w: m.w, a: m.a, d: m.d, big: big });
         x += m.w + (it ? 0.04 * S : 0);
         if (op) x += pad;
@@ -3026,12 +3027,44 @@
     if (side) f.glyphs(fb.prims, cx + Wd / 2 + 2.5 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
     else f.glyphs(fb.prims, (bw - fb.w) / 2, cy + h2 + 1.3 * S - fb.ext[0]);
   }
+  /* The box diagram of B meson mixing. Along each quark line a b quark turns into a d quark, through a top
+     quark in the loop and two W bosons, so the B-bar meson (b d-bar) becomes a B meson (d b-bar). The top
+     quark dominates the loop, which makes the mass difference of the two neutral B mesons proportional to
+     |V_tb V_td*|^2. Along the lower line the fermion arrows run backwards, as it carries the antiquarks. */
+  function boxMixing(f, bw, bh) {
+    var S = Math.min(21, bh * 0.08, bw / 22), top = 44, bot = bh - 12;
+    var formula = 'Δm_d∝|V_{tb}V^∗_{td}|^2', fb = f.box(formula, S), fh = fb.ext[1] - fb.ext[0];
+    var Hs = Math.min(bot - top - fh - 3.8 * S, 130), Ws = Math.min(bw - 5 * S, Hs * 2.25);              // formula below
+    var Hr = Math.min(bot - top - 2.8 * S, 130), Wr = Math.min(bw - 36 - 3.6 * S - fb.w, Hr * 2.25);  // or beside
+    var side = Wr > Ws * 1.15, Wd = side ? Wr : Ws, Hd = Math.min(side ? Hr : Hs, 0.44 * Wd), h2 = Hd / 2, cx, cy;
+    if (side) { cx = (bw - Wd - 3.6 * S - fb.w) / 2 + 1.2 * S + Wd / 2; cy = (top + bot) / 2; }
+    else { cx = bw / 2; cy = top + (bot - top - Hd - 3.6 * S - fh) / 2 + 1.3 * S + h2; }
+    var a = 0.22 * Wd, s = Math.max(3.2, S * 0.26);
+    var TL = [cx - a, cy - h2], TR = [cx + a, cy - h2], BL = [cx - a, cy + h2], BR = [cx + a, cy + h2];
+    var l1 = [cx - 0.5 * Wd, cy - h2], r1 = [cx + 0.5 * Wd, cy - h2], l2 = [cx - 0.5 * Wd, cy + h2], r2 = [cx + 0.5 * Wd, cy + h2];
+    function wavy(A, B) {                             // a W boson, as a wavy line from A to B
+      var dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy), n = Math.max(3, Math.round(L / (0.85 * S))), m = n * 12, pts = [];
+      for (var i = 0; i <= m; i++) { var u = i / m, w = 0.2 * S * Math.sin(TAU * n * u); pts.push([A[0] + dx * u - dy / L * w, A[1] + dy * u + dx / L * w]); }
+      f.stroke(pts, 260);
+    }
+    f.stroke([l1, TL], 240); chevron(f, l1, TL, 1, s); f.label('b', l1[0] - 0.7 * S, l1[1], S);
+    f.stroke([TL, TR], 240); chevron(f, TL, TR, 1, s); f.label('t', cx, cy - h2 - 0.8 * S, S);
+    f.stroke([TR, r1], 240); chevron(f, TR, r1, 1, s); f.label('d', r1[0] + 0.7 * S, r1[1], S);
+    wavy(TL, BL); f.label('W', TL[0] - 0.95 * S, cy, S);
+    wavy(TR, BR); f.label('W', TR[0] + 0.95 * S, cy, S);
+    f.stroke([l2, BL], 240); chevron(f, l2, BL, -1, s); f.label('\\bar{d}', l2[0] - 0.7 * S, l2[1], S);
+    f.stroke([BL, BR], 240); chevron(f, BL, BR, -1, s); f.label('t', cx, cy + h2 + 0.85 * S, S);
+    f.stroke([BR, r2], 240); chevron(f, BR, r2, -1, s); f.label('\\bar{b}', r2[0] + 0.7 * S, r2[1], S);
+    if (side) f.glyphs(fb.prims, cx + Wd / 2 + 2.4 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
+    else f.glyphs(fb.prims, (bw - fb.w) / 2, cy + h2 + 2.3 * S - fb.ext[0]);
+  }
   var EQUATIONS = [
     { name: 'The Dirac equation', course: 'Quantum Field Theory', lines: ['(iγ^μ\\,∂_μ−m)\\,ψ=0'] },
     { name: 'The Feynman propagator', course: 'Quantum Field Theory', lines: ['D_F(p)=\\frac{i}{p^2−m^2+iε}'] },
     { name: 'Electron-positron annihilation into muons', course: 'Quantum Field Theory', fig: annihilation },
     { name: 'Unitarity of the CKM matrix', course: 'Flavour Physics', lines: ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0'] },
     { name: 'The unitarity triangle', course: 'Flavour Physics', fig: unitarityTriangle },
+    { name: 'The box diagram of B meson mixing', course: 'Flavour Physics', fig: boxMixing },
     { name: 'Gauss’s law and Faraday’s law', course: 'Introductory Physics', lines: ['\\oint\\bf{E}\\cdot\\rm{d}\\bf{A}=\\frac{Q}{ε_0}', '\\oint\\bf{E}\\cdot\\rm{d}\\bf{l}=−\\frac{\\rm{d}Φ_B}{\\rm{d}t}'] }
   ];
   function courseOf(e, eq) {
@@ -3355,16 +3388,25 @@
     for (i = 0; i < n; i++) moved = Math.max(moved, Math.abs(xs[i] - items[i].x));
     return { xs: xs, ok: !n || (xs[0] - items[0].w / 2 >= lo - 0.5 && moved < 40) };
   }
-  function placeLabels(items, lo, hi, gap) {        // one row if it fits, otherwise every other label on a second row
+  function placeLabels(items, lo, hi, gap) {        // one row if it fits, otherwise only the labels that collide drop to a second row
     var one = spreadRow(items, lo, hi, gap);
     if (one.ok) return items.map(function (it, i) { return { x: one.xs[i], row: 0 }; });
-    var out = [];
-    [0, 1].forEach(function (r) {
-      var idx = items.map(function (it, i) { return i; }).filter(function (i) { return i % 2 === r; });
-      var res = spreadRow(idx.map(function (i) { return items[i]; }), lo, hi, gap);
-      idx.forEach(function (i, j) { out[i] = { x: res.xs[j], row: r }; });
+    function rows(pick, force) {
+      var out = [], ok = true;
+      [0, 1].forEach(function (r) {
+        var idx = items.map(function (it, i) { return i; }).filter(function (i) { return pick[i] === r; });
+        var res = spreadRow(idx.map(function (i) { return items[i]; }), lo, hi, gap);
+        ok = ok && res.ok;
+        idx.forEach(function (i, j) { out[i] = { x: res.xs[j], row: r }; });
+      });
+      return ok || force ? out : null;
+    }
+    var pick = [], end = -Infinity;
+    items.forEach(function (it, i) {                // a label stays up if it fits after the last one kept up
+      var a = Math.min(Math.max(lo, it.x - it.w / 2), hi - it.w);
+      if (a >= end + gap) { pick[i] = 0; end = a + it.w; } else pick[i] = 1;
     });
-    return out;
+    return rows(pick) || rows(items.map(function (it, i) { return i % 2; }), true);
   }
   SCENES.timeline = {
     touchHint: 'Tap for the next stage',
