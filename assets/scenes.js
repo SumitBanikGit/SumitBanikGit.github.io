@@ -1,22 +1,23 @@
 /* Page scenes for the inner pages.
    Each page header has its own animation, drawn on the header canvas inside the
    stage on the right, in the brass and green palette of the site:
-     Research       triangulations of a point configuration
+     Research       a tour of the papers, one small animation for each
      Publications   a constellation of the papers, by year and field
      Talks          the talks around the world, one year at a time
-     Funding        a toy di-photon spectrum with excesses near 95 and 152 GeV
-     Teaching       equations written on a blackboard
-     CV             tracks in a bubble chamber
-     Contact        two-source interference
+     Funding        the fellowships and grants as medals along the years
+     Teaching       equations from the courses taught, written on a blackboard
+     Supervision    the students and their projects
+     CV             the path from Kolkata to Stanford on a timeline
+     Contact        a globe turning under SLAC, with messages arriving
    The home page keeps its collider event display, which lives in the page itself. */
 (function () {
   'use strict';
   var host = document.querySelector('.hero[data-scene]');
   if (!host || !window.requestAnimationFrame) return;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var TAU = Math.PI * 2;
+  var TAU = Math.PI * 2, D2R = Math.PI / 180;
   var RGB = { green: '28,53,47', pine: '46,92,78', brass: '168,137,79', brassD: '122,95,42', slate: '74,90,102',
-              crimson: '110,44,52', cream: '238,231,214', paper: '251,248,241' };
+              crimson: '110,44,52', cream: '238,231,214', paper: '251,248,241', plum: '90,61,85' };
   var SANS = 'Inter, system-ui, sans-serif', SERIF = '"Source Serif 4", Georgia, serif',
       DISPLAY = '"Cormorant Garamond", Georgia, serif';
 
@@ -27,12 +28,16 @@
   function easeInOut(x) { x = clamp01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(2 - 2 * x, 3) / 2; }
   function seeded(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
   function rand(a, b) { return a + Math.random() * (b - a); }
-  function sign() { return Math.random() < 0.5 ? -1 : 1; }
   function gauss(r) { return Math.sqrt(-2 * Math.log(1 - r())) * Math.cos(TAU * r()); }
   function font(size, family, weight, italic) {
     return (italic ? 'italic ' : '') + (weight || 400) + ' ' + (Math.round(size * 100) / 100) + 'px ' + family;
   }
   function tracking(ctx, px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px + 'px'; }
+  function caps(ctx, text, x, y, color, size, align) {          // small capitals label
+    ctx.font = font(size || 8.5, SANS, 600); tracking(ctx, 1.1);
+    ctx.textAlign = align || 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = color; ctx.fillText(text, x, y);
+    tracking(ctx, 0);
+  }
   function layer(w, h, dpr) {                         // an offscreen canvas in CSS pixel units
     var c = document.createElement('canvas');
     c.width = Math.max(1, Math.round(w * dpr)); c.height = Math.max(1, Math.round(h * dpr));
@@ -55,37 +60,39 @@
     ctx.fillStyle = g; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
     ctx.restore();
   }
-  function ellipseFade(ctx, cx, cy, rx, ry, inner) {  // keep the middle, fade out towards an ellipse
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-in';
-    ctx.translate(cx, cy); ctx.scale(rx, ry);
-    var g = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
-    g.addColorStop(0, '#000'); g.addColorStop(inner, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g; ctx.fillRect(-1000, -1000, 2000, 2000);
-    ctx.restore();
+  function dot(ctx, x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill(); }
+  function ring(ctx, x, y, r, color, lw) { ctx.strokeStyle = color; ctx.lineWidth = lw || 1; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.stroke(); }
+  function line(ctx, x1, y1, x2, y2, color, lw) {
+    ctx.strokeStyle = color; ctx.lineWidth = lw || 1; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
   }
 
   /* ---------- the engine: sizing, clock, pointer, captions ---------- */
+  function swapper(el, fallback) {                  // fade a caption or hint from one text to the next
+    var shown = el ? el.innerHTML : '', timer = null;
+    return function (html) {
+      if (!el) return;
+      html = html || fallback();
+      if (html === shown) return;
+      shown = html;
+      if (reduce) { el.innerHTML = html; return; }
+      el.classList.add('swap');
+      clearTimeout(timer);
+      timer = setTimeout(function () { el.innerHTML = shown; el.classList.remove('swap'); }, 190);
+    };
+  }
   function run(scene) {
     var cv = host.querySelector('.field'), stage = host.querySelector('.hero-stage');
     if (!cv || !cv.getContext || !stage) return;
     var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var meta = stage.querySelector('.scene-meta'), cap = stage.querySelector('.scene-cap');
-    var touch = window.matchMedia('(hover: none)').matches, hint = stage.querySelector('.scene-hint');
+    var meta = stage.querySelector('.scene-meta'), cap = stage.querySelector('.scene-cap'), hint = stage.querySelector('.scene-hint');
+    var touch = window.matchMedia('(hover: none)').matches;
     var env = { ctx: ctx, dpr: dpr, stage: stage, data: readData(), t: 0, dt: 0, active: false, reduce: reduce, touch: touch };
     if (touch && hint && scene.touchHint) hint.textContent = scene.touchHint;
-    var raf = null, last = 0, visible = true, capHTML = cap ? cap.innerHTML : '', capTimer = null;
-    env.defaultCaption = capHTML;
-    env.caption = function (html) {
-      if (!cap) return;
-      html = html || env.defaultCaption;
-      if (html === capHTML) return;
-      capHTML = html;
-      if (reduce) { cap.innerHTML = html; return; }
-      cap.classList.add('swap');
-      clearTimeout(capTimer);
-      capTimer = setTimeout(function () { cap.innerHTML = capHTML; cap.classList.remove('swap'); }, 190);
-    };
+    env.defaultCaption = cap ? cap.innerHTML : ''; env.defaultHint = hint ? hint.innerHTML : '';
+    env.caption = swapper(cap, function () { return env.defaultCaption; });
+    env.hint = swapper(hint, function () { return env.defaultHint; });
+    host.sceneEnv = env;
+    var raf = null, last = 0, visible = true;
     function size() {
       var r = host.getBoundingClientRect(), s = stage.getBoundingClientRect();
       env.W = r.width; env.H = r.height;
@@ -93,13 +100,13 @@
       var gap = meta ? meta.offsetHeight + 16 : 0;
       env.x = s.left - r.left; env.y = s.top - r.top; env.w = s.width; env.h = s.height - gap;
       env.active = env.w > 60 && env.h > 60;
+      mathCache = {};
       if (env.active && scene.layout) scene.layout(env);
     }
     function draw() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, env.W, env.H);
       ctx.save(); scene.frame(env, env.t); ctx.restore();
-      if (scene.soft) ellipseFade(ctx, env.x + env.w / 2, env.y + env.h / 2, env.w / 2, env.h / 2, scene.soft);
     }
     function tick(now) {
       raf = null;
@@ -114,14 +121,18 @@
       if (reduce) { draw(); return; }
       if (!raf) raf = requestAnimationFrame(tick);
     }
+    env.redraw = start;
     function local(ev) { var r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
-    function inside(p) { return p.x >= env.x && p.x <= env.x + env.w && p.y >= env.y && p.y <= env.y + env.h; }
+    function inside(p) { return p.x >= env.x && p.x <= env.x + env.w && p.y >= env.y && p.y <= env.y + env.h + 30; }
 
     if (scene.init) scene.init(env);
     if (reduce) env.t = scene.still || 0;
     size();
     start();
+    var dragged = 0;
     if (scene.click) stage.addEventListener('click', function (ev) {
+      if (ev.target.closest && ev.target.closest('a')) return;          // a link in the caption opens the paper
+      if (dragged > 6) { dragged = 0; return; }
       var p = local(ev);
       if (env.active && inside(p)) { scene.click(env, p.x, p.y); start(); }
     });
@@ -133,15 +144,33 @@
       });
       stage.addEventListener('mouseleave', function () { scene.move(env, null); if (reduce) draw(); });
     }
+    if (scene.drag) {
+      var grab = null;
+      stage.addEventListener('pointerdown', function (ev) {
+        if (ev.button) return;
+        grab = { x: ev.clientX }; dragged = 0; env.dragging = true;
+      });
+      window.addEventListener('pointermove', function (ev) {
+        if (!grab) return;
+        var dx = ev.clientX - grab.x;
+        grab.x = ev.clientX; dragged += Math.abs(dx);
+        scene.drag(env, dx);
+        if (reduce) draw();
+      });
+      var release = function () { grab = null; env.dragging = false; };
+      window.addEventListener('pointerup', release);
+      window.addEventListener('pointercancel', release);
+    }
     window.addEventListener('resize', function () { size(); start(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) start(); });
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (en) { visible = en[0].isIntersecting; if (visible) start(); }).observe(host);
     }
-    if (document.fonts && document.fonts.load) {       // re-lay out once the web fonts have arrived
-      var sample = 'Γγλμνψεπ∂∫∞ 0123456789 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      Promise.all(['500 10px Inter', '600 10px Inter', '400 24px "Source Serif 4"', 'italic 400 24px "Source Serif 4"',
-                   'italic 600 14px "Cormorant Garamond"'].map(function (f) { return document.fonts.load(f, sample); }))
+    if (document.fonts && document.fonts.load) {       // lay out again once the web fonts have arrived
+      var sample = 'ΓΦγλμνψεπ∂∫∮∞ 0123456789 abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      Promise.all(['500 10px Inter', '600 10px Inter', '700 10px Inter', '400 24px "Source Serif 4"',
+                   'italic 400 24px "Source Serif 4"', '700 24px "Source Serif 4"', 'italic 600 14px "Cormorant Garamond"']
+        .map(function (f) { return document.fonts.load(f, sample); }))
         .then(function () { size(); start(); }, function () {});
     }
   }
@@ -162,7 +191,276 @@
   var SCENES = {};
 
   /* =====================================================================
-     Research: triangulations of a point configuration
+     A tiny typesetter for mathematics: ^ and _ for scripts, \frac{}{},
+     \int, \oint, \bar{}, \rm{}, \bf{}, \to, \cdot, \langle, \rangle,
+     \, for a thin space and \quad for a wide one.
+     ===================================================================== */
+  var mathCache = {};
+  function parseTeX(src) {
+    var i = 0;
+    function arg() {
+      if (src[i] === '{') { i++; return seq(); }
+      var out = []; one(out); return out;
+    }
+    function one(out) {
+      var c = src[i];
+      if (c === '{') { i++; out.push({ k: 'grp', b: seq() }); return; }
+      if (c === '^' || c === '_') { i++; out.push({ k: c === '^' ? 'sup' : 'sub', b: arg() }); return; }
+      if (c === ' ') { i++; return; }
+      if (c === '\\') {
+        var m = /^\\([a-zA-Z]+|.)/.exec(src.slice(i)), cmd = m[1];
+        i += m[0].length;
+        if (cmd === 'frac') { var n = arg(); out.push({ k: 'frac', n: n, d: arg() }); }
+        else if (cmd === 'int') out.push({ k: 'big', s: '∫' });
+        else if (cmd === 'oint') out.push({ k: 'big', s: '∮' });
+        else if (cmd === 'sum') out.push({ k: 'big', s: '∑', sum: 1 });
+        else if (cmd === ',') out.push({ k: 'sp', w: 0.18 });
+        else if (cmd === 'quad') out.push({ k: 'sp', w: 1 });
+        else if (cmd === 'rm') out.push({ k: 'grp', b: arg(), st: 'rm' });
+        else if (cmd === 'bf') out.push({ k: 'grp', b: arg(), st: 'bf' });
+        else if (cmd === 'bar') out.push({ k: 'bar', b: arg() });
+        else if (cmd === 'to') out.push({ k: 'g', s: '→', op: 1 });
+        else if (cmd === 'cdot') out.push({ k: 'g', s: '·', op: 1 });
+        else if (cmd === 'langle') out.push({ k: 'g', s: '⟨' });
+        else if (cmd === 'rangle') out.push({ k: 'g', s: '⟩' });
+        else if (cmd === 'cdots') out.push({ k: 'g', s: '⋯' });
+        return;
+      }
+      out.push({ k: 'g', s: c }); i++;
+    }
+    function seq() {
+      var out = [];
+      while (i < src.length) { if (src[i] === '}') { i++; return out; } one(out); }
+      return out;
+    }
+    return seq();
+  }
+  function measure(ctx, s, f, size) {
+    ctx.font = f;
+    var m = ctx.measureText(s), a = m.actualBoundingBoxAscent, d = m.actualBoundingBoxDescent;
+    if (!(a >= 0)) { a = 0.72 * size; d = 0.22 * size; }
+    return { w: m.width, a: a, d: d };
+  }
+  var ITALIC = /[A-Za-zα-ω]/;
+  function typeset(ctx, nodes, S, script, st) {      // glyphs and rules in writing order
+    var x = 0, asc = 0.72 * S, desc = 0.24 * S, prims = [], prev = 'start';
+    function place(box, dx, dy) {
+      box.prims.forEach(function (p) { p.x += dx; p.y += dy; prims.push(p); });
+      asc = Math.max(asc, box.asc - dy); desc = Math.max(desc, box.desc + dy);
+    }
+    for (var n = 0; n < nodes.length; n++) {
+      var nd = nodes[n];
+      if (nd.k === 'sp') { x += nd.w * S; continue; }
+      if (nd.k === 'g' || nd.k === 'big') {
+        var big = nd.k === 'big', sz = big ? S * (nd.sum ? 1.45 : 1.85) : S;
+        var it = !big && st !== 'rm' && st !== 'bf' && ITALIC.test(nd.s);
+        var op = !script && !big && (nd.op || '=+−≠'.indexOf(nd.s) >= 0) && (prev === 'x' || nd.s === '→' || (nd.s === '=' && prev === 'start'));
+        var pad = nd.s === '=' || nd.s === '→' || nd.s === '≠' ? 0.3 * S : nd.s === '·' ? 0.14 * S : 0.22 * S;
+        if (op) x += pad;
+        var f = font(sz, SERIF, st === 'bf' ? 700 : 400, it), m = measure(ctx, nd.s, f, sz), y = 0;
+        if (big) y = -0.27 * S + (m.a - m.d) / 2;     // centre the big operator on the maths axis
+        prims.push({ t: 'txt', s: nd.s, f: f, x: x, y: y, w: m.w, a: m.a, d: m.d, big: big });
+        x += m.w + (it ? 0.04 * S : 0);
+        if (op) x += pad;
+        asc = Math.max(asc, m.a - y); desc = Math.max(desc, m.d + y);
+        prev = op ? 'op' : (nd.s === '(' || nd.s === '[' || nd.s === '⟨') ? 'open' : 'x';
+        continue;
+      }
+      if (nd.k === 'grp') {
+        var g = typeset(ctx, nd.b, S, script, nd.st || st);
+        place(g, x, 0); x += g.w; prev = 'x';
+        continue;
+      }
+      if (nd.k === 'bar') {
+        var bb = typeset(ctx, nd.b, S, script, st), top = 0;
+        bb.prims.forEach(function (p) { top = Math.min(top, p.t === 'rule' ? p.y : p.y - p.a); });
+        place(bb, x, 0);
+        prims.push({ t: 'rule', x: x + bb.w * 0.18, y: top - 0.14 * S, w: bb.w * 0.72, h: Math.max(1, 0.055 * S) });
+        asc = Math.max(asc, -top + 0.2 * S);
+        x += bb.w; prev = 'x';
+        continue;
+      }
+      if (nd.k === 'sup' || nd.k === 'sub') {
+        var sup = nd.k === 'sup' ? nd.b : null, sub = nd.k === 'sub' ? nd.b : null, nx = nodes[n + 1];
+        if (nx && (nx.k === 'sup' || nx.k === 'sub') && nx.k !== nd.k) { if (nx.k === 'sup') sup = nx.b; else sub = nx.b; n++; }
+        var base = prims[prims.length - 1], onBig = base && base.big && base.x + base.w >= x - 0.5;
+        var up = sup && typeset(ctx, sup, S * 0.7, true, st), dn = sub && typeset(ctx, sub, S * 0.7, true, st);
+        var right = x;
+        if (up) {
+          var upY = onBig ? base.y - base.a + up.asc * 0.9 : -0.42 * S;
+          place(up, x, upY); right = Math.max(right, x + up.w);
+        }
+        if (dn) {
+          var dnX = onBig && !base.s.match(/∑/) ? x - 0.36 * S : x, dnY = onBig ? base.y + base.d : 0.2 * S + (up ? 0.06 * S : 0);
+          place(dn, dnX, dnY); right = Math.max(right, dnX + dn.w);
+        }
+        x = right + 0.05 * S; prev = 'x';
+        continue;
+      }
+      if (nd.k === 'frac') {
+        var fs = S * 0.92, nu = typeset(ctx, nd.n, fs, script, st), de = typeset(ctx, nd.d, fs, script, st);
+        var fw = Math.max(nu.w, de.w) + 0.35 * S, axis = -0.27 * S, gp = 0.16 * S;
+        x += 0.08 * S;
+        place(nu, x + (fw - nu.w) / 2, axis - gp - nu.desc);
+        prims.push({ t: 'rule', x: x, y: axis - 0.03 * S, w: fw, h: Math.max(1.1, 0.055 * S) });
+        place(de, x + (fw - de.w) / 2, axis + gp + de.asc);
+        x += fw + 0.08 * S; prev = 'x';
+      }
+    }
+    return { w: x, asc: asc, desc: desc, prims: prims };
+  }
+  function extent(prims) {
+    var top = Infinity, bot = -Infinity;
+    prims.forEach(function (p) {
+      if (p.t === 'rule') { top = Math.min(top, p.y); bot = Math.max(bot, p.y + p.h); }
+      else { top = Math.min(top, p.y - p.a); bot = Math.max(bot, p.y + p.d); }
+    });
+    return [top, bot];
+  }
+  function mathBox(ctx, src, S) {
+    var key = src + '|' + S;
+    return mathCache[key] || (mathCache[key] = typeset(ctx, parseTeX(src), S, false, ''));
+  }
+  function drawMath(ctx, src, x, y, S, color, align, upto) {   // upto: how many glyphs to show (writing order)
+    var b = mathBox(ctx, src, S), ox = align === 'center' ? x - b.w / 2 : align === 'right' ? x - b.w : x;
+    ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    var n = upto === undefined ? b.prims.length : Math.floor(upto);
+    for (var i = 0; i < n && i < b.prims.length; i++) {
+      var p = b.prims[i];
+      if (p.t === 'rule') ctx.fillRect(ox + p.x, y + p.y, p.w, p.h);
+      else { ctx.font = p.f; ctx.fillText(p.s, ox + p.x, y + p.y); }
+    }
+    return b;
+  }
+
+  /* =====================================================================
+     Feynman diagrams. Nodes sit in a frame 1.9 wide and 1 high; edges are
+     drawn one after another: f fermion (arrow), p plain propagator,
+     s scalar (dashed), ph photon (wavy), w weak boson (wavy), g gluon (curly).
+     ===================================================================== */
+  function dFrame(e, aspect, pad) {
+    aspect = aspect || 1.9; pad = pad === undefined ? 12 : pad;
+    var h = Math.min(e.h - 2 * pad, (e.w - 2 * pad) / aspect);
+    return { x: e.x + (e.w - h * aspect) / 2, y: e.y + (e.h - h) / 2, s: h };
+  }
+  function edgePts(F, D, ed) {
+    var pts = [], N = 56, i;
+    if (ed.arc) {                                  // an arc of a circle [cx, cy, r, from, to] in frame units
+      var c = ed.arc;
+      for (i = 0; i <= N; i++) {
+        var an = c[3] + (c[4] - c[3]) * i / N;
+        pts.push([F.x + (c[0] + c[2] * Math.cos(an)) * F.s, F.y + (c[1] + c[2] * Math.sin(an)) * F.s]);
+      }
+      return pts;
+    }
+    var A = D.n[ed.a], B = D.n[ed.b];
+    var ax = F.x + A[0] * F.s, ay = F.y + A[1] * F.s, bx = F.x + B[0] * F.s, by = F.y + B[1] * F.s;
+    var bend = ed.bend || 0, cx = (ax + bx) / 2 - (by - ay) * bend, cy = (ay + by) / 2 + (bx - ax) * bend;
+    for (i = 0; i <= N; i++) {
+      var u = i / N, w1 = (1 - u) * (1 - u), w2 = 2 * u * (1 - u), w3 = u * u;
+      pts.push([w1 * ax + w2 * cx + w3 * bx, w1 * ay + w2 * cy + w3 * by]);
+    }
+    return pts;
+  }
+  function pathGeo(pts) {
+    var L = [0];
+    for (var i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    return { pts: pts, L: L, len: L[L.length - 1] };
+  }
+  function pathAt(g, s) {                           // point and unit tangent at arc length s
+    var L = g.L, n = L.length - 1, lo = 1, hi = n;
+    s = Math.max(0, Math.min(g.len, s));
+    while (lo < hi) { var mid = (lo + hi) >> 1; if (L[mid] < s) lo = mid + 1; else hi = mid; }
+    var p = g.pts[lo - 1], q = g.pts[lo], seg = L[lo] - L[lo - 1], u = seg > 0 ? (s - L[lo - 1]) / seg : 0;
+    var tx = q[0] - p[0], ty = q[1] - p[1], tl = Math.hypot(tx, ty) || 1;
+    return [p[0] + tx * u, p[1] + ty * u, tx / tl, ty / tl];
+  }
+  var EDGE_STYLE = {
+    f: ['green', 1.4], p: ['green', 1.5], s: ['crimson', 1.35], ph: ['brassD', 1.2], w: ['pine', 1.3], g: ['pine', 1.1]
+  };
+  function drawEdge(ctx, g, type, k, color, lw, t) {
+    var end = g.len * k, s;
+    if (end <= 0.5) return;
+    ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    if (type === 'ph' || type === 'w') {
+      var A = type === 'w' ? 3.1 : 2.6, lam = type === 'w' ? 10 : 8;
+      lam = g.len / Math.max(1, Math.round(g.len / lam));
+      for (s = 0; s <= end; s += 0.7) {
+        var q = pathAt(g, s), off = A * Math.sin(TAU * s / lam);
+        if (s === 0) ctx.moveTo(q[0] - q[3] * off, q[1] + q[2] * off); else ctx.lineTo(q[0] - q[3] * off, q[1] + q[2] * off);
+      }
+    } else if (type === 'g') {
+      var r = 2.8, lg = g.len / Math.max(2, Math.round(g.len / 6.4));
+      for (s = 0; s <= end; s += 0.35) {
+        var ph = TAU * s / lg, q2 = pathAt(g, s + r * 0.9 * Math.sin(ph)), off2 = -r * Math.cos(ph) + r * 0.2;
+        if (s === 0) ctx.moveTo(q2[0] - q2[3] * off2, q2[1] + q2[2] * off2); else ctx.lineTo(q2[0] - q2[3] * off2, q2[1] + q2[2] * off2);
+      }
+    } else {
+      if (type === 's') { ctx.setLineDash([4.5, 3.5]); ctx.lineDashOffset = -(t || 0) * 9; }
+      var p0 = g.pts[0]; ctx.moveTo(p0[0], p0[1]);
+      for (var i = 1; i < g.pts.length && g.L[i] <= end; i++) ctx.lineTo(g.pts[i][0], g.pts[i][1]);
+      var qe = pathAt(g, end); ctx.lineTo(qe[0], qe[1]);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  function arrowAt(ctx, g, rev, color, size) {       // fermion-number arrow at the middle of an edge
+    var q = pathAt(g, g.len / 2), dx = rev ? -q[2] : q[2], dy = rev ? -q[3] : q[3], a = size || 4.6;
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(q[0] + dx * a, q[1] + dy * a);
+    ctx.lineTo(q[0] - dx * a * 0.7 - dy * a * 0.62, q[1] - dy * a * 0.7 + dx * a * 0.62);
+    ctx.lineTo(q[0] - dx * a * 0.7 + dy * a * 0.62, q[1] - dy * a * 0.7 - dx * a * 0.62);
+    ctx.closePath(); ctx.fill();
+  }
+  function opVertex(ctx, x, y, r, k, t) {           // an effective operator: a crossed circle
+    ctx.save();
+    ctx.globalAlpha *= k;
+    dot(ctx, x, y, r, ink('paper', 1));
+    ring(ctx, x, y, r, ink('brassD', 1), 1.5);
+    var d = r * 0.62;
+    line(ctx, x - d, y - d, x + d, y + d, ink('brassD', 1), 1.4); line(ctx, x - d, y + d, x + d, y - d, ink('brassD', 1), 1.4);
+    ring(ctx, x, y, r + 3 + 3 * (0.5 + 0.5 * Math.sin(t * 3)), ink('brass', 0.35), 1);
+    ctx.restore();
+  }
+  function diagramLayout(v, D) {
+    v.F = dFrame(v, D.aspect || 1.9, D.pad);
+    v.geo = D.e.map(function (ed) { return pathGeo(edgePts(v.F, D, ed)); });
+  }
+  function drawDiagram(ctx, v, D, t, t0) {         // t0: when the first edge starts
+    var F = v.F, st = D.stagger || 0.34, du = D.edgeDur || 0.5, started = {};
+    t0 = t0 === undefined ? 0.35 : t0;
+    D.e.forEach(function (ed, i) {
+      var g = v.geo[i], k = v.reduce ? 1 : ease((t - t0 - (ed.at !== undefined ? ed.at : i * st)) / du);
+      var sty = EDGE_STYLE[ed.t], col = ink(ed.c || sty[0], 0.92), lw = ed.lw || sty[1];
+      if (k > 0) { started[ed.a] = 1; started[ed.b] = 1; }
+      drawEdge(ctx, g, ed.t, k, col, lw, t);
+      if (ed.t === 'f' && k > 0.6) arrowAt(ctx, g, ed.rev, col);
+      if (ed.lab && k > 0.8) {
+        var la = clamp01((k - 0.8) / 0.2), q = pathAt(g, g.len * (ed.lt || 0.5)), o = ed.lo || [0, -12];
+        ctx.save(); ctx.globalAlpha *= la;
+        drawMath(ctx, ed.lab, q[0] + o[0], q[1] + o[1], D.labSize || 13, ink('green', 0.95), 'center');
+        ctx.restore();
+      }
+    });
+    Object.keys(D.n).forEach(function (id) {       // vertices
+      var n = D.n[id];
+      if (!n[2] || !started[id]) return;
+      var x = F.x + n[0] * F.s, y = F.y + n[1] * F.s;
+      if (n[2] === 'op') opVertex(ctx, x, y, 6.5, 1, t);
+      else dot(ctx, x, y, 2.3, ink('green', 0.95));
+    });
+  }
+  function diagramVignette(o) {                    // a paper whose picture is a single diagram
+    return {
+      key: o.key, paper: o.paper, cap: o.cap, ref: o.ref, dur: o.dur || 10,
+      layout: function (v) { diagramLayout(v, o.D); if (o.layout) o.layout(v); },
+      frame: function (v, t) { drawDiagram(v.ctx, v, o.D, t); if (o.extra) o.extra(v, t); }
+    };
+  }
+
+  /* =====================================================================
+     Research: a tour of the papers
      ===================================================================== */
   function delaunay(P) {                              // Bowyer-Watson
     var n = P.length, minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -356,9 +654,559 @@
       if (users.length > 16) e.pts.splice(e.pts.indexOf(users[0]), 1);
     }
   };
+  function bkg(m) { return Math.exp(-(m - 65) / 42); }
+  function sig(m) { return 0.12 * Math.exp(-Math.pow(m - 95, 2) / 23) + 0.085 * Math.exp(-Math.pow(m - 152, 2) / 23); }
+  function sb(m) { return bkg(m) + sig(m); }
+
+  SCENES.spectrum = {
+    touchHint: 'Tap for a new pseudo-experiment',
+    init: function (e) { e.seed = 3; e.c0 = 0; this.toy(e); },
+    toy: function (e) {                                // one pseudo-experiment
+      var r = seeded(1 + e.seed * 7919);
+      e.bins = [];
+      for (var m = 67; m <= 163; m += 4) {
+        var mu = sb(m), err = 0.02 + 0.042 * Math.sqrt(mu);
+        e.bins.push({ m: m, v: Math.max(0.01, mu + 0.85 * err * gauss(r)), err: err });
+      }
+    },
+    frame: function (e, t) {
+      var ctx = e.ctx, C = 13, c = e.reduce ? 9 : t - e.c0;
+      if (c > C) { e.seed++; this.toy(e); e.c0 = t; c = 0; }
+      var L = e.x + 34, R = e.x + e.w - 6, T = e.y + 8, B = e.y + e.h - 30;
+      function X(m) { return L + (m - 65) / 100 * (R - L); }
+      function Y(v) { return B - v / 1.1 * (B - T); }
+      var fade = e.reduce ? 1 : (c > C - 1 ? C - c : 1), ax = e.reduce ? 1 : ease(c / 0.5);
+      var fk = e.reduce ? 1 : ease((c - 4.2) / 1.3), sk = e.reduce ? 1 : ease((c - 5.7) / 1.3);
+      var bk = e.reduce ? 1 : ease((c - 6.4) / 0.9);
+      ctx.globalAlpha = fade;
+
+      // axes, ticks and titles
+      ctx.strokeStyle = ink('green', 0.6 * ax); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, B); ctx.lineTo(R, B); ctx.stroke();
+      ctx.font = font(9.5, SANS, 500); ctx.fillStyle = ink('slate', 0.9 * ax);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      for (var m = 70; m <= 160; m += 10) {
+        var major = m % 20 === 10, x = X(m);
+        ctx.beginPath(); ctx.moveTo(x, B); ctx.lineTo(x, B + (major ? 5 : 3)); ctx.stroke();
+        if (major) ctx.fillText(String(m), x, B + 16);
+      }
+      for (var v = 0.2; v < 1.1; v += 0.2) { var yv = Y(v); ctx.beginPath(); ctx.moveTo(L, yv); ctx.lineTo(L - 3, yv); ctx.stroke(); }
+      ctx.textAlign = 'right';
+      var unit = ' [GeV]', uw = ctx.measureText(unit).width;
+      ctx.fillText(unit, R, B + 28);
+      ctx.font = font(8.5, SERIF, 400, true); var gw = ctx.measureText('γγ').width;
+      ctx.fillText('γγ', R - uw, B + 30.5);
+      ctx.font = font(12, SERIF, 400, true); ctx.fillText('m', R - uw - gw - 0.5, B + 28);
+      ctx.save(); ctx.translate(L - 14, T); ctx.rotate(-Math.PI / 2);
+      ctx.font = font(9.5, SANS, 500); ctx.textAlign = 'right'; ctx.fillText('Events / 4 GeV', 0, 0);
+      ctx.restore();
+
+      // the excess regions
+      if (bk > 0) [95, 152].forEach(function (m0) {
+        ctx.fillStyle = ink('crimson', 0.075 * bk); ctx.fillRect(X(m0 - 5), T, X(m0 + 5) - X(m0 - 5), B - T);
+      });
+      // fits: the smooth background, then signal plus background
+      function curve(k, f) {
+        ctx.beginPath();
+        for (var mm = 65; mm <= 65 + 100 * k + 0.001; mm += 0.5) { var yy = Y(f(mm)); if (mm === 65) ctx.moveTo(X(mm), yy); else ctx.lineTo(X(mm), yy); }
+        ctx.stroke();
+      }
+      if (fk > 0) { ctx.save(); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4; ctx.strokeStyle = ink('brass', 0.95); curve(fk, bkg); ctx.restore(); }
+      if (sk > 0) { ctx.lineWidth = 1.3; ctx.strokeStyle = ink('crimson', 0.85); curve(sk, sb); }
+      // toy data, rising bin by bin
+      e.bins.forEach(function (b, i) {
+        var k = e.reduce ? 1 : ease((c - 0.5 - i * 0.14) / 0.45);
+        if (k <= 0) return;
+        var x = X(b.m), y = Y(b.v * k), ey = b.err / 1.1 * (B - T);
+        ctx.strokeStyle = ink('green', 0.8 * k); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, y - ey); ctx.lineTo(x, y + ey); ctx.stroke();
+        ctx.fillStyle = ink('green', 0.95 * k); ctx.beginPath(); ctx.arc(x, y, 2.2, 0, TAU); ctx.fill();
+      });
+      // the two excesses, named
+      if (bk > 0) [95, 152].forEach(function (m0) {
+        var top = 0;
+        e.bins.forEach(function (b) { if (Math.abs(b.m - m0) <= 6) top = Math.max(top, b.v + b.err); });
+        ctx.font = font(14, DISPLAY, 600, true); ctx.fillStyle = ink('crimson', 0.95 * bk); ctx.textAlign = 'center';
+        ctx.fillText(m0 + ' GeV', X(m0), Y(top) - 9);
+      });
+      // legend
+      ctx.font = font(9, SANS, 500); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      [['Toy data', 0], ['Background', 1], ['Signal + background', 2]].forEach(function (row, i) {
+        var y = T + 7 + i * 14, tx = X(143), w = ctx.measureText(row[0]).width, sx = tx - w - 28;
+        ctx.fillStyle = ink('slate', 0.9 * ax); ctx.fillText(row[0], tx, y);
+        if (row[1] === 0) {
+          ctx.strokeStyle = ink('green', 0.8 * ax); ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(sx + 10, y - 5); ctx.lineTo(sx + 10, y + 5); ctx.stroke();
+          ctx.fillStyle = ink('green', 0.95 * ax); ctx.beginPath(); ctx.arc(sx + 10, y, 2.2, 0, TAU); ctx.fill();
+        } else {
+          ctx.save();
+          if (row[1] === 1) { ctx.setLineDash([5, 4]); ctx.strokeStyle = ink('brass', ax); ctx.lineWidth = 1.4; }
+          else { ctx.strokeStyle = ink('crimson', 0.85 * ax); ctx.lineWidth = 1.3; }
+          ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(sx + 20, y); ctx.stroke(); ctx.restore();
+        }
+      });
+    },
+    click: function (e) { e.seed++; this.toy(e); e.c0 = e.t - 0.5; }
+  };
+  var TRI = SCENES.triangulation, SPEC = SCENES.spectrum;
+  delete SCENES.triangulation; delete SCENES.spectrum;
+
+  /* Conic hulls. The 2-fold Mellin-Barnes integral of 1/(1 + x + y)^a has three Gamma
+     functions, Gamma(-z1), Gamma(-z2) and Gamma(a + z1 + z2). Each pair of them fixes a
+     family of poles filling a cone; summing the residues in a cone gives one series. */
+  var CONES = [
+    { A: [0, 0], d1: [1, 0], d2: [0, 1], col: 'pine', lab: 'Γ(−z_1)\\,Γ(−z_2)' },
+    { A: [0, -1.5], d1: [1, -1], d2: [0, -1], col: 'brassD', lab: 'Γ(−z_1)\\,Γ(a+z_1+z_2)' },
+    { A: [-1.5, 0], d1: [-1, 1], d2: [-1, 0], col: 'crimson', lab: 'Γ(−z_2)\\,Γ(a+z_1+z_2)' }
+  ];
+  var CONIC = {
+    key: 'conic', paper: '2012.15108', dur: 12.5, cap: 'Conic hulls and series representations',
+    layout: function (v) {
+      var u = Math.min((v.w * 0.6) / 7.4, (v.h - 10) / 6.7);
+      v.u = u; v.ox = v.x + 6 + 4.0 * u; v.oy = v.y + 6 + 2.6 * u; v.S = Math.max(9, Math.min(12.5, v.w / 42));
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, u = v.u, R = v.reduce, i, n;
+      function X(z1) { return v.ox + z1 * u; }
+      function Y(z2) { return v.oy - z2 * u; }
+      var x0 = X(-4), x1 = X(3.4), y0 = Y(2.6), y1 = Y(-4.1);
+      ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
+      var ak = R ? 1 : ease(t / 0.8), lk = R ? 1 : ease((t - 0.8) / 1.2);
+      ctx.save(); ctx.setLineDash([3, 4]); ctx.lineWidth = 0.9;
+      for (n = 0; n <= 3; n++) line(ctx, X(n), y0, X(n), y1, ink('pine', 0.3 * lk));                 // poles of Gamma(-z1)
+      for (n = 0; n <= 2; n++) line(ctx, x0, Y(n), x1, Y(n), ink('brassD', 0.3 * lk));               // poles of Gamma(-z2)
+      for (n = 0; n <= 4; n++) line(ctx, X(-4), Y(-1.5 - n + 4), X(3.4), Y(-1.5 - n - 3.4), ink('crimson', 0.26 * lk));
+      ctx.restore();
+      line(ctx, x0, Y(0), x1, Y(0), ink('green', 0.55 * ak), 1); line(ctx, X(0), y0, X(0), y1, ink('green', 0.55 * ak), 1);
+      CONES.forEach(function (C, ci) {
+        var start = 2.3 + ci * 2.6, ck = R ? 1 : ease((t - start) / 0.9);
+        if (ck <= 0) return;
+        var ax = X(C.A[0]), ay = Y(C.A[1]);
+        ctx.fillStyle = ink(C.col, 0.08 * ck);
+        ctx.beginPath(); ctx.moveTo(ax, ay);
+        ctx.lineTo(X(C.A[0] + 12 * C.d1[0]), Y(C.A[1] + 12 * C.d1[1]));
+        ctx.lineTo(X(C.A[0] + 12 * (C.d1[0] + C.d2[0])), Y(C.A[1] + 12 * (C.d1[1] + C.d2[1])));
+        ctx.lineTo(X(C.A[0] + 12 * C.d2[0]), Y(C.A[1] + 12 * C.d2[1])); ctx.closePath(); ctx.fill();
+        line(ctx, ax, ay, X(C.A[0] + 12 * C.d1[0] * ck), Y(C.A[1] + 12 * C.d1[1] * ck), ink(C.col, 0.75), 1.2);
+        line(ctx, ax, ay, X(C.A[0] + 12 * C.d2[0] * ck), Y(C.A[1] + 12 * C.d2[1] * ck), ink(C.col, 0.75), 1.2);
+        for (var p = 0; p <= 6; p++) for (var q = 0; q <= 6 - p; q++) {     // residues, summed order by order
+          var dk = R ? 1 : ease((t - start - 0.45 - (p + q) * 0.16) / 0.3);
+          if (dk <= 0) continue;
+          var zx = C.A[0] + p * C.d1[0] + q * C.d2[0], zy = C.A[1] + p * C.d1[1] + q * C.d2[1];
+          dot(ctx, X(zx), Y(zy), 2.4 * dk, ink(C.col, 0.95));
+        }
+      });
+      var cx = X(-0.5), cy = Y(-0.5), ck2 = R ? 1 : ease((t - 1.4) / 0.6);           // the straight contour, Re z = c
+      if (ck2 > 0) {
+        line(ctx, cx - 4, cy - 4, cx + 4, cy + 4, ink('green', ck2), 1.5); line(ctx, cx - 4, cy + 4, cx + 4, cy - 4, ink('green', ck2), 1.5);
+      }
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha *= ak;
+      drawMath(ctx, '\\rm{Re}\\,z_1', x1 - 2, Y(0) - 6, v.S * 0.85, ink('slate', 0.9), 'right');
+      drawMath(ctx, '\\rm{Re}\\,z_2', X(0) - 5, y0 + 11, v.S * 0.85, ink('slate', 0.9), 'right');
+      ctx.restore();
+      var px = x1 + 14, pw = v.x + v.w - px, S = v.S;                             // the integral and its three series
+      if (pw > 90) {
+        ctx.save(); ctx.globalAlpha *= ak;
+        drawMath(ctx, '\\frac{1}{(1+x+y)^a}', px, v.y + 34, S * 1.15, ink('green', 0.95), 'left');
+        caps(ctx, 'THREE SERIES', px, v.y + 62, ink('slate', 0.85), 8);
+        ctx.restore();
+        CONES.forEach(function (C, ci) {
+          var k = R ? 1 : ease((t - 2.3 - ci * 2.6) / 0.6);
+          if (k <= 0) return;
+          ctx.save(); ctx.globalAlpha *= k;
+          var yy = v.y + 84 + ci * 24;
+          dot(ctx, px + 4, yy - 4, 3.2, ink(C.col, 0.95));
+          drawMath(ctx, C.lab, px + 14, yy, S * 0.9, ink('green', 0.9), 'left');
+          ctx.restore();
+        });
+      }
+    }
+  };
+
+  /* A one-fold Mellin-Barnes integral: the straight contour Re z = c separates the poles
+     of Gamma(a + z) from those of Gamma(-z); closing it to the right sums the residues. */
+  var CONTOUR = {
+    key: 'contour', paper: '2212.11839', dur: 11.5, cap: 'Mellin-Barnes integrals with straight contours',
+    layout: function (v) {
+      v.S = Math.max(9.5, Math.min(13, v.w / 38)); v.ux = v.w / 11.2;
+      v.cx0 = v.x + v.w * 0.44; v.ay = v.y + v.h * 0.62; v.ry = Math.min(v.h * 0.33, 80);
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, ux = v.ux, c = -0.3, a = 0.6, n;
+      function X(re) { return v.cx0 + re * ux; }
+      var ak = R ? 1 : ease(t / 0.7), top = v.ay - v.ry - 10, bot = v.ay + v.ry + 10;
+      line(ctx, v.x + 6, v.ay, v.x + v.w - 6, v.ay, ink('green', 0.45 * ak), 1);                   // real axis
+      ctx.save(); ctx.globalAlpha *= ak; drawMath(ctx, '\\rm{Re}\\,z', v.x + v.w - 6, v.ay - 7, v.S * 0.85, ink('slate', 0.9), 'right'); ctx.restore();
+      var lk = R ? 1 : ease((t - 0.4) / 1.1), yTop = bot + (top - bot) * lk;                         // the contour
+      line(ctx, X(c), bot, X(c), yTop, ink('green', 0.95), 1.6);
+      if (lk > 0.95) {
+        ctx.fillStyle = ink('green', 0.95); ctx.beginPath();
+        ctx.moveTo(X(c), v.ay - v.ry * 0.5 - 6); ctx.lineTo(X(c) - 4, v.ay - v.ry * 0.5 + 2); ctx.lineTo(X(c) + 4, v.ay - v.ry * 0.5 + 2); ctx.fill();
+      }
+      for (n = 0; n <= 4; n++) {                                                                    // the poles
+        var pk = R ? 1 : ease((t - 1.3 - n * 0.14) / 0.35);
+        if (pk > 0) dot(ctx, X(n), v.ay, 3 * pk, ink('pine', 0.95));
+        var lk2 = R ? 1 : ease((t - 1.5 - n * 0.14) / 0.35);
+        if (lk2 > 0 && X(-a - n) > v.x + 8) dot(ctx, X(-a - n), v.ay, 3 * lk2, ink('brassD', 0.95));
+      }
+      var gk = R ? 1 : ease((t - 2.3) / 0.6);
+      ctx.save(); ctx.globalAlpha *= gk;
+      drawMath(ctx, 'Γ(−z)', X(2), v.ay + 22, v.S, ink('pine', 0.95), 'center');
+      drawMath(ctx, 'Γ(a+z)', X(-2.1), v.ay + 22, v.S, ink('brassD', 0.95), 'center');
+      drawMath(ctx, '\\rm{Re}\\,z=c', X(c) - 8, top + 4, v.S * 0.9, ink('green', 0.9), 'right');
+      ctx.restore();
+      var ck = R ? 1 : easeInOut((t - 3.2) / 1.6), rx = X(4.7) - X(c);                               // close to the right
+      if (ck > 0) {
+        ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = ink('green', 0.7); ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.ellipse(X(c), v.ay, rx, v.ry, 0, -Math.PI / 2, -Math.PI / 2 + Math.PI * ck); ctx.stroke(); ctx.restore();
+      }
+      for (n = 0; n <= 4; n++) {                                                                    // residues, one by one
+        var rk = R ? 1 : clamp01((t - 5 - n * 0.42) / 0.5);
+        if (rk <= 0) continue;
+        ring(ctx, X(n), v.ay, 5 + 4 * (1 - rk), ink('pine', 0.9 * rk + 0.1), 1.2);
+      }
+      var S = v.S, fk = R ? 1 : ease((t - 0.2) / 0.8), sk = R ? 1 : ease((t - 7.3) / 0.8);
+      ctx.save(); ctx.globalAlpha *= fk;
+      var b = drawMath(ctx, '\\frac{1}{2πi}\\int\\rm{d}z\\,Γ(−z)\\,Γ(a+z)\\,x^z', v.x + 6, v.y + 22, S, ink('green', 0.95), 'left');
+      ctx.restore();
+      if (sk > 0) { ctx.save(); ctx.globalAlpha *= sk; drawMath(ctx, '=Γ(a)\\,(1+x)^{−a}', v.x + 6 + b.w, v.y + 22, S, ink('crimson', 0.95), 'left'); ctx.restore(); }
+    }
+  };
+
+  /* Double box and hexagon: the two conformal integrals of the paper, drawn in turn. */
+  var DOUBLEBOX = {
+    n: { a: [0.62, 0.2, 1], b: [0.95, 0.2, 1], c: [1.28, 0.2, 1], d: [0.62, 0.8, 1], e: [0.95, 0.8, 1], f: [1.28, 0.8, 1],
+         p1: [0.36, 0.02], p2: [0.36, 0.98], p3: [1.54, 0.02], p4: [1.54, 0.98] },
+    e: [{ a: 'p1', b: 'a', t: 'p', c: 'brassD', lab: 'p_1', lt: 0.1, lo: [-12, 6] }, { a: 'p2', b: 'd', t: 'p', c: 'brassD', lab: 'p_2', lt: 0.1, lo: [-12, -2] },
+        { a: 'a', b: 'b', t: 'p' }, { a: 'b', b: 'c', t: 'p' }, { a: 'a', b: 'd', t: 'p' }, { a: 'b', b: 'e', t: 'p' },
+        { a: 'c', b: 'f', t: 'p' }, { a: 'd', b: 'e', t: 'p' }, { a: 'e', b: 'f', t: 'p' },
+        { a: 'c', b: 'p3', t: 'p', c: 'brassD', lab: 'p_3', lt: 0.9, lo: [12, 6] }, { a: 'f', b: 'p4', t: 'p', c: 'brassD', lab: 'p_4', lt: 0.9, lo: [12, -2] }],
+    stagger: 0.22, edgeDur: 0.45
+  };
+  var HEXAGON = (function () {
+    var n = {}, e = [];
+    for (var k = 0; k < 6; k++) {
+      var an = (k * 60 - 90) * D2R;
+      n['v' + k] = [0.95 + 0.33 * Math.cos(an), 0.5 + 0.33 * Math.sin(an), 1];
+      n['x' + k] = [0.95 + 0.5 * Math.cos(an), 0.5 + 0.5 * Math.sin(an)];
+    }
+    for (k = 0; k < 6; k++) e.push({ a: 'v' + k, b: 'v' + ((k + 1) % 6), t: 'p' });
+    for (k = 0; k < 6; k++) e.push({ a: 'v' + k, b: 'x' + k, t: 'p', c: 'brassD' });
+    return { n: n, e: e, stagger: 0.2, edgeDur: 0.45 };
+  })();
+  var CONFORMAL = {
+    key: 'conformal', paper: '2007.08360', dur: 12, cap: 'Double box and hexagon conformal integrals',
+    layout: function (v) {
+      v.box = Object.create(v); diagramLayout(v.box, DOUBLEBOX);
+      v.hex = Object.create(v); diagramLayout(v.hex, HEXAGON);
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, split = 6;
+      var a1 = R ? 1 : clamp01((split - t) / 0.5), a2 = R ? 0 : clamp01((t - split) / 0.5);
+      if (a1 > 0) {
+        ctx.save(); ctx.globalAlpha *= a1; drawDiagram(ctx, v.box, DOUBLEBOX, t);
+        drawMath(ctx, 'k_1', v.box.F.x + 0.785 * v.box.F.s, v.box.F.y + 0.53 * v.box.F.s, 12, ink('slate', 0.9 * clamp01(t - 3)), 'center');
+        drawMath(ctx, 'k_2', v.box.F.x + 1.115 * v.box.F.s, v.box.F.y + 0.53 * v.box.F.s, 12, ink('slate', 0.9 * clamp01(t - 3)), 'center');
+        caps(ctx, 'TWO LOOPS', v.x + 4, v.y + 12, ink('slate', 0.85), 8); ctx.restore();
+      }
+      if (a2 > 0) {
+        ctx.save(); ctx.globalAlpha *= a2; drawDiagram(ctx, v.hex, HEXAGON, t - split);
+        caps(ctx, 'ONE LOOP, SIX POINTS', v.x + 4, v.y + 12, ink('slate', 0.85), 8); ctx.restore();
+      }
+    }
+  };
+
+  /* The sunset integral with three different masses, as in chiral perturbation theory. */
+  var SUNSET = diagramVignette({
+    key: 'sunset', paper: '2512.07727', dur: 9.5, cap: 'Sunset integrals with three mass scales',
+    D: { n: { i: [0.1, 0.5], v1: [0.5, 0.5, 1], v2: [1.4, 0.5, 1], o: [1.8, 0.5] },
+         e: [{ a: 'i', b: 'v1', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] },
+             { a: 'v1', b: 'v2', t: 'p', bend: -0.36, c: 'brassD', lab: 'm_1', lo: [0, -10] },
+             { a: 'v1', b: 'v2', t: 'p', c: 'pine', lab: 'm_2', lo: [0, -8] },
+             { a: 'v1', b: 'v2', t: 'p', bend: 0.36, c: 'crimson', lab: 'm_3', lo: [0, 20] },
+             { a: 'v2', b: 'o', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] }], stagger: 0.5, edgeDur: 0.7 }
+  });
+
+  /* Proton decay through a baryon-number-violating operator of the SMEFT:
+     u u turn into e+ and an anti-d quark, which binds with the spectator d into a pion. */
+  function brace(ctx, x, y1, y2, dir, color) {      // a curly bracket, opening to dir = +1 (right) or -1 (left)
+    var m = (y1 + y2) / 2, w = 6 * dir;
+    ctx.strokeStyle = color; ctx.lineWidth = 1.1; ctx.beginPath();
+    ctx.moveTo(x + w, y1); ctx.quadraticCurveTo(x, y1, x, y1 + 6); ctx.lineTo(x, m - 5); ctx.quadraticCurveTo(x, m, x - w, m);
+    ctx.quadraticCurveTo(x, m, x, m + 5); ctx.lineTo(x, y2 - 6); ctx.quadraticCurveTo(x, y2, x + w, y2); ctx.stroke();
+  }
+  var BNV = diagramVignette({
+    key: 'bnv', paper: '2510.08682', dur: 10.5, cap: 'Baryon number violation and proton decay',
+    D: { n: { u1: [0.2, 0.26], u2: [0.2, 0.46], d1: [0.2, 0.8], O: [0.9, 0.36, 'op'], ep: [1.62, 0.1], db: [1.52, 0.58], d2: [1.52, 0.8] },
+         e: [{ a: 'u1', b: 'O', t: 'f', lab: 'u', lt: 0.25, lo: [0, -9] }, { a: 'u2', b: 'O', t: 'f', lab: 'u', lt: 0.25, lo: [0, 16] },
+             { a: 'd1', b: 'd2', t: 'f', lab: 'd', lt: 0.12, lo: [0, -8] },
+             { a: 'O', b: 'ep', t: 'f', rev: 1, lab: 'e^+', lt: 0.8, lo: [0, -9] }, { a: 'O', b: 'db', t: 'f', rev: 1, lab: '\\bar{d}', lt: 0.8, lo: [0, -9] }],
+         stagger: 0.45, edgeDur: 0.6 },
+    extra: function (v, t) {
+      var ctx = v.ctx, F = v.F, k = v.reduce ? 1 : ease((t - 2.8) / 0.6);
+      if (k <= 0) return;
+      ctx.save(); ctx.globalAlpha *= k;
+      brace(ctx, F.x + 0.12 * F.s, F.y + 0.2 * F.s, F.y + 0.86 * F.s, 1, ink('slate', 0.8));
+      drawMath(ctx, 'p', F.x + 0.03 * F.s, F.y + 0.56 * F.s, 14, ink('green', 0.95), 'center');
+      brace(ctx, F.x + 1.6 * F.s, F.y + 0.52 * F.s, F.y + 0.86 * F.s, -1, ink('slate', 0.8));
+      drawMath(ctx, 'π^0', F.x + 1.72 * F.s, F.y + 0.73 * F.s, 14, ink('green', 0.95), 'center');
+      drawMath(ctx, 'p\\to e^+π^0', v.x + v.w - 4, v.y + 16, 13, ink('crimson', 0.95), 'right');
+      ctx.restore();
+    }
+  });
+
+  /* Drell-Yan production of the charged and neutral members of a Higgs triplet,
+     with the neutral one decaying to two photons. */
+  var TRIPLET = diagramVignette({
+    key: 'triplet', paper: '2402.00101', dur: 10, cap: 'Drell-Yan production of a Higgs triplet',
+    D: { n: { q: [0.12, 0.1], qb: [0.12, 0.9], v1: [0.52, 0.5, 1], v2: [1.0, 0.5, 1], hc: [1.72, 0.14], v3: [1.36, 0.74, 1], g1: [1.8, 0.6], g2: [1.78, 0.96] },
+         e: [{ a: 'q', b: 'v1', t: 'f', lab: 'q', lo: [-10, -4] }, { a: 'qb', b: 'v1', t: 'f', rev: 1, lab: "\\bar{q}'", lo: [-12, 8] },
+             { a: 'v1', b: 'v2', t: 'w', lab: 'W^{±∗}', lo: [0, -12] },
+             { a: 'v2', b: 'hc', t: 's', lab: 'H^±', lo: [-4, -10] }, { a: 'v2', b: 'v3', t: 's', lab: 'H^0', lo: [-16, 14] },
+             { a: 'v3', b: 'g1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'v3', b: 'g2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
+         stagger: 0.42, edgeDur: 0.6 }
+  });
+
+  /* Two-loop Barr-Zee diagram: the electron electric dipole moment from a new scalar and
+     a photon attached to a top-quark loop. */
+  var BARRZEE = diagramVignette({
+    key: 'barrzee', paper: '2412.00523', dur: 10, cap: 'Electric dipole moments from Barr-Zee diagrams',
+    D: { n: { e1: [0.1, 0.9], a1: [0.62, 0.9, 1], a2: [1.28, 0.9, 1], e2: [1.8, 0.9],
+              l1: [0.95 - 0.17, 0.42 + 0.1, 1], l2: [0.95 + 0.17, 0.42 + 0.1, 1], l3: [0.95, 0.22, 1], out: [0.95, 0.0] },
+         e: [{ a: 'e1', b: 'a1', t: 'f', lab: 'e', lo: [0, 16] }, { a: 'a1', b: 'a2', t: 'f' }, { a: 'a2', b: 'e2', t: 'f', lab: 'e', lo: [0, 16] },
+             { a: 'a1', b: 'l1', t: 's', lab: 'A', lo: [-12, 0] }, { a: 'a2', b: 'l2', t: 'ph', lab: 'γ', lo: [12, 2] },
+             { a: 'l1', b: 'l3', t: 'f', arc: [0.95, 0.42, 0.2, 150 * D2R, 270 * D2R] },
+             { a: 'l3', b: 'l2', t: 'f', arc: [0.95, 0.42, 0.2, 270 * D2R, 390 * D2R], lab: 't', lt: 0.5, lo: [12, 0] },
+             { a: 'l2', b: 'l1', t: 'f', arc: [0.95, 0.42, 0.2, 30 * D2R, 150 * D2R] },
+             { a: 'l3', b: 'out', t: 'ph', lab: 'γ', lt: 0.7, lo: [12, 0] }], stagger: 0.36, edgeDur: 0.55 }
+  });
+
+  /* Asymmetric di-Higgs: gluon fusion through a top loop into a heavy scalar that decays
+     into two different lighter ones. */
+  var DIHIGGS = diagramVignette({
+    key: 'dihiggs', paper: '2303.11351', dur: 10, cap: 'Asymmetric di-Higgs signals',
+    D: { n: { g1: [0.08, 0.12], g2: [0.08, 0.88], t1: [0.5, 0.26, 1], t2: [0.5, 0.74, 1], t3: [0.82, 0.5, 1], v: [1.22, 0.5, 1], h1: [1.8, 0.14], h2: [1.8, 0.86] },
+         e: [{ a: 'g1', b: 't1', t: 'g', lab: 'g', lt: 0.35, lo: [6, -10] }, { a: 'g2', b: 't2', t: 'g', lab: 'g', lt: 0.35, lo: [6, 18] },
+             { a: 't1', b: 't2', t: 'f' }, { a: 't2', b: 't3', t: 'f', lab: 't', lo: [8, 12] }, { a: 't3', b: 't1', t: 'f' },
+             { a: 't3', b: 'v', t: 's', lab: 'H', lo: [0, -9] },
+             { a: 'v', b: 'h1', t: 's', lab: 'h_1', lo: [-6, -10] }, { a: 'v', b: 'h2', t: 's', lab: 'h_2', lo: [-6, 16] }], stagger: 0.38, edgeDur: 0.55 },
+    extra: function (v, t) {
+      var k = v.reduce ? 1 : ease((t - 3.6) / 0.6);
+      if (k > 0) drawMath(v.ctx, 'm_{h_1}≠m_{h_2}', v.x + v.w - 4, v.y + v.h - 4, 12, ink('slate', 0.9 * k), 'right');
+    }
+  });
+
+  /* Top-quark pairs in the e mu b b channel, whose differential distributions the paper
+     analyses for traces of new Higgs bosons. */
+  var TTBAR = diagramVignette({
+    key: 'ttbar', paper: '2308.07953', dur: 10.5, cap: 'Top-quark pairs and new Higgs bosons',
+    D: { n: { g1: [0.06, 0.16], g2: [0.06, 0.84], v1: [0.36, 0.5, 1], v2: [0.66, 0.5, 1], T: [1.0, 0.22, 1], Tb: [1.0, 0.78, 1],
+              b: [1.38, 0.04], Wp: [1.3, 0.34, 1], ep: [1.8, 0.2], nu: [1.8, 0.44], bb: [1.38, 0.96], Wm: [1.3, 0.66, 1], mu: [1.8, 0.56], nb: [1.8, 0.8] },
+         e: [{ a: 'g1', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, -6] }, { a: 'g2', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, 14] },
+             { a: 'v1', b: 'v2', t: 'g' },
+             { a: 'v2', b: 'T', t: 'f', lab: 't', lo: [-6, -8] }, { a: 'v2', b: 'Tb', t: 'f', rev: 1, lab: '\\bar{t}', lo: [-6, 16] },
+             { a: 'T', b: 'b', t: 'f', lab: 'b', lt: 0.8, lo: [-8, -2] }, { a: 'T', b: 'Wp', t: 'w', lab: 'W^+', lt: 0.6, lo: [-12, 10] },
+             { a: 'Wp', b: 'ep', t: 'f', rev: 1, lab: 'e^+', lt: 0.9, lo: [10, -4] }, { a: 'Wp', b: 'nu', t: 'f', lab: 'ν', lt: 0.9, lo: [10, 6] },
+             { a: 'Tb', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.8, lo: [-10, 10] }, { a: 'Tb', b: 'Wm', t: 'w', lab: 'W^−', lt: 0.6, lo: [-12, -4] },
+             { a: 'Wm', b: 'mu', t: 'f', lab: 'μ^−', lt: 0.9, lo: [10, -4] }, { a: 'Wm', b: 'nb', t: 'f', rev: 1, lab: '\\bar{ν}', lt: 0.9, lo: [10, 8] }],
+         stagger: 0.26, edgeDur: 0.5, labSize: 12 }
+  });
+
+  /* The Newton polytope of the two-loop sunset: the exponents of the monomials of its
+     Lee-Pomeransky polynomial G = U + F, the point configuration behind its GKZ system. */
+  var POLY_PTS = [[1, 1, 0], [0, 1, 1], [1, 0, 1], [2, 1, 0], [2, 0, 1], [1, 0, 2], [0, 1, 2], [0, 2, 1], [1, 2, 0], [1, 1, 1]];
+  var POLY_EDGES = [[0, 1], [1, 2], [2, 0], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 3],
+                    [0, 3], [0, 8], [2, 4], [2, 5], [1, 6], [1, 7]];
+  var POLYTOPE = {
+    key: 'polytope', paper: '2211.01285', dur: 10.5, cap: 'GKZ systems and Newton polytopes',
+    layout: function (v) { v.sc = Math.min(v.h * 0.3, v.w * 0.19); v.cx = v.x + v.w * 0.36; v.cy = v.y + v.h * 0.52; v.S = Math.max(9.5, Math.min(12.5, v.w / 42)); },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, th = (R ? 0.7 : t * 0.45) + 0.4, tilt = 0.55;
+      var cxm = 1, cym = 1, czm = 1;                              // rotate about the centre of the configuration
+      var P = POLY_PTS.map(function (p) {
+        var x = p[0] - cxm * 0.9, y = p[1] - cym * 0.9, z = p[2] - czm * 0.9;
+        var x1 = x * Math.cos(th) - y * Math.sin(th), y1 = x * Math.sin(th) + y * Math.cos(th);
+        var y2 = y1 * Math.cos(tilt) - z * Math.sin(tilt), z2 = y1 * Math.sin(tilt) + z * Math.cos(tilt);
+        return [v.cx + x1 * v.sc, v.cy + z2 * -v.sc + y2 * 0.12 * v.sc, y2];
+      });
+      var ek = R ? 1 : ease((t - 0.6) / 1.6);
+      POLY_EDGES.forEach(function (ed, i) {
+        var a = P[ed[0]], b = P[ed[1]], k = R ? 1 : ease((t - 0.6 - i * 0.1) / 0.5), back = (a[2] + b[2]) / 2 > 0.3;
+        if (k <= 0) return;
+        ctx.save(); if (back) ctx.setLineDash([3, 3]);
+        line(ctx, a[0], a[1], a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, ink(i < 3 ? 'brassD' : i < 9 ? 'pine' : 'green', back ? 0.35 : 0.85), 1.2);
+        ctx.restore();
+      });
+      var hex = [3, 4, 5, 6, 7, 8], fk = R ? 1 : ease((t - 3.4) / 1);                 // the hexagonal face, fanned from its inner point
+      if (fk > 0) {
+        ctx.fillStyle = ink('pine', 0.08 * fk); ctx.beginPath();
+        hex.forEach(function (i, j) { if (j) ctx.lineTo(P[i][0], P[i][1]); else ctx.moveTo(P[i][0], P[i][1]); }); ctx.closePath(); ctx.fill();
+        hex.forEach(function (i, j) { var k2 = R ? 1 : ease((t - 3.8 - j * 0.18) / 0.4); if (k2 > 0) line(ctx, P[9][0], P[9][1], P[9][0] + (P[i][0] - P[9][0]) * k2, P[9][1] + (P[i][1] - P[9][1]) * k2, ink('crimson', 0.6), 1); });
+      }
+      P.forEach(function (p, i) {
+        var k = R ? 1 : ease((t - 0.2 - i * 0.07) / 0.4);
+        if (k <= 0) return;
+        dot(ctx, p[0], p[1], (i === 9 ? 3.1 : 2.7) * k, ink('paper', 1)); ring(ctx, p[0], p[1], (i === 9 ? 3.1 : 2.7) * k, ink(i === 9 ? 'crimson' : 'green', 0.95), 1.2);
+      });
+      var S = v.S, tx = v.x + v.w * 0.66, fk2 = R ? 1 : ease((t - 0.3) / 0.8);
+      ctx.save(); ctx.globalAlpha *= fk2;
+      drawMath(ctx, 'G=U+F', tx, v.y + v.h * 0.3, S * 1.1, ink('green', 0.95), 'left');
+      drawMath(ctx, 'U=x_1x_2+x_2x_3+x_3x_1', tx, v.y + v.h * 0.3 + S * 2.1, S * 0.85, ink('slate', 0.95), 'left');
+      caps(ctx, 'SUNSET, TWO LOOPS', tx, v.y + v.h * 0.3 + S * 4, ink('slate', 0.85), 7.5);
+      ctx.restore();
+    }
+  };
+
+  /* HyperPrecision: the partial sums of an Appell F1 series settle digit by digit on its
+     exact value, 6 ln(4/3). The sums were computed exactly when the site was built. */
+  var PRECISION = {
+    key: 'precision', paper: '2605.30216', dur: 11, cap: 'Multivariate hypergeometric functions to high precision',
+    layout: function (v) { v.S = Math.max(9, Math.min(13, v.w / 38)); v.D = Math.max(9, Math.min(15.5, v.w / 31)); },
+    frame: function (v, t) {
+      var ctx = v.ctx, hp = (v.data && v.data.hp) || null, R = v.reduce;
+      if (!hp) return;
+      var S = v.S, fk = R ? 1 : ease(t / 0.7), sums = hp.sums, exact = hp.exact;
+      ctx.save(); ctx.globalAlpha *= fk;
+      drawMath(ctx, 'F_1(x,y)=\\sum_{m,n≥0}\\frac{x^m\\,y^n}{m+n+1}', v.x + 4, v.y + 26, S, ink('green', 0.95), 'left');
+      drawMath(ctx, 'x=\\frac{1}{2},\\quad y=\\frac{1}{3}', v.x + v.w - 4, v.y + 26, S * 0.9, ink('slate', 0.95), 'right');
+      drawMath(ctx, 'a=b_1=b_2=1,\\quad c=2', v.x + 4, v.y + 26 + S * 2.4, S * 0.82, ink('slate', 0.9), 'left');
+      ctx.restore();
+      var prog = R ? 1 : easeInOut((t - 0.8) / 6.5), idx = Math.min(sums.length - 1, Math.floor(prog * (sums.length - 1) + 1e-9));
+      var cur = sums[idx][1], order = sums[idx][0], good = 0;
+      while (good < cur.length && cur[good] === exact[good]) good++;
+      var digits = cur.replace('.', '').length, correct = Math.max(0, (good > 1 ? good - 1 : good));
+      var Dz = v.D, y = v.y + v.h * 0.5;                                // the value: 1. then two lines of thirty decimals
+      ctx.font = font(Dz, SERIF, 400, false); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      var cw = ctx.measureText('0').width, x0 = v.x + 4, pre = ctx.measureText('1.').width + cw * 0.35;
+      ctx.fillStyle = good > 1 ? ink('brassD', 1) : ink('slate', 0.3); ctx.fillText(cur.slice(0, 2) || '1.', x0, y);
+      for (var i = 0; i < 60; i++) {
+        var ch = cur[i + 2] || '·', ok = i + 2 < good, ln = Math.floor(i / 30), col = i % 30;
+        ctx.fillStyle = ok ? ink('brassD', 1) : ink('slate', ch === '·' ? 0.18 : 0.3);
+        ctx.fillText(ch, x0 + pre + col * cw + Math.floor(col / 5) * cw * 0.5, y + ln * Dz * 1.55);
+      }
+      caps(ctx, 'ORDER ' + order + ' · ' + correct + ' CORRECT DIGITS', v.x + 4, v.y + v.h - 6, ink('slate', 0.9), 8);
+      var ek = R ? 1 : ease((t - 7.6) / 0.8);
+      if (ek > 0) { ctx.save(); ctx.globalAlpha *= ek; drawMath(ctx, '=6\\,\\rm{ln}(4/3)', v.x + v.w - 4, v.y + v.h - 6, S, ink('crimson', 0.95), 'right'); ctx.restore(); }
+    }
+  };
+
+  /* The method of brackets: its two basic rules, written out. */
+  var BRACKETS = {
+    key: 'brackets', paper: '2112.09679', dur: 10.5, cap: 'The method of brackets',
+    lines: ['\\int_0^∞x^{α−1}\\,\\rm{d}x=\\langle α\\rangle',
+            '\\sum_nφ_n\\,f(n)\\,\\langle an+b\\rangle=\\frac{1}{|a|}\\,f(n^∗)\\,Γ(−n^∗)',
+            'φ_n=\\frac{(−1)^n}{Γ(n+1)},\\quad n^∗=−\\frac{b}{a}'],
+    layout: function (v) { v.S = Math.max(10, Math.min(16, v.w / 30)); },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, rate = 16, sizes = [S * 1.05, S, S * 0.88], t0 = 0.4, total = 0;
+      BRACKETS.lines.forEach(function (src, i) { var ex = extent(mathBox(ctx, src, sizes[i]).prims); total += ex[1] - ex[0] + (i ? S * 1.3 : 0); });
+      var y = v.y + (v.h - total) / 2 + S * 1.1;
+      BRACKETS.lines.forEach(function (src, i) {
+        var b = mathBox(ctx, src, sizes[i]), n = b.prims.length, k = R ? n : Math.max(0, (t - t0) * rate);
+        drawMath(ctx, src, v.x + (v.w - b.w) / 2, y, sizes[i], ink(i === 2 ? 'slate' : 'green', 0.95), 'left', k);
+        t0 += n / rate + 0.5;
+        var ex = extent(b.prims); y += (ex[1] - ex[0]) + S * 1.3;
+      });
+    }
+  };
+
+  /* The running of the Standard Model gauge couplings at one loop, from the Z mass
+     to the scales where baryon number can be violated. */
+  var RUNNING = {
+    key: 'running', paper: '2307.06800', dur: 10, cap: 'Renormalization group evolution',
+    layout: function (v) { v.L = v.x + 34; v.R = v.x + v.w - 40; v.T = v.y + 10; v.B = v.y + v.h - 26; },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, L = v.L, Rr = v.R, T = v.T, B = v.B;
+      function X(l) { return L + (l - 2) / 15 * (Rr - L); }
+      function Y(a) { return B - a / 65 * (B - T); }
+      var ak = R ? 1 : ease(t / 0.6), MZ = Math.log10(91.19);
+      line(ctx, L, T, L, B, ink('green', 0.6 * ak), 1); line(ctx, L, B, Rr, B, ink('green', 0.6 * ak), 1);
+      ctx.font = font(9, SANS, 500); ctx.fillStyle = ink('slate', 0.9 * ak); ctx.textAlign = 'center';
+      [2, 5, 8, 11, 14, 17].forEach(function (l) { line(ctx, X(l), B, X(l), B + 4, ink('green', 0.6 * ak), 1); ctx.save(); ctx.globalAlpha *= ak; drawMath(ctx, '10^{' + l + '}', X(l), B + 16, 10, ink('slate', 0.9), 'center'); ctx.restore(); });
+      [10, 20, 30, 40, 50, 60].forEach(function (a) { line(ctx, L, Y(a), L - 3, Y(a), ink('green', 0.6 * ak), 1); });
+      ctx.save(); ctx.globalAlpha *= ak;
+      drawMath(ctx, 'μ\\,[\\rm{GeV}]', Rr - 4, B - 7, 10.5, ink('slate', 0.9), 'right');
+      drawMath(ctx, 'α^{−1}', L - 8, T + 8, 11, ink('slate', 0.9), 'right');
+      ctx.restore();
+      var inv = [59.0, 29.6, 8.47], b = [41 / 10, -19 / 6, -7], cols = ['brassD', 'pine', 'crimson'], ends = [];
+      var reach = R ? 17 : 2 + 15 * easeInOut((t - 0.8) / 5.5);
+      inv.forEach(function (a0, i) {                  // 1/alpha_i(mu) = 1/alpha_i(MZ) - b_i ln(mu/MZ) / (2 pi)
+        ctx.strokeStyle = ink(cols[i], 0.92); ctx.lineWidth = 1.6; ctx.beginPath();
+        for (var l = MZ; l <= reach; l += 0.1) {
+          var y = Y(a0 - b[i] / TAU * (l - MZ) * Math.LN10);
+          if (l === MZ) ctx.moveTo(X(l), y); else ctx.lineTo(X(l), y);
+        }
+        ctx.stroke();
+        var le = Math.min(reach, 17), ye = Y(a0 - b[i] / TAU * (le - MZ) * Math.LN10);
+        ends.push([ye, i, X(le)]);
+      });
+      ends.sort(function (p, q) { return p[0] - q[0]; });
+      for (var j = 1; j < ends.length; j++) if (ends[j][0] - ends[j - 1][0] < 13) ends[j][0] = ends[j - 1][0] + 13;
+      if (reach > MZ + 0.5) ends.forEach(function (en) { drawMath(ctx, 'α_' + (en[1] + 1) + '^{−1}', en[2] + 6, en[0] + 4, 11, ink(cols[en[1]], 0.95), 'left'); });
+      var gk = R ? 1 : ease((t - 6.3) / 0.8);
+      if (gk > 0) {
+        ctx.fillStyle = ink('brass', 0.1 * gk); ctx.fillRect(X(13), T, X(17) - X(13), B - T);
+        caps(ctx, 'NEAR UNIFICATION', X(15), T + 10, ink('brassD', 0.9 * gk), 7.5, 'center');
+      }
+    }
+  };
+
+  var TRIV = { key: 'triangulation', paper: '2309.00409', dur: 11, cap: 'Triangulations of point configurations',
+               init: function (v) { TRI.init(v); }, frame: function (v, t) { TRI.frame(v, t); } };
+  var SPECV = { key: 'excesses', paper: '2306.15722', dur: 11.5, cap: 'The di-photon excesses at 95 and 152 GeV',
+                ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
+                init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
+
+  var TOUR = [CONIC, SPECV, TRIV, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, SUNSET, DIHIGGS, POLYTOPE, TTBAR, PRECISION, RUNNING, BRACKETS];
+
+  SCENES.tour = {
+    touchHint: 'Tap for the next paper',
+    init: function (e) {
+      e.refs = (e.data && e.data.refs) || {};
+      e.vs = TOUR.map(function (V) { var v = Object.create(e); v.V = V; return v; });
+      e.i = 0; e.t0 = 0; e.begun = false;
+    },
+    layout: function (e) {
+      var m = 24;
+      e.box = { x: e.x - m, y: e.y - m, w: e.w + 2 * m, h: e.h + 2 * m };
+      e.lay = layer(e.box.w, e.box.h, e.dpr);
+      e.lay.ctx.setTransform(e.dpr, 0, 0, e.dpr, -e.box.x * e.dpr, -e.box.y * e.dpr);
+      e.vs.forEach(function (v) { v.ctx = e.lay.ctx; v.laid = false; });
+    },
+    begin: function (e, i, t) {
+      e.i = (i + e.vs.length) % e.vs.length; e.t0 = t;
+      var v = e.vs[e.i], V = v.V, ref = e.refs[V.paper] || {};
+      if (V.init) V.init(v);
+      v.laid = false;
+      e.caption(ref.u ? '<a href="' + ref.u + '" tabindex="-1" rel="noopener" target="_blank">' + V.cap + '</a>' : V.cap);
+      e.hint(V.ref || ref.r || '');
+    },
+    frame: function (e, t) {
+      if (!e.lay) return;
+      if (!e.begun) { this.begin(e, 0, t); e.begun = true; }
+      var v = e.vs[e.i], V = v.V, lt = e.reduce ? 60 : t - e.t0;
+      if (!e.reduce && lt > V.dur) { this.begin(e, e.i + 1, t); v = e.vs[e.i]; V = v.V; lt = 0; }
+      if (!v.laid) { if (V.layout) V.layout(v); v.laid = true; }
+      var c = e.lay.ctx, a = e.reduce ? 1 : Math.max(0, Math.min(1, lt / 0.45, (V.dur - lt) / 0.45));
+      c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, e.lay.c.width, e.lay.c.height); c.restore();
+      c.save(); V.frame(v, lt); c.restore();
+      var ctx = e.ctx;
+      ctx.save(); ctx.globalAlpha = a; ctx.drawImage(e.lay.c, e.box.x, e.box.y, e.box.w, e.box.h); ctx.restore();
+      var n = e.vs.length, gap = Math.min(9, (e.w - 20) / n), y = e.y + e.h + 7;       // where we are in the tour
+      for (var i = 0; i < n; i++) {
+        var x = e.x + 3 + i * gap;
+        if (i === e.i) {
+          dot(ctx, x, y, 2.6, ink('brass', 1));
+          if (!e.reduce) { ctx.strokeStyle = ink('brassD', 0.8); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 4.6, -Math.PI / 2, -Math.PI / 2 + TAU * clamp01(lt / V.dur)); ctx.stroke(); }
+        } else dot(ctx, x, y, 1.5, ink('slate', 0.35));
+      }
+    },
+    click: function (e) { this.begin(e, e.i + 1, e.t); }
+  };
 
   /* =====================================================================
-     Publications: a constellation of the papers, by year and by field
+     Publications and Talks
      ===================================================================== */
   SCENES.constellation = {
     touchHint: 'Tap a star to see the paper',
@@ -493,10 +1341,6 @@
       if (p.u) window.open(p.u, '_blank', 'noopener');
     }
   };
-
-  /* =====================================================================
-     Talks: the talks around the world, one year at a time
-     ===================================================================== */
   SCENES.talkmap = {
     init: function (e) {
       var d = e.data, talks = d.talks || [], years = [], seg = 2.4;
@@ -601,232 +1445,130 @@
   };
 
   /* =====================================================================
-     Funding: a toy di-photon spectrum with excesses near 95 and 152 GeV
+     Funding: the fellowships and grants as medals along the years
      ===================================================================== */
-  function bkg(m) { return Math.exp(-(m - 65) / 42); }
-  function sig(m) { return 0.12 * Math.exp(-Math.pow(m - 95, 2) / 23) + 0.085 * Math.exp(-Math.pow(m - 152, 2) / 23); }
-  function sb(m) { return bkg(m) + sig(m); }
-
-  SCENES.spectrum = {
-    touchHint: 'Tap for a new pseudo-experiment',
-    init: function (e) { e.seed = 3; e.c0 = 0; this.toy(e); },
-    toy: function (e) {                                // one pseudo-experiment
-      var r = seeded(1 + e.seed * 7919);
-      e.bins = [];
-      for (var m = 67; m <= 163; m += 4) {
-        var mu = sb(m), err = 0.02 + 0.042 * Math.sqrt(mu);
-        e.bins.push({ m: m, v: Math.max(0.01, mu + 0.85 * err * gauss(r)), err: err });
-      }
+  function medal(ctx, x, y, r, label, k, lift) {
+    ctx.save(); ctx.globalAlpha *= k;
+    var tail = function (sgn, col) {                // ribbon tails with notched ends
+      ctx.fillStyle = col; ctx.beginPath();
+      ctx.moveTo(x + sgn * 0.12 * r, y + 0.55 * r); ctx.lineTo(x + sgn * 0.62 * r, y + 0.45 * r);
+      ctx.lineTo(x + sgn * 0.78 * r, y + 1.75 * r); ctx.lineTo(x + sgn * 0.52 * r, y + 1.52 * r); ctx.lineTo(x + sgn * 0.3 * r, y + 1.85 * r);
+      ctx.closePath(); ctx.fill();
+    };
+    tail(-1, ink('pine', 0.9)); tail(1, ink('crimson', 0.85));
+    if (lift > 0) { ctx.shadowColor = 'rgba(122,95,42,' + (0.45 * lift) + ')'; ctx.shadowBlur = 12 * lift; }
+    var g = ctx.createRadialGradient(x - 0.35 * r, y - 0.4 * r, 0.1 * r, x, y, r);
+    g.addColorStop(0, '#f6ebc6'); g.addColorStop(0.55, '#d6bb7c'); g.addColorStop(1, '#9a7a3c');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+    ctx.shadowBlur = 0;
+    ring(ctx, x, y, r, ink('brassD', 1), 1.1); ring(ctx, x, y, r * 0.8, 'rgba(122,95,42,.5)', 0.8);
+    var fs = r * 0.5; ctx.font = font(fs, SANS, 700);
+    var w = ctx.measureText(label).width;
+    if (w > r * 1.35) { fs *= r * 1.35 / w; ctx.font = font(fs, SANS, 700); }
+    ctx.fillStyle = '#5b4520'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, y + 0.5);
+    ctx.restore();
+  }
+  function glint(ctx, x, y, r, u) {                 // a band of light passing over a medal
+    if (u <= 0 || u >= 1) return;
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.clip();
+    var gx = x - 1.6 * r + 3.2 * r * u, g = ctx.createLinearGradient(gx - r * 0.5, y - r, gx + r * 0.5, y + r);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r); ctx.restore();
+  }
+  SCENES.medals = {
+    touchHint: 'Tap for the next award',
+    init: function (e) { e.aw = (e.data && e.data.awards) || []; e.sel = -1; e.selAt = 0; e.nextSel = 5; },
+    layout: function (e) {
+      var A = e.aw, n = A.length;
+      if (!n) return;
+      e.L = e.x + 12; e.R = e.x + e.w - 12; e.base = e.y + e.h - 30;
+      e.mr = Math.max(10, Math.min(16.5, e.w / 30, e.h / 12));
+      var low = e.base - 12 - 1.9 * e.mr, high = e.y + e.mr + 10;
+      e.pos = A.map(function (a, i) {                 // evenly along the path, rising with each award
+        return [e.L + (i + 0.5) / n * (e.R - e.L), low - (low - high) * (i / Math.max(1, n - 1))];
+      });
     },
     frame: function (e, t) {
-      var ctx = e.ctx, C = 13, c = e.reduce ? 9 : t - e.c0;
-      if (c > C) { e.seed++; this.toy(e); e.c0 = t; c = 0; }
-      var L = e.x + 34, R = e.x + e.w - 6, T = e.y + 8, B = e.y + e.h - 30;
-      function X(m) { return L + (m - 65) / 100 * (R - L); }
-      function Y(v) { return B - v / 1.1 * (B - T); }
-      var fade = e.reduce ? 1 : (c > C - 1 ? C - c : 1), ax = e.reduce ? 1 : ease(c / 0.5);
-      var fk = e.reduce ? 1 : ease((c - 4.2) / 1.3), sk = e.reduce ? 1 : ease((c - 5.7) / 1.3);
-      var bk = e.reduce ? 1 : ease((c - 6.4) / 0.9);
-      ctx.globalAlpha = fade;
-
-      // axes, ticks and titles
-      ctx.strokeStyle = ink('green', 0.6 * ax); ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(L, T); ctx.lineTo(L, B); ctx.lineTo(R, B); ctx.stroke();
-      ctx.font = font(9.5, SANS, 500); ctx.fillStyle = ink('slate', 0.9 * ax);
-      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-      for (var m = 70; m <= 160; m += 10) {
-        var major = m % 20 === 10, x = X(m);
-        ctx.beginPath(); ctx.moveTo(x, B); ctx.lineTo(x, B + (major ? 5 : 3)); ctx.stroke();
-        if (major) ctx.fillText(String(m), x, B + 16);
-      }
-      for (var v = 0.2; v < 1.1; v += 0.2) { var yv = Y(v); ctx.beginPath(); ctx.moveTo(L, yv); ctx.lineTo(L - 3, yv); ctx.stroke(); }
-      ctx.textAlign = 'right';
-      var unit = ' [GeV]', uw = ctx.measureText(unit).width;
-      ctx.fillText(unit, R, B + 28);
-      ctx.font = font(8.5, SERIF, 400, true); var gw = ctx.measureText('γγ').width;
-      ctx.fillText('γγ', R - uw, B + 30.5);
-      ctx.font = font(12, SERIF, 400, true); ctx.fillText('m', R - uw - gw - 0.5, B + 28);
-      ctx.save(); ctx.translate(L - 14, T); ctx.rotate(-Math.PI / 2);
-      ctx.font = font(9.5, SANS, 500); ctx.textAlign = 'right'; ctx.fillText('Events / 4 GeV', 0, 0);
-      ctx.restore();
-
-      // the excess regions
-      if (bk > 0) [95, 152].forEach(function (m0) {
-        ctx.fillStyle = ink('crimson', 0.075 * bk); ctx.fillRect(X(m0 - 5), T, X(m0 + 5) - X(m0 - 5), B - T);
+      var A = e.aw, n = A.length, ctx = e.ctx, R = e.reduce;
+      if (!n || !e.pos) return;
+      line(ctx, e.L, e.base, e.R, e.base, ink('brass', 0.55), 1);                                   // the years
+      ctx.font = font(9.5, SANS, 500); ctx.textAlign = 'center';
+      A.forEach(function (a, i) {
+        var x = e.pos[i][0];
+        line(ctx, x, e.base - 3, x, e.base + 3, ink('brass', 0.6), 1);
+        ctx.fillStyle = ink(i === e.sel ? 'brassD' : 'slate', 0.9); ctx.fillText(String(a.y), x, e.base + 15);
       });
-      // fits: the smooth background, then signal plus background
-      function curve(k, f) {
-        ctx.beginPath();
-        for (var mm = 65; mm <= 65 + 100 * k + 0.001; mm += 0.5) { var yy = Y(f(mm)); if (mm === 65) ctx.moveTo(X(mm), yy); else ctx.lineTo(X(mm), yy); }
-        ctx.stroke();
+      var split = A.filter(function (a) { return a.y < 2024; }).length;                           // doctoral years and postdoctoral years
+      if (split > 0 && split < n) {
+        caps(ctx, 'MASTER’S AND DOCTORAL', (e.pos[0][0] + e.pos[split - 1][0]) / 2, e.base + 27, ink('slate', 0.7), 7, 'center');
+        caps(ctx, 'POSTDOCTORAL', (e.pos[split][0] + e.pos[n - 1][0]) / 2, e.base + 27, ink('slate', 0.7), 7, 'center');
+        var xm = (e.pos[split - 1][0] + e.pos[split][0]) / 2;
+        line(ctx, xm, e.base + 18, xm, e.base + 30, ink('brass', 0.45), 1);
       }
-      if (fk > 0) { ctx.save(); ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4; ctx.strokeStyle = ink('brass', 0.95); curve(fk, bkg); ctx.restore(); }
-      if (sk > 0) { ctx.lineWidth = 1.3; ctx.strokeStyle = ink('crimson', 0.85); curve(sk, sb); }
-      // toy data, rising bin by bin
-      e.bins.forEach(function (b, i) {
-        var k = e.reduce ? 1 : ease((c - 0.5 - i * 0.14) / 0.45);
+      ctx.save(); ctx.strokeStyle = ink('brass', 0.55); ctx.lineWidth = 1.2; ctx.setLineDash([2, 4]); ctx.beginPath();  // the path of the awards
+      var shownPath = R ? n : (t - 0.3) / 0.55 + 1;
+      for (var i = 0; i < n && i < shownPath; i++) { var p = e.pos[i]; if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
+      ctx.stroke(); ctx.restore();
+      if (!R && t > 4.4 && t > e.nextSel) { e.sel = (e.sel + 1) % n; e.selAt = t; e.nextSel = t + 3.2; this.announce(e); }
+      if (R && e.sel < 0) { e.sel = n - 1; this.announce(e); }
+      A.forEach(function (a, i) {
+        var p = e.pos[i], age = t - 0.3 - i * 0.55, k = R ? 1 : ease(age / 0.5);
         if (k <= 0) return;
-        var x = X(b.m), y = Y(b.v * k), ey = b.err / 1.1 * (B - T);
-        ctx.strokeStyle = ink('green', 0.8 * k); ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(x, y - ey); ctx.lineTo(x, y + ey); ctx.stroke();
-        ctx.fillStyle = ink('green', 0.95 * k); ctx.beginPath(); ctx.arc(x, y, 2.2, 0, TAU); ctx.fill();
-      });
-      // the two excesses, named
-      if (bk > 0) [95, 152].forEach(function (m0) {
-        var top = 0;
-        e.bins.forEach(function (b) { if (Math.abs(b.m - m0) <= 6) top = Math.max(top, b.v + b.err); });
-        ctx.font = font(14, DISPLAY, 600, true); ctx.fillStyle = ink('crimson', 0.95 * bk); ctx.textAlign = 'center';
-        ctx.fillText(m0 + ' GeV', X(m0), Y(top) - 9);
-      });
-      // legend
-      ctx.font = font(9, SANS, 500); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      [['Toy data', 0], ['Background', 1], ['Signal + background', 2]].forEach(function (row, i) {
-        var y = T + 7 + i * 14, tx = X(143), w = ctx.measureText(row[0]).width, sx = tx - w - 28;
-        ctx.fillStyle = ink('slate', 0.9 * ax); ctx.fillText(row[0], tx, y);
-        if (row[1] === 0) {
-          ctx.strokeStyle = ink('green', 0.8 * ax); ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(sx + 10, y - 5); ctx.lineTo(sx + 10, y + 5); ctx.stroke();
-          ctx.fillStyle = ink('green', 0.95 * ax); ctx.beginPath(); ctx.arc(sx + 10, y, 2.2, 0, TAU); ctx.fill();
-        } else {
-          ctx.save();
-          if (row[1] === 1) { ctx.setLineDash([5, 4]); ctx.strokeStyle = ink('brass', ax); ctx.lineWidth = 1.4; }
-          else { ctx.strokeStyle = ink('crimson', 0.85 * ax); ctx.lineWidth = 1.3; }
-          ctx.beginPath(); ctx.moveTo(sx, y); ctx.lineTo(sx + 20, y); ctx.stroke(); ctx.restore();
-        }
+        var sel = i === e.sel, lift = sel ? (R ? 1 : ease((t - e.selAt) / 0.4)) : 0, s = (R ? 1 : 1 + 0.35 * (1 - ease(age / 0.5))) * (1 + 0.1 * lift);
+        if (!R && age < 1.2) ring(ctx, p[0], p[1], e.mr * (1 + age * 1.4), ink('brass', 0.5 * (1 - age / 1.2)), 1);
+        medal(ctx, p[0], p[1] - 3 * lift, e.mr * s, a.s, k * (e.sel < 0 || sel ? 1 : 0.62), lift);
+        if (sel && !R) glint(ctx, p[0], p[1] - 3 * lift, e.mr * s, (t - e.selAt - 0.2) / 0.9);
       });
     },
-    click: function (e) { e.seed++; this.toy(e); e.c0 = e.t - 0.5; }
+    announce: function (e) {
+      var a = e.aw[e.sel];
+      e.caption(a.n);
+      e.hint(a.s + ', ' + a.c + ' · ' + a.y + ' · ' + a.amt + (a.st ? ' · awarded, ' + a.st : ''));
+    },
+    click: function (e) {
+      if (!e.aw.length) return;
+      e.sel = (e.sel + 1) % e.aw.length; e.selAt = e.t; e.nextSel = e.t + 5; this.announce(e);
+    }
   };
 
   /* =====================================================================
-     Teaching: equations written on a blackboard
-     A tiny typesetter reads a TeX-like line: ^ and _ for scripts,
-     \frac{}{}, \int, \rm{} and \, for a thin space.
+     Teaching: equations from the courses, written on a blackboard
      ===================================================================== */
   var EQUATIONS = [
-    ['The Dirac equation', ['(iγ^μ\\,∂_μ−m)\\,ψ=0']],
-    ['The Feynman propagator', ['D_F(p)=\\frac{i}{p^2−m^2+iε}']],
-    ['Euler’s Gamma function', ['Γ(z)=\\int_0^∞\\,t^{z−1}\\,e^{−t}\\,\\rm{d}t']],
-    ['A Mellin-Barnes representation', ['\\frac{1}{(X+Y)^λ}=\\frac{1}{2πi}\\int_{−i∞}^{+i∞}\\rm{d}z\\,\\frac{Γ(−z)\\,Γ(λ+z)}{Γ(λ)}\\,\\frac{Y^z}{X^{λ+z}}']],
-    ['Unitarity of the CKM matrix', ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0']],
-    ['Maxwell’s equations', ['∂_μF^{μν}=J^ν', '∂_{[λ}F_{μν]}=0']]
+    { name: 'The Dirac equation', course: 'Quantum Field Theory', lines: ['(iγ^μ\\,∂_μ−m)\\,ψ=0'] },
+    { name: 'The Feynman propagator', course: 'Quantum Field Theory', lines: ['D_F(p)=\\frac{i}{p^2−m^2+iε}'] },
+    { name: 'Unitarity of the CKM matrix', course: 'Flavour Physics', lines: ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0'] },
+    { name: 'Gauss’s law and Faraday’s law', course: 'Introductory Physics', lines: ['\\oint\\bf{E}\\cdot\\rm{d}\\bf{A}=\\frac{Q}{ε_0}', '\\oint\\bf{E}\\cdot\\rm{d}\\bf{l}=−\\frac{\\rm{d}Φ_B}{\\rm{d}t}'] }
   ];
-
-  function parseTeX(src) {
-    var i = 0;
-    function arg() {
-      if (src[i] === '{') { i++; return seq(); }
-      var out = []; one(out); return out;
-    }
-    function one(out) {
-      var c = src[i];
-      if (c === '{') { i++; out.push({ k: 'grp', b: seq() }); return; }
-      if (c === '^' || c === '_') { i++; out.push({ k: c === '^' ? 'sup' : 'sub', b: arg() }); return; }
-      if (c === ' ') { i++; return; }
-      if (c === '\\') {
-        var m = /^\\([a-zA-Z]+|.)/.exec(src.slice(i));
-        i += m[0].length;
-        if (m[1] === 'frac') { var n = arg(); out.push({ k: 'frac', n: n, d: arg() }); }
-        else if (m[1] === 'int') out.push({ k: 'big', s: '∫' });
-        else if (m[1] === ',') out.push({ k: 'sp', w: 0.18 });
-        else if (m[1] === 'rm') out.push({ k: 'grp', b: arg(), rm: true });
-        return;
-      }
-      out.push({ k: 'g', s: c }); i++;
-    }
-    function seq() {
-      var out = [];
-      while (i < src.length) { if (src[i] === '}') { i++; return out; } one(out); }
-      return out;
-    }
-    return seq();
+  function courseOf(e, eq) {
+    var list = (e.data && e.data.courses) || [];
+    for (var i = 0; i < list.length; i++) if (list[i].c.indexOf(eq.course) === 0) return list[i];
+    return null;
   }
-  function measure(ctx, s, f, size) {
-    ctx.font = f;
-    var m = ctx.measureText(s), a = m.actualBoundingBoxAscent, d = m.actualBoundingBoxDescent;
-    if (!(a >= 0)) { a = 0.72 * size; d = 0.22 * size; }
-    return { w: m.width, a: a, d: d };
-  }
-  var ITALIC = /[A-Za-zα-ω]/;
-  function typeset(ctx, nodes, S, script, rm) {      // returns glyphs and rules in writing order
-    var x = 0, asc = 0.72 * S, desc = 0.24 * S, prims = [], prev = 'start';
-    function place(box, dx, dy) {
-      box.prims.forEach(function (p) { p.x += dx; p.y += dy; prims.push(p); });
-      asc = Math.max(asc, box.asc - dy); desc = Math.max(desc, box.desc + dy);
-    }
-    for (var n = 0; n < nodes.length; n++) {
-      var nd = nodes[n];
-      if (nd.k === 'sp') { x += nd.w * S; continue; }
-      if (nd.k === 'g' || nd.k === 'big') {
-        var big = nd.k === 'big', sz = big ? S * 1.85 : S, it = !big && !rm && ITALIC.test(nd.s);
-        var op = !script && !big && '=+−'.indexOf(nd.s) >= 0 && prev === 'x';
-        var pad = nd.s === '=' ? 0.3 * S : 0.22 * S;
-        if (op) x += pad;
-        var f = font(sz, SERIF, 400, it), m = measure(ctx, nd.s, f, sz), y = 0;
-        if (big) y = -0.27 * S + (m.a - m.d) / 2;     // centre the integral sign on the maths axis
-        prims.push({ t: 'txt', s: nd.s, f: f, x: x, y: y, w: m.w, a: m.a, d: m.d, big: big });
-        x += m.w + (it ? 0.04 * S : 0);
-        if (op) x += pad;
-        asc = Math.max(asc, m.a - y); desc = Math.max(desc, m.d + y);
-        prev = op ? 'op' : (nd.s === '(' || nd.s === '[') ? 'open' : 'x';
-        continue;
-      }
-      if (nd.k === 'grp') {
-        var g = typeset(ctx, nd.b, S, script, nd.rm || rm);
-        place(g, x, 0); x += g.w; prev = 'x';
-        continue;
-      }
-      if (nd.k === 'sup' || nd.k === 'sub') {
-        var sup = nd.k === 'sup' ? nd.b : null, sub = nd.k === 'sub' ? nd.b : null, nx = nodes[n + 1];
-        if (nx && (nx.k === 'sup' || nx.k === 'sub') && nx.k !== nd.k) { if (nx.k === 'sup') sup = nx.b; else sub = nx.b; n++; }
-        var base = prims[prims.length - 1], onBig = base && base.big && base.x + base.w >= x - 0.5;
-        var up = sup && typeset(ctx, sup, S * 0.7, true, rm), dn = sub && typeset(ctx, sub, S * 0.7, true, rm);
-        var right = x;
-        if (up) {
-          var upY = onBig ? base.y - base.a + up.asc * 0.9 : -0.42 * S;
-          place(up, x, upY); right = Math.max(right, x + up.w);
-        }
-        if (dn) {
-          var dnX = onBig ? x - 0.36 * S : x, dnY = onBig ? base.y + base.d : 0.2 * S + (up ? 0.06 * S : 0);
-          place(dn, dnX, dnY); right = Math.max(right, dnX + dn.w);
-        }
-        x = right + 0.05 * S; prev = 'x';
-        continue;
-      }
-      if (nd.k === 'frac') {
-        var fs = S * 0.92, nu = typeset(ctx, nd.n, fs, script, rm), de = typeset(ctx, nd.d, fs, script, rm);
-        var fw = Math.max(nu.w, de.w) + 0.35 * S, axis = -0.27 * S, gap = 0.16 * S;
-        x += 0.08 * S;
-        place(nu, x + (fw - nu.w) / 2, axis - gap - nu.desc);
-        prims.push({ t: 'rule', x: x, y: axis - 0.03 * S, w: fw, h: Math.max(1.1, 0.055 * S) });
-        place(de, x + (fw - de.w) / 2, axis + gap + de.asc);
-        x += fw + 0.08 * S; prev = 'x';
-      }
-    }
-    return { w: x, asc: asc, desc: desc, prims: prims };
-  }
-  function extent(prims) {
-    var top = Infinity, bot = -Infinity;
-    prims.forEach(function (p) {
-      if (p.t === 'rule') { top = Math.min(top, p.y); bot = Math.max(bot, p.y + p.h); }
-      else { top = Math.min(top, p.y - p.a); bot = Math.max(bot, p.y + p.d); }
-    });
-    return [top, bot];
-  }
-  function chalk(e, index) {                          // render one equation in chalk, with its writing schedule
+  function chalk(e, index) {                          // one equation in chalk, with its writing schedule
     var eq = EQUATIONS[index], bw = e.bw, bh = e.bh, L = layer(bw, bh, e.dpr), c = L.ctx;
-    var S = Math.min(36, bh * 0.19), lines, wmax, htot, gap;
+    var S = Math.min(34, bh * 0.18), lines, wmax, htot, gap;
     for (var pass = 0; pass < 3; pass++) {             // shrink until it fits the board
-      lines = eq[1].map(function (src) { var b = typeset(c, parseTeX(src), S, false, false); b.ext = extent(b.prims); return b; });
+      lines = eq.lines.map(function (src) { var b = typeset(c, parseTeX(src), S, false, ''); b.ext = extent(b.prims); return b; });
       gap = 0.55 * S; wmax = 0; htot = -gap;
       lines.forEach(function (ln) { wmax = Math.max(wmax, ln.w); htot += ln.ext[1] - ln.ext[0] + gap; });
-      var fit = Math.min((bw - 64) / wmax, (bh - 56) / htot, 1);
+      var fit = Math.min((bw - 64) / wmax, (bh - 104) / htot, 1);
       if (fit > 0.995) break;
       S *= fit;
     }
-    var y = (bh - htot) / 2, rects = [], T = 0.35;
+    var rects = [], T = 0.2, course = courseOf(e, eq);
+    if (course) {                                      // the course, written small in the corner
+      var lab = course.c + ' · ' + course.i + ', ' + course.y, fs = Math.min(13, bw / 30);
+      c.font = font(fs, DISPLAY, 600, true);
+      var lw = c.measureText(lab).width;
+      if (lw > bw - 40) { fs *= (bw - 40) / lw; c.font = font(fs, DISPLAY, 600, true); lw = c.measureText(lab).width; }
+      c.fillStyle = 'rgba(238,231,214,.62)'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(lab, 18, 26);
+      c.fillRect(18, 31, lw, 0.8);
+      rects.push({ r: [16, 26 - fs, lw + 4, fs + 8], t0: T, dur: 0.5 }); T += 0.6;
+    }
+    var y = 42 + (bh - 50 - htot) / 2;
     lines.forEach(function (ln) {
-      var ox = (bw - wmax) / 2, oy = y - ln.ext[0];          // lines share a left edge
+      var ox = (bw - wmax) / 2, oy = y - ln.ext[0];
       ln.prims.forEach(function (p) {
         var r, dur;
         if (p.t === 'rule') {
@@ -852,9 +1594,8 @@
       }
     });
     c.fill(); c.globalCompositeOperation = 'source-over';
-    // a hand-drawn box around the result, closing with a small overshoot
-    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-    rects.forEach(function (q) { x0 = Math.min(x0, q.r[0]); y0 = Math.min(y0, q.r[1]); x1 = Math.max(x1, q.r[0] + q.r[2]); y1 = Math.max(y1, q.r[1] + q.r[3]); });
+    var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;      // a hand-drawn box around the equation
+    rects.slice(course ? 1 : 0).forEach(function (q) { x0 = Math.min(x0, q.r[0]); y0 = Math.min(y0, q.r[1]); x1 = Math.max(x1, q.r[0] + q.r[2]); y1 = Math.max(y1, q.r[1] + q.r[3]); });
     x0 -= 13; y0 -= 9; x1 += 13; y1 += 9;
     function j() { return (rnd() - 0.5) * 3.2; }
     var pts = [[x0 + j(), y0 + j()], [x1 + j(), y0 + j()], [x1 + j(), y1 + j()], [x0 + j(), y1 + j()]];
@@ -910,7 +1651,6 @@
     c.fillStyle = '#e4dcc8'; roundRect(c, x + w - 47, y + h + 2.4, 9, 4.2, 2); c.fill();
     return L.c;
   }
-
   SCENES.chalkboard = {
     touchHint: 'Tap for the next equation',
     init: function (e) { e.idx = 0; e.t0 = 0.6; e.cur = null; e.cut = null; },
@@ -924,7 +1664,7 @@
       ctx.drawImage(e.residue.c, e.bx, e.by, e.bw, e.bh);
       if (!e.cur) e.cur = chalk(e, e.idx);
       var q = e.cur, tau = e.reduce ? 1e3 : t - e.t0, tBox = q.Tw + 0.2, tErase = q.Tw + 4.6, tEnd = tErase + 0.9;
-      e.caption(EQUATIONS[e.idx][0]);
+      e.caption(EQUATIONS[e.idx].name);
       var written = e.cut !== null ? e.cut : tau, boxK = ease((written - tBox) / 0.7);
       if (tau < tErase) {                              // writing, glyph by glyph
         ctx.save(); ctx.beginPath();
@@ -970,128 +1710,286 @@
   };
 
   /* =====================================================================
-     CV: tracks in a bubble chamber
-     Beam particles enter from the left. One interacts and throws out
-     charged tracks that curl in the magnetic field, often with a neutral
-     that decays into a V, a photon that converts into a spiralling
-     electron and positron, and delta rays kicked off the beam tracks.
+     Supervision: the students and their projects
+       Feynman diagrams turned into Mellin-Barnes integrals
+       a compendium of two-body decays
+       new techniques for perturbative quantum field theory
      ===================================================================== */
-  function trail(x, y, dir, R, q, len, loss, dens, size) {
-    var pts = [], s = 0, step = 2.5;
-    while (s < len) {
-      var r = R * Math.exp(-s * loss);                 // losing energy, the track curls tighter
-      if (r < 3) break;
-      dir += q * step / r; x += Math.cos(dir) * step; y += Math.sin(dir) * step; s += step;
-      pts.push([x + (Math.random() - 0.5) * 0.7, y + (Math.random() - 0.5) * 0.7,
-                Math.random() < dens ? size * (0.55 + Math.random() * 0.6) : 0]);
-    }
-    return pts;
+  var DECAYS = [
+    { p: 's', d: ['f', 'f'], rev: [0, 1], lab: 'H\\to b\\bar{b}' }, { p: 'w', d: ['f', 'f'], rev: [0, 1], lab: 'Z\\to μ^+μ^−' },
+    { p: 'w', d: ['f', 'f'], rev: [1, 0], lab: 'W^+\\to e^+ν' }, { p: 'f', d: ['f', 'w'], rev: [0, 0], lab: 't\\to b\\,W^+' },
+    { p: 's', d: ['ph', 'ph'], rev: [0, 0], lab: 'π^0\\to γγ' }
+  ];
+  function seg(ctx, x1, y1, x2, y2, type, k, color, lw, t, rev) {   // one line of a mini diagram
+    var g = pathGeo([[x1, y1], [x2, y2]]);
+    if (type === 'f' || type === 'p' || type === 's') { g = pathGeo([[x1, y1], [(x1 + x2) / 2, (y1 + y2) / 2], [x2, y2]]); }
+    drawEdge(ctx, g, type, k, color, lw, t);
+    if (type === 'f' && k > 0.6) arrowAt(ctx, g, rev, color, 3.8);
   }
-  function picture(e, t0, vx, vy) {
-    var V = 340, end = e.reduce ? 1e9 : t0 + 5.8, X0 = e.x - 12, list = [];
-    function add(pts, delay, col, alpha) { list.push({ pts: pts, t0: t0 + delay, end: end, col: col, alpha: alpha }); }
-    var ix = vx !== undefined ? vx : e.x + e.w * rand(0.3, 0.6), iy = vy !== undefined ? vy : e.y + e.h * rand(0.28, 0.72);
-    var nb = 2 + Math.floor(Math.random() * 3);
-    for (var b = 0; b < nb; b++) {                     // beam particles passing straight through
-      var by = e.y + e.h * rand(0.1, 0.9);
-      if (Math.abs(by - iy) < 14) continue;
-      var d0 = rand(0, 0.25), bt = trail(X0, by, rand(-0.015, 0.015), 5000, 1, e.w + 24, 0, 0.55, 0.95);
-      add(bt, d0, 'brassD', 0.72);
-      if (Math.random() < 0.55 && bt.length > 40) {    // a delta ray
-        var kk = Math.floor(rand(0.2, 0.8) * bt.length), p = bt[kk];
-        add(trail(p[0], p[1], rand(0, TAU), rand(9, 16), sign(), 70, 0.03, 0.8, 0.75), d0 + kk * 2.5 / V, 'crimson', 0.6);
-      }
-    }
-    add(trail(X0, iy, 0, 1e5, 1, ix - X0, 0, 0.55, 0.95), 0, 'brassD', 0.8);
-    var tv = (ix - X0) / V, n = 3 + Math.floor(Math.random() * 4);
-    for (var k = 0; k < n; k++) {                      // the products of the interaction
-      var heavy = k === 0 && Math.random() < 0.6;
-      var dir = heavy ? rand(-1.1, 1.1) : rand(-0.85, 0.85) + (Math.random() < 0.12 ? Math.PI : 0);
-      add(heavy ? trail(ix, iy, dir, rand(160, 300), sign(), rand(40, 80), 0, 0.95, 1.45)
-                : trail(ix, iy, dir, rand(70, 520), sign(), rand(140, 360), rand(0.0015, 0.006), 0.62, 1),
-          tv, k % 2 ? 'green' : 'brassD', heavy ? 0.92 : 0.82);
-    }
-    if (Math.random() < 0.55) {                        // a neutral decays into a V
-      var vd = rand(-0.5, 0.5), vl = rand(45, 95), dx = ix + Math.cos(vd) * vl, dy = iy + Math.sin(vd) * vl, o = rand(0.18, 0.35);
-      add(trail(dx, dy, vd - o, rand(120, 260), 1, rand(120, 220), 0.002, 0.62, 1), tv + vl / V, 'pine', 0.85);
-      add(trail(dx, dy, vd + o, rand(120, 260), -1, rand(120, 220), 0.002, 0.62, 1), tv + vl / V, 'pine', 0.85);
-    }
-    if (Math.random() < 0.5) {                         // a photon converts into an electron and a positron
-      var gd = rand(-0.7, 0.7), gl = rand(60, 120), gx = ix + Math.cos(gd) * gl, gy = iy + Math.sin(gd) * gl;
-      add(trail(gx, gy, gd, rand(35, 70), 1, 380, 0.008, 0.7, 0.85), tv + gl / V, 'crimson', 0.7);
-      add(trail(gx, gy, gd, rand(35, 70), -1, 380, 0.008, 0.7, 0.85), tv + gl / V, 'crimson', 0.7);
-    }
-    e.tracks = e.tracks.concat(list);
+  function loopArc(ctx, cx, cy, r, a0, a1, k, color, lw) {
+    ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + (a1 - a0) * k); ctx.stroke();
   }
-  SCENES.bubbles = {
-    touchHint: 'Tap to make a collision',
-    soft: 0.6,
-    init: function (e) { e.tracks = []; e.next = 0.4; },
-    frame: function (e, t) {
-      var ctx = e.ctx;
-      ctx.strokeStyle = ink('slate', 0.4); ctx.lineWidth = 1;          // fiducial marks on the chamber window
-      for (var i = 1; i <= 3; i++) for (var j = 1; j <= 2; j++) {
-        var fx = e.x + e.w * i / 4, fy = e.y + e.h * j / 3;
-        ctx.beginPath(); ctx.moveTo(fx - 4, fy); ctx.lineTo(fx + 4, fy); ctx.moveTo(fx, fy - 4); ctx.lineTo(fx, fy + 4); ctx.stroke();
-      }
-      if (e.reduce) { if (!e.tracks.length) { picture(e, -20); picture(e, -20); } }
-      else if (t >= e.next) { picture(e, t); e.next = t + 3.1; }
-      e.tracks = e.tracks.filter(function (tr) { return t < tr.end; });
-      e.tracks.forEach(function (tr) {
-        var age = t - tr.t0;
-        if (age <= 0) return;
-        var n = Math.min(tr.pts.length, Math.floor(age * 136)), fade = clamp01((tr.end - t) / 1.8);
-        ctx.fillStyle = ink(tr.col, tr.alpha * fade);
-        ctx.beginPath();
-        for (var k = 0; k < n; k++) { var p = tr.pts[k]; if (p[2]) { ctx.moveTo(p[0] + p[2], p[1]); ctx.arc(p[0], p[1], p[2], 0, TAU); } }
-        ctx.fill();
-      });
+  SCENES.mentoring = {
+    touchHint: 'Tap for the next student',
+    init: function (e) { e.st = (e.data && e.data.students) || []; e.sel = 0; e.selAt = 0; e.nextSel = 6; },
+    layout: function (e) {
+      var n = Math.max(1, e.st.length);
+      e.pw = e.w / n; e.vh = e.h - 50; e.su = Math.min(e.pw / 150, e.vh / 105);
     },
-    click: function (e, x, y) { picture(e, e.t, x, y); e.next = e.t + 3.4; }
+    frame: function (e, t) {
+      var ctx = e.ctx, n = e.st.length, R = e.reduce;
+      if (!n) return;
+      if (!R && t > e.nextSel) { e.sel = (e.sel + 1) % n; e.selAt = t; e.nextSel = t + 5.5; this.announce(e); }
+      if (e.selAt === 0 && !e.said) { e.said = 1; this.announce(e); }
+      e.cy = e.y + (e.h - (116 * e.su + 31)) / 2 + 50 * e.su;           // the projects and their timeline, centred
+      var by = e.cy + 66 * e.su + 16;
+      line(ctx, e.x + e.pw * 0.5, by, e.x + e.pw * (n - 0.5), by, ink('brass', 0.5), 1);      // the students, in time
+      for (var i = 0; i < n; i++) {
+        var s = e.st[i], cx = e.x + e.pw * (i + 0.5), cy = e.cy, u = e.su, on = i === e.sel;
+        var a = R ? 1 : (on ? 1 : 0.38), lt = R ? 30 : (on ? t - e.selAt : 30);
+        ctx.save(); ctx.globalAlpha *= a;
+        this.project[i % 3](ctx, cx, cy, u, lt, t, R);
+        ctx.restore();
+        dot(ctx, cx, by, on ? 3.6 : 2.6, on ? ink('brass', 1) : ink('slate', 0.6));
+        caps(ctx, s.y + ' · ' + s.l.replace(' student', '').toUpperCase(), cx, by + 15, on ? ink('brassD', 1) : ink('slate', 0.6), 7.5, 'center');
+      }
+    },
+    project: [
+      function (ctx, cx, cy, u, lt, t, R) {            // a one-loop bubble becomes a Mellin-Barnes integral
+        var k1 = R ? 1 : ease(lt / 1), k2 = R ? 1 : ease((lt - 1.2) / 0.6), k3 = R ? 1 : ease((lt - 1.8) / 1.2), bx = cx - 44 * u, r = 15 * u;
+        seg(ctx, bx - 30 * u, cy, bx - r, cy, 'p', k1, ink('brassD', 0.95), 1.3, t);
+        loopArc(ctx, bx, cy, r, Math.PI, Math.PI * 3, k1, ink('green', 0.95), 1.4);
+        seg(ctx, bx + r, cy, bx + 30 * u, cy, 'p', k1, ink('brassD', 0.95), 1.3, t);
+        if (k2 > 0) { drawMath(ctx, '\\to', cx + 2 * u, cy + 5, 16 * Math.max(0.8, u), ink('slate', 0.9 * k2), 'center'); }
+        var mx = cx + 38 * u;
+        if (k3 > 0) {
+          line(ctx, mx, cy + 30 * u, mx, cy + 30 * u - 60 * u * k3, ink('green', 0.95), 1.4);
+          for (var j = 0; j < 3; j++) {
+            var kk = clamp01(k3 * 3 - j);
+            if (kk > 0) { dot(ctx, mx + (9 + j * 9) * u, cy, 2.2 * kk, ink('pine', 0.95)); dot(ctx, mx - (8 + j * 9) * u, cy, 2.2 * kk, ink('brassD', 0.95)); }
+          }
+        }
+      },
+      function (ctx, cx, cy, u, lt, t, R) {            // two-body decays, one after another
+        var i = Math.floor((R ? 0 : Math.max(0, lt)) / 2.2) % DECAYS.length, dk = R ? 1 : ease(((lt % 2.2) + 2.2) % 2.2 / 0.9);
+        var D = DECAYS[R ? 0 : (Math.floor(Math.max(0, lt) / 2.2) % DECAYS.length)], th = (R ? 0.5 : t * 0.35);
+        seg(ctx, cx - 52 * u, cy, cx, cy, D.p, dk, ink(D.p === 's' ? 'crimson' : D.p === 'w' ? 'pine' : 'green', 0.95), 1.3, t, 0);
+        var L = 44 * u, a1 = 0.55 + 0.12 * Math.sin(th * 2.3), a2 = -0.5 - 0.1 * Math.sin(th * 1.7), kd = clamp01(dk * 1.6 - 0.6);
+        var c0 = function (d) { return ink(d === 'ph' ? 'brassD' : d === 'w' ? 'pine' : 'green', 0.95); };
+        seg(ctx, cx, cy, cx + L * Math.cos(a1), cy - L * Math.sin(a1), D.d[0], kd, c0(D.d[0]), 1.3, t, D.rev[0]);
+        seg(ctx, cx, cy, cx + L * Math.cos(a2), cy - L * Math.sin(a2), D.d[1], kd, c0(D.d[1]), 1.3, t, D.rev[1]);
+        dot(ctx, cx, cy, 2.4, ink('green', 0.95));
+        drawMath(ctx, D.lab, cx, cy + 50 * u, 12, ink('green', 0.95 * (R ? 1 : clamp01(dk * 2))), 'center');
+        return i;
+      },
+      function (ctx, cx, cy, u, lt, t, R) {            // a propagator, order by order in perturbation theory
+        var w = 30 * u, xs = [cx - 52 * u, cx, cx + 52 * u], labels = ['+', '+'];
+        for (var j = 0; j < 3; j++) {
+          var k = R ? 1 : ease((lt - j * 0.9) / 0.8), x = xs[j];
+          if (k <= 0) continue;
+          line(ctx, x - w / 2 - 4 * u, cy, x - w / 2 - 4 * u + (w + 8 * u) * Math.min(1, k * 1.3), cy, ink('green', 0.95), 1.3);
+          if (j >= 1) loopArc(ctx, x, cy, 8 * u, Math.PI, Math.PI * 3, k, ink('pine', 0.95), 1.3);
+          if (j === 2) { line(ctx, x - 8 * u, cy - 8 * u * 0, x + 8 * u, cy, ink('pine', 0.95), 1.3); loopArc(ctx, x, cy, 12 * u, Math.PI, Math.PI * 2, k, ink('brassD', 0.9), 1.1); }
+          if (j < 2 && k > 0.9) drawMath(ctx, labels[j], x + 26 * u, cy + 5, 13, ink('slate', 0.9), 'center');
+        }
+        var dk = R ? 1 : ease((lt - 2.9) / 0.6);
+        if (dk > 0) drawMath(ctx, '+\\,\\cdots', cx + 52 * u + 24 * u, cy + 5, 13, ink('slate', 0.9 * dk), 'left');
+        caps(ctx, 'TREE · ONE LOOP · TWO LOOPS', cx, cy + 40 * u, ink('slate', 0.75), 7, 'center');
+      }
+    ],
+    announce: function (e) {
+      var s = e.st[e.sel];
+      if (!s) return;
+      e.caption(s.n + ', ' + s.l.replace('’', '’'));
+      e.hint(s.i + ' · ' + s.y);
+    },
+    click: function (e) { if (!e.st.length) return; e.sel = (e.sel + 1) % e.st.length; e.selAt = e.t; e.nextSel = e.t + 7; this.announce(e); }
   };
 
   /* =====================================================================
-     Contact: two-source interference
+     CV: the path from Kolkata to Stanford, on a timeline
      ===================================================================== */
-  SCENES.waves = {
-    touchHint: 'Tap to move a source',
-    soft: 0.55,
-    still: 2.5,
-    init: function (e) { e.s2 = null; e.aim = null; },
-    frame: function (e, t) {
-      var ctx = e.ctx, cx = e.x + e.w / 2, cy = e.y + e.h / 2;
-      var s1 = [cx - e.w * 0.19 + Math.cos(t * 0.31) * 6, cy + Math.sin(t * 0.23) * 8];
-      var home = [cx + e.w * 0.19 - Math.cos(t * 0.29) * 6, cy - Math.sin(t * 0.21) * 8], aim = e.aim || home;
-      if (!e.s2) e.s2 = home.slice();
-      var f = e.reduce ? 1 : 1 - Math.pow(0.02, e.dt);   // the second source follows the pointer smoothly
-      e.s2[0] += (aim[0] - e.s2[0]) * f; e.s2[1] += (aim[1] - e.s2[1]) * f;
-      var s2 = e.s2, step = 7, kw = TAU / 34, w = 3.2, buckets = {};
-      for (var y = e.y + step / 2; y < e.y + e.h; y += step) {
-        for (var x = e.x + step / 2; x < e.x + e.w; x += step) {
-          var r1 = Math.hypot(x - s1[0], y - s1[1]), r2 = Math.hypot(x - s2[0], y - s2[1]);
-          var f1 = 1 / Math.sqrt(1 + r1 / 80), f2 = 1 / Math.sqrt(1 + r2 / 80);
-          var re = f1 * Math.cos(kw * r1) + f2 * Math.cos(kw * r2), im = f1 * Math.sin(kw * r1) + f2 * Math.sin(kw * r2);
-          var E = Math.min(1, 0.5 * Math.sqrt(re * re + im * im)), ph = Math.cos(Math.atan2(im, re) - w * t);
-          var lvl = Math.round(E * (0.62 + 0.38 * ph) * 12);
-          var key = (ph > 0 ? 'b' : 'p') + lvl;
-          (buckets[key] = buckets[key] || []).push(x, y);
-        }
-      }
-      Object.keys(buckets).forEach(function (key) {    // one path per shade keeps this cheap
-        var I = +key.slice(1) / 12, pts = buckets[key], r = 0.4 + 2.5 * I;
-        ctx.fillStyle = key[0] === 'b' ? ink('brassD', 0.18 + 0.72 * I) : ink('pine', 0.18 + 0.72 * I);
-        ctx.beginPath();
-        for (var i = 0; i < pts.length; i += 2) { ctx.moveTo(pts[i] + r, pts[i + 1]); ctx.arc(pts[i], pts[i + 1], r, 0, TAU); }
-        ctx.fill();
-      });
-      [s1, s2].forEach(function (s) {
-        ctx.fillStyle = ink('paper', 0.95); ctx.beginPath(); ctx.arc(s[0], s[1], 4.2, 0, TAU); ctx.fill();
-        ctx.strokeStyle = ink('green', 0.85); ctx.lineWidth = 1.2; ctx.stroke();
-        ctx.fillStyle = ink('green', 0.95); ctx.beginPath(); ctx.arc(s[0], s[1], 1.7, 0, TAU); ctx.fill();
-      });
+  SCENES.timeline = {
+    touchHint: 'Tap for the next stage',
+    init: function (e) { e.st = (e.data && e.data.stages) || []; e.now = (e.data && e.data.now) || 2026.8; e.c0 = 0; e.cur = -2; },
+    layout: function (e) {
+      if (!e.st.length) return;
+      e.L = e.x + 16; e.R = e.x + e.w - 30; e.ay = e.y + e.h * 0.62;
+      e.y0 = Math.floor(e.st[0].s); e.y1 = e.now + 0.5;
     },
-    move: function (e, p) { if (!e.touch) e.aim = p ? [p.x, p.y] : null; },
-    click: function (e, x, y) { if (e.touch) e.aim = [x, y]; }
+    frame: function (e, t) {
+      var ctx = e.ctx, st = e.st, R = e.reduce, T = 9.5, C = 14;
+      if (!st.length) return;
+      var c = R ? 99 : (t - e.c0) % C, yc = R ? e.now : e.y0 + (e.now - e.y0) * clamp01(c / T);
+      function X(yr) { return e.L + (yr - e.y0) / (e.y1 - e.y0) * (e.R - e.L); }
+      line(ctx, e.L, e.ay, e.R, e.ay, ink('green', 0.35), 1);                                        // the years
+      ctx.font = font(9, SANS, 500); ctx.textAlign = 'center'; ctx.fillStyle = ink('slate', 0.85);
+      for (var yr = e.y0; yr <= Math.floor(e.now); yr += 2) { line(ctx, X(yr), e.ay + 7, X(yr), e.ay + 11, ink('green', 0.4), 1); ctx.fillText(String(yr), X(yr), e.ay + 23); }
+      var groups = [];                                                                                // cities, bracketed above
+      st.forEach(function (s, i) { var g = groups[groups.length - 1]; if (g && g.c === s.c) g.e = i; else groups.push({ c: s.c, s: i, e: i }); });
+      groups.forEach(function (g) {
+        var a = st[g.s].s, b = st[g.e].e || e.now, k = R ? 1 : clamp01((yc - a) / 0.8);
+        if (k <= 0) return;
+        var xa = X(a) + 2, xb = X(b) - 2, yb = e.ay - 44;
+        ctx.save(); ctx.globalAlpha *= k;
+        line(ctx, xa, yb + 4, xa, yb, ink('brass', 0.8), 1); line(ctx, xa, yb, xb, yb, ink('brass', 0.8), 1); line(ctx, xb, yb, xb, yb + 4, ink('brass', 0.8), 1);
+        caps(ctx, g.c.toUpperCase(), (xa + xb) / 2, yb - 6, ink('brassD', 0.95), 7.5, 'center');
+        ctx.font = font(12.5, DISPLAY, 500, true);
+        var name = st[g.s].os || st[g.s].o, nw = ctx.measureText(name).width;
+        var nx = Math.max(e.x + nw / 2 + 2, Math.min(e.x + e.w - nw / 2 - 2, (xa + xb) / 2));
+        ctx.fillStyle = ink('slate', 0.9); ctx.textAlign = 'center'; ctx.fillText(name, nx, e.ay + 42);
+        ctx.restore();
+      });
+      var active = -1;
+      st.forEach(function (s, i) {                                                                   // the stages
+        var end = s.e || e.now;
+        if (yc < s.s) return;
+        if (yc <= end + 0.001) active = i;
+        var xa = X(s.s), xb = X(Math.min(end, yc)), col = s.k === 'edu' ? 'brass' : 'pine';
+        ctx.strokeStyle = ink(col, 0.95); ctx.lineWidth = 6; ctx.lineCap = 'butt';
+        ctx.beginPath(); ctx.moveTo(xa + 1.5, e.ay); ctx.lineTo(Math.max(xa + 1.5, xb - 1.5), e.ay); ctx.stroke();
+        var k = R ? 1 : clamp01((yc - s.s) / 0.6);
+        ctx.save(); ctx.globalAlpha *= k;
+        drawMath(ctx, '\\rm{' + s.t + '}', (xa + X(end)) / 2, e.ay - 14, 13, ink(i === active ? 'green' : 'slate', 0.95), 'center');
+        ctx.restore();
+        dot(ctx, xa, e.ay, 4, ink('paper', 1)); ring(ctx, xa, e.ay, 4, ink(col === 'brass' ? 'brassD' : 'pine', 1), 1.3);
+      });
+      if (!R) {                                                                                       // the present, moving along
+        var xc = X(yc), g = ctx.createRadialGradient(xc, e.ay, 0, xc, e.ay, 12);
+        g.addColorStop(0, ink('brass', 0.5)); g.addColorStop(1, ink('brass', 0));
+        ctx.fillStyle = g; ctx.fillRect(xc - 12, e.ay - 12, 24, 24); dot(ctx, xc, e.ay, 2.8, ink('brassD', 1));
+      }
+      if (c > T || R) {
+        var pk = R ? 0.5 : ((t * 0.8) % 1);
+        ring(ctx, X(e.now), e.ay, 4 + pk * 12, ink('pine', 0.6 * (1 - pk)), 1.2);
+        caps(ctx, 'NOW', X(e.now) + 4, e.ay + 23, ink('pine', 0.9), 7.5, 'left');
+      }
+      var show = c > T && !R ? -1 : active;
+      if (show !== e.cur) {
+        e.cur = show;
+        if (show < 0) { e.caption(null); e.hint(null); }
+        else { e.caption(st[show].title + ', ' + st[show].o); e.hint(st[show].c + ' · ' + st[show].w); }
+      }
+    },
+    click: function (e) {                              // jump to the start of the next stage
+      var st = e.st, T = 9.5, C = 14;
+      if (!st.length) return;
+      var c = (e.t - e.c0) % C, yc = e.y0 + (e.now - e.y0) * clamp01(c / T), next = null;
+      for (var i = 0; i < st.length; i++) if (st[i].s > yc + 0.05) { next = st[i].s; break; }
+      var target = next === null ? 0.01 : (next - e.y0) / (e.now - e.y0) * T + 0.3;
+      e.c0 = e.t - target;
+    }
+  };
+
+  /* =====================================================================
+     Contact: a globe turning under SLAC, with messages arriving from afar
+     ===================================================================== */
+  var CITIES = [[51.51, -0.13], [35.68, 139.69], [-33.87, 151.21], [-23.55, -46.63], [12.97, 77.59], [39.9, 116.4],
+                [-33.92, 18.42], [43.65, -79.38], [19.43, -99.13], [-34.6, -58.38], [37.57, 126.98], [22.57, 88.36],
+                [41.88, -87.63], [21.31, -157.86], [-36.85, 174.76], [-33.45, -70.67], [40.71, -74.0], [47.38, 8.54],
+                [64.14, -21.94], [4.71, -74.07], [61.22, -149.9], [-12.05, -77.04], [1.35, 103.82], [55.75, 37.62]];
+  function unit(lat, lon) { var c = Math.cos(lat); return [c * Math.cos(lon), c * Math.sin(lon), Math.sin(lat)]; }
+  SCENES.globe = {
+    touchHint: 'Drag to turn the globe',
+    init: function (e) {
+      e.rings = ((e.data && e.data.land) || []).map(function (r) {
+        var out = [];
+        for (var i = 0; i < r.length; i += 2) out.push(unit(r[i + 1] / 10 * D2R, r[i] / 10 * D2R));
+        return out;
+      });
+      e.home = unit(37.42 * D2R, -122.2 * D2R); e.spin = 0; e.dragLon = 0; e.arcs = []; e.nextArc = 0.8; e.pings = [];
+    },
+    layout: function (e) { e.Rg = Math.min(e.h * 0.46, e.w * 0.3); e.cx = e.x + e.w / 2; e.cy = e.y + e.h / 2 + 3; },
+    frame: function (e, t) {
+      var ctx = e.ctx, Rg = e.Rg, cx = e.cx, cy = e.cy, R = e.reduce;
+      if (!R && !e.dragging) { e.spin += e.dt; e.dragLon *= Math.pow(0.35, e.dt); }
+      var lam0 = -122.2 * D2R + 0.5 * Math.sin((R ? 1.2 : e.spin) * 0.16) + e.dragLon, phi0 = 0.38;
+      var cl0 = Math.cos(lam0), sl0 = Math.sin(lam0), cp = Math.cos(phi0), sp = Math.sin(phi0);
+      function view(V) {                            // rotate a point of the Earth into view: [x right, y up, z towards us]
+        var x = V[1] * cl0 - V[0] * sl0, c = V[0] * cl0 + V[1] * sl0;
+        return [x, cp * V[2] - sp * c, sp * V[2] + cp * c];
+      }
+      var halo = ctx.createRadialGradient(cx, cy, Rg * 0.9, cx, cy, Rg * 1.18);                    // atmosphere
+      halo.addColorStop(0, ink('brass', 0.16)); halo.addColorStop(1, ink('brass', 0));
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, Rg * 1.18, 0, TAU); ctx.fill();
+      var sea = ctx.createRadialGradient(cx - Rg * 0.35, cy - Rg * 0.4, Rg * 0.1, cx, cy, Rg);
+      sea.addColorStop(0, '#fbfaf4'); sea.addColorStop(1, '#e6eadf');
+      ctx.fillStyle = sea; ctx.beginPath(); ctx.arc(cx, cy, Rg, 0, TAU); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, Rg, 0, TAU); ctx.clip();
+      ctx.strokeStyle = ink('pine', 0.13); ctx.lineWidth = 0.7;                                      // graticule
+      var lat, lon, first, P;
+      for (lon = -180; lon < 180; lon += 30) {
+        ctx.beginPath(); first = true;
+        for (lat = -80; lat <= 80; lat += 4) { P = view(unit(lat * D2R, lon * D2R)); if (P[2] < 0) { first = true; continue; } if (first) ctx.moveTo(cx + Rg * P[0], cy - Rg * P[1]); else ctx.lineTo(cx + Rg * P[0], cy - Rg * P[1]); first = false; }
+        ctx.stroke();
+      }
+      for (lat = -60; lat <= 60; lat += 30) {
+        ctx.beginPath(); first = true;
+        for (lon = -180; lon <= 180; lon += 4) { P = view(unit(lat * D2R, lon * D2R)); if (P[2] < 0) { first = true; continue; } if (first) ctx.moveTo(cx + Rg * P[0], cy - Rg * P[1]); else ctx.lineTo(cx + Rg * P[0], cy - Rg * P[1]); first = false; }
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#d9e0cc'; ctx.strokeStyle = '#a9b596'; ctx.lineWidth = 0.8; ctx.lineJoin = 'round';   // land
+      e.rings.forEach(function (ringPts) {
+        var pts = ringPts.map(view), any = false;
+        for (var i = 0; i < pts.length; i++) if (pts[i][2] > 0) { any = true; break; }
+        if (!any) return;
+        ctx.beginPath();
+        pts.forEach(function (p, i) {
+          var x = p[0], y = p[1];
+          if (p[2] < 0) { var l = Math.hypot(x, y) || 1; x /= l; y /= l; }     // hidden points sit on the rim
+          if (i) ctx.lineTo(cx + Rg * x, cy - Rg * y); else ctx.moveTo(cx + Rg * x, cy - Rg * y);
+        });
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        for (var j = 1; j < pts.length; j++) {
+          if (pts[j][2] > 0 && pts[j - 1][2] > 0) { ctx.moveTo(cx + Rg * pts[j - 1][0], cy - Rg * pts[j - 1][1]); ctx.lineTo(cx + Rg * pts[j][0], cy - Rg * pts[j][1]); }
+        }
+        ctx.stroke();
+      });
+      var shade = ctx.createRadialGradient(cx - Rg * 0.4, cy - Rg * 0.45, Rg * 0.2, cx, cy, Rg * 1.05);   // light from the upper left
+      shade.addColorStop(0, 'rgba(255,255,255,.18)'); shade.addColorStop(0.7, 'rgba(255,255,255,0)'); shade.addColorStop(1, 'rgba(28,53,47,.12)');
+      ctx.fillStyle = shade; ctx.fillRect(cx - Rg, cy - Rg, 2 * Rg, 2 * Rg);
+      ctx.restore();
+      ring(ctx, cx, cy, Rg, ink('brass', 0.75), 1.2);
+      var H = view(e.home), hx = cx + Rg * H[0], hy = cy - Rg * H[1], homeUp = H[2] > 0.05;
+      if (!R && t > e.nextArc) {                                                                     // a message sets out
+        var tries = 0, V, P2;
+        do { V = CITIES[Math.floor(Math.random() * CITIES.length)]; P2 = view(unit(V[0] * D2R, V[1] * D2R)); } while (P2[2] < 0.12 && ++tries < 12);
+        if (P2[2] >= 0.12) e.arcs.push({ from: unit(V[0] * D2R, V[1] * D2R), t0: t });
+        e.nextArc = t + 0.75 + Math.random() * 0.5;
+      }
+      if (R && !e.arcs.length) { [0, 3, 7, 8, 13].forEach(function (i) { var V = CITIES[i]; e.arcs.push({ from: unit(V[0] * D2R, V[1] * D2R), t0: -1.2 }); }); }
+      var alive = [];
+      e.arcs.forEach(function (a) {
+        var age = R ? 1.2 : t - a.t0, travel = 1.9;
+        if (age > travel + 1.2) return;
+        alive.push(a);
+        var A = a.from, B = e.home, dotAB = Math.max(-1, Math.min(1, A[0] * B[0] + A[1] * B[1] + A[2] * B[2])), om = Math.acos(dotAB), so = Math.sin(om) || 1;
+        var head = R ? 1 : clamp01(age / travel), fade = R ? 0.5 : clamp01(1 - (age - travel) / 1.2), lift = 0.06 + 0.2 * om / Math.PI;
+        ctx.strokeStyle = ink('brassD', 0.75 * fade); ctx.lineWidth = 1.1; ctx.beginPath();
+        var started = false, last = null;
+        for (var s = 0; s <= 40 * head; s++) {
+          var u = s / 40, w1 = Math.sin((1 - u) * om) / so, w2 = Math.sin(u * om) / so, h = 1 + lift * Math.sin(Math.PI * u);
+          var Pv = view([(w1 * A[0] + w2 * B[0]) * h, (w1 * A[1] + w2 * B[1]) * h, (w1 * A[2] + w2 * B[2]) * h]);
+          var vis = Pv[2] > 0 || Pv[0] * Pv[0] + Pv[1] * Pv[1] > 1;
+          var sx = cx + Rg * Pv[0], sy = cy - Rg * Pv[1];
+          if (!vis) { started = false; continue; }
+          if (!started) { ctx.moveTo(sx, sy); started = true; } else ctx.lineTo(sx, sy);
+          last = [sx, sy];
+        }
+        ctx.stroke();
+        if (last && head < 1) dot(ctx, last[0], last[1], 2, ink('brassD', 1));
+        if (!R && head >= 1 && !a.arrived) { a.arrived = true; e.pings.push(t); }
+      });
+      e.arcs = alive;
+      if (homeUp) {                                                                                   // SLAC
+        e.pings = e.pings.filter(function (p) { return t - p < 1.4; });
+        e.pings.forEach(function (p) { var k = (t - p) / 1.4; ring(ctx, hx, hy, 4 + k * 16, ink('crimson', 0.6 * (1 - k)), 1.2); });
+        dot(ctx, hx, hy, 3.4, ink('crimson', 1)); ring(ctx, hx, hy, 5.2, ink('paper', 0.9), 1.2);
+        caps(ctx, 'SLAC', hx + 8, hy - 6, ink('green', 0.95), 8);
+      }
+    },
+    drag: function (e, dx) { e.dragLon -= dx / (e.Rg || 100); }
   };
 
   var scene = SCENES[host.getAttribute('data-scene')];

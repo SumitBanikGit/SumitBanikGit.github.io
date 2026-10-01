@@ -530,9 +530,31 @@ def render_pubs():
     return "\n".join(out)
 
 
+def _p(d, cls=""):
+    attr = ' class="%s"' % cls if cls else ""
+    return f'<path{attr} pathLength="1" d="{d}"/>'
+
+
+def _dots(pts, r=1.6):
+    return "".join(f'<circle cx="{x}" cy="{y}" r="{r}"/>' for x, y in pts)
+
+
+# a small line drawing for each research domain, in the order of DOMAINS
+DOMAIN_ICONS = [
+    _p("M6 26H44M6 26L30 3") + _dots([(14, 22), (22, 22), (30, 22), (38, 22), (20, 16), (28, 16), (36, 16), (26, 10), (34, 10)], 1.3),
+    _p("M16 8H32V22H16Z") + _p("M16 8L9 2M32 8L39 2M16 22L9 28M32 22L39 28", "thin") + _dots([(16, 8), (32, 8), (16, 22), (32, 22)], 1.7),
+    _p("M4 27H44", "thin") + _p("M5 5C12 13 16 18 20 18C23 18 23 11 26 11C29 11 29 20 33 21C37 22 40 22 44 23")
+    + _dots([(9, 10), (15, 16), (26, 11), (35, 21)], 1.3),
+    _p("M40 3H44V27H40") + _p("M5 8H29M5 14H23M5 20H33", "thin") + _dots([(36, 20)], 1.6),
+    _p("M4 28H44", "thin") + _p("M4 5L44 16M4 18L44 14M4 25L44 17"),
+    _p("M4 4L16 15L4 26M44 4L32 15L44 26") + _p("M16 15H19M22.5 15H25.5M29 15H32", "thin") + _dots([(16, 15), (32, 15)], 1.8),
+]
+
+
 def render_domains():
     return "\n".join(
-        f'<div class="theme d{i}"><h4>{name}</h4><p>{text}</p><div class="keys">{keys}</div></div>'
+        f'<div class="theme d{i}"><svg class="th-icon" viewBox="0 0 48 30" aria-hidden="true">{DOMAIN_ICONS[i - 1]}</svg>'
+        f'<h4>{name}</h4><p>{text}</p><div class="keys">{keys}</div></div>'
         for i, (name, text, keys) in enumerate(DOMAINS, 1))
 
 
@@ -625,22 +647,123 @@ def pub_scene_data():
     return dict(pubs=pubs)
 
 
+def _plain(text):
+    import html as _html
+    import re
+    return _html.unescape(re.sub(r"<[^>]+>", "", text)).replace("\u00a0", " ")
+
+
+def _precision_digits():
+    """Partial sums of the Appell F1 series F1(1; 1, 1; 2; x, y) = sum x^m y^n / (m + n + 1)
+    at x = 1/2, y = 1/3, whose value is 6 ln(4/3), computed to 90 digits."""
+    from decimal import Decimal, getcontext
+    getcontext().prec = 90
+    x, y = Decimal(1) / 2, Decimal(1) / 3
+    keep = {0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 22, 26, 30, 35, 40, 46, 52, 60, 68, 76, 85, 95, 105,
+            116, 128, 140, 153, 166, 180, 195, 200}
+    sums, total, xp, yp = [], Decimal(0), x, y
+    for k in range(201):                              # order k collects the terms with m + n = k
+        total += (xp - yp) / ((x - y) * (k + 1))
+        xp, yp = xp * x, yp * y
+        if k in keep:
+            sums.append([k, format(total, "f")[:62]])
+    return dict(exact=format(6 * (Decimal(4) / 3).ln(), "f")[:62], sums=sums)
+
+
+def tour_scene_data():
+    """References for the paper tour on the Research page, taken from PUBS, and the digits
+    for the high-precision vignette."""
+    refs = {}
+    for p in PUBS:
+        key = p.get("arxiv") or p.get("doi") or p["title"]
+        url = (f"https://arxiv.org/abs/{p['arxiv']}" if p.get("arxiv") else
+               f"https://doi.org/{p['doi']}" if p.get("doi") else "")
+        refs[key] = dict(r=_plain(p["ref"]), u=url)
+    return dict(refs=refs, hp=_precision_digits())
+
+
+def funding_scene_data():
+    import re
+    short = {"Alexander von Humboldt Foundation": "AvH", "University of Zürich": "UZH",
+             "Ministry of Human Resource Development": "MHRD"}
+    awards = []
+    for year, name, agency, country, amount, dur, status in sorted(FUNDING, key=lambda f: int(f[0])):
+        m = re.search(r"\(([A-Z]+)\)", agency)
+        awards.append(dict(y=int(year), n=name, a=re.sub(r"\s*\([A-Z]+\)", "", agency), s=m.group(1) if m else short.get(agency, agency),
+                           c=country, amt=amount.split(" (")[0], d=dur, st=status.lower()))
+    return dict(awards=awards)
+
+
+def teaching_scene_data():
+    return dict(courses=[dict(y=int(y), c=course, i=inst) for y, course, role, inst, desc in TEACHING])
+
+
+def supervision_scene_data():
+    return dict(students=[dict(y=int(y), n=name, l=lvl, i=inst, th=thesis)
+                          for y, name, lvl, inst, thesis in sorted(SUPERVISION, key=lambda x: int(x[0]))])
+
+
+def cv_scene_data():
+    import re
+    months = {m: i for i, m in enumerate("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split())}
+    tags = {"BSc in Physics": "BSc", "MS in Physics": "MS", "PhD in High Energy Physics": "PhD",
+            "Postdoctoral Researcher": "Postdoc"}
+    stages = []
+    for item in EDUCATION + EMPLOYMENT:
+        dates = re.findall(r"([A-Z][a-z]{2}) (\d{4})", item["when"])
+        start = int(dates[0][1]) + months[dates[0][0]] / 12
+        end = int(dates[1][1]) + (months[dates[1][0]] + 1) / 12 if len(dates) > 1 else None
+        org = _plain(item["org"])
+        for long_name, short_name in (("Centre for High Energy Physics, ", ""), ("Department of Physical Sciences, ", ""),
+                                      ("SLAC National Accelerator Laboratory", "SLAC"), ("Paul Scherrer Institut", "PSI"),
+                                      (" & ", " and ")):
+            org = org.replace(long_name, short_name)
+        short_org = {"Indian Institute of Science": "IISc", "University of Zürich and PSI": "UZH and PSI",
+                     "SLAC and Stanford University": "SLAC and Stanford"}.get(org, org)
+        stages.append(dict(t=tags.get(item["title"], item["title"]), title=item["title"], o=org, os=short_org, w=item["when"],
+                           c=item["where"].split(",")[0], s=round(start, 3), e=round(end, 3) if end else None,
+                           k="edu" if item in EDUCATION else "job"))
+    stages.sort(key=lambda x: x["s"])
+    now = date.today()
+    return dict(stages=stages, now=round(now.year + (now.month - 0.5) / 12, 3))
+
+
+def globe_scene_data():
+    """Land outlines in longitude and latitude (Natural Earth 1:110m), simplified, for the globe."""
+    import importlib.util
+    import json
+    spec = importlib.util.spec_from_file_location("make_world_dots", "tools/make_world_dots.py")
+    mw = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mw)
+    rings = []
+    for ring in mw.decode_rings(json.loads(Path("tools/land-110m.json").read_text())):
+        if max(lat for _, lat in ring) < -55:          # leave out Antarctica
+            continue
+        simple = mw.simplify_ring(ring, 0.35)
+        if len(simple) < 4:
+            continue
+        rings.append([v for lon, lat in simple for v in (round(lon * 10), round(lat * 10))])
+    return dict(land=rings)
+
+
 def page_scenes():
     """The animation in the header of each inner page: (scene, caption, hint, data)."""
     years = [int(p["year"]) for p in PUBS]
     cities = {t[2] for t in TALKS}
     first_talk = min(int(t[0]) for t in TALKS)
     return {
-        "research.html": ("triangulation", "Triangulations of a point configuration", "Click to add a point", None),
+        "research.html": ("tour", "A tour of my papers", "Click for the next paper", tour_scene_data),
         "publications.html": ("constellation", f"{len(PUBS)} publications from {min(years)} to {max(years)}",
                               "Hover over a star to see the paper", pub_scene_data),
         "talks.html": ("talkmap", f"{len(TALKS)} talks in {len(cities)} cities since {first_talk}",
                        "Hollow circles mark online talks", talk_scene_data),
-        "funding.html": ("spectrum", "Toy di-photon spectrum with two excesses",
-                         "Click for a new pseudo-experiment", None),
-        "teaching.html": ("chalkboard", "From the blackboard", "Click for the next equation", None),
-        "cv.html": ("bubbles", "Tracks in a bubble chamber", "Click to make a collision", None),
-        "contact.html": ("waves", "Two-source interference", "Move the pointer to steer a source", None),
+        "funding.html": ("medals", f"{len(FUNDING)} fellowships and grants since {min(int(f[0]) for f in FUNDING)}",
+                         "Click for the next award", funding_scene_data),
+        "teaching.html": ("chalkboard", "From the blackboard", "Click for the next equation", teaching_scene_data),
+        "supervision.html": ("mentoring", f"{len(SUPERVISION)} students since {min(int(x[0]) for x in SUPERVISION)}",
+                             "Click for the next student", supervision_scene_data),
+        "cv.html": ("timeline", "From Kolkata to Stanford", "Click for the next stage", cv_scene_data),
+        "contact.html": ("globe", "SLAC, Menlo Park, California", "Drag to turn the globe", globe_scene_data),
     }
 
 
@@ -846,7 +969,8 @@ PAGES = [
     ("publications.html", "Publications", "Publications",          "Journal articles, conference proceedings and my PhD thesis.",   ["publications"]),
     ("talks.html",        "Talks",        "Talks",                 "Invited seminars and conference talks since 2020.",             ["talks"]),
     ("funding.html",      "Funding",      "Research Funding",      "Fellowships and grants awarded for my research.",               ["funding"]),
-    ("teaching.html",     "Teaching",     "Teaching and Mentoring", "Courses I have taught and students I have supervised.",        ["teaching"]),
+    ("teaching.html",     "Teaching",     "Teaching",              "Courses I have taught in Zürich and Bengaluru.",                 ["teaching"]),
+    ("supervision.html",  "Supervision",  "Supervision",           "Students whose research projects I have supervised.",           ["supervision"]),
     ("cv.html",           "CV",           "Curriculum Vitae",      "Positions, education, skills and service to the community.",   ["cv", "refereeing"]),
     ("contact.html",      "Contact",      "Contact",               "Feel free to get in touch. I am always happy to hear from you.", ["reach"]),
 ]
@@ -858,7 +982,22 @@ INTRO = ('<div class="intro" aria-hidden="true"><svg viewBox="0 0 100 100">'
 # Where each old in-page anchor now lives.
 LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research": "research.html", "#publications": "publications.html",
             "#software": "research.html#software", "#talks": "talks.html", "#funding": "funding.html",
-            "#teaching": "teaching.html", "#refereeing": "cv.html#refereeing", "#cv": "cv.html"}
+            "#teaching": "teaching.html", "#supervision": "supervision.html", "#refereeing": "cv.html#refereeing", "#cv": "cv.html"}
+
+
+# small line drawings for the explore cards, one per page, echoing its header animation
+EX_ICONS = {
+    "research.html": _p("M6 22L14 5L32 3L43 14L36 27L15 27Z") + _p("M14 5L22 16L32 3M22 16L43 14M22 16L36 27M22 16L15 27M6 22L22 16", "thin")
+                     + _dots([(6, 22), (14, 5), (32, 3), (43, 14), (36, 27), (15, 27), (22, 16)]),
+    "publications.html": _p("M4 22L13 12L21 17L31 6L44 10", "thin") + _dots([(4, 22), (13, 12), (21, 17), (31, 6), (44, 10)], 2)
+                         + _p("M3 28H45"),
+    "talks.html": _p("M4 26Q24 -2 44 18") + _p("M2 28Q24 22 46 28", "thin") + _dots([(4, 26), (44, 18)], 2.2),
+    "funding.html": _p("M24 4A9 9 0 1 1 23.9 4Z") + _p("M24 8.5A4.5 4.5 0 1 1 23.9 8.5Z", "thin") + _p("M18.5 20L15 29L19.5 27L21 30M29.5 20L33 29L28.5 27L27 30", "thin"),
+    "teaching.html": _p("M5 4H43V23H5Z") + _p("M10 12Q13 8 16 12T22 12M25 15H36", "thin") + _p("M9 27H39"),
+    "supervision.html": _p("M6 15C18 15 20 5 40 5M6 15H40M6 15C18 15 20 25 40 25", "thin") + _dots([(6, 15)], 2.6) + _dots([(40, 5), (40, 15), (40, 25)], 2),
+    "cv.html": _p("M3 25H45") + _p("M6 19H16M14 13H27M26 7H38", "thin") + _dots([(38, 7)], 2),
+    "contact.html": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M12 15H36M24 3C18 9 18 21 24 27M24 3C30 9 30 21 24 27", "thin") + _dots([(19, 11)], 2),
+}
 
 
 def render_explore(n_articles, n_proc):
@@ -867,11 +1006,14 @@ def render_explore(n_articles, n_proc):
         ("publications.html", "Publications", "Articles, proceedings and thesis", f"{n_articles} journal articles · {n_proc} proceedings"),
         ("talks.html", "Talks", "Seminars and conference talks", f"{len(TALKS)} talks since {min(t[0] for t in TALKS)}"),
         ("funding.html", "Funding", "Fellowships and grants", f"{len(FUNDING)} fellowships and grants"),
-        ("teaching.html", "Teaching", "Courses and supervision", f"{len(TEACHING)} courses · {len(SUPERVISION)} students"),
+        ("teaching.html", "Teaching", "Courses and tutorials", f"{len(TEACHING)} courses since {min(t[0] for t in TEACHING)}"),
+        ("supervision.html", "Supervision", "Students and their projects", f"{len(SUPERVISION)} students since {min(s[0] for s in SUPERVISION)}"),
         ("cv.html", "CV", "Curriculum vitae", "Positions, education and skills"),
+        ("contact.html", "Contact", "Get in touch", "Email, address and profiles"),
     ]
     items = "\n".join(
         f'<a class="ex-card" href="{href}"><span class="ex-num" aria-hidden="true">{n:02d}</span>'
+        f'<svg class="ex-icon" viewBox="0 0 48 30" aria-hidden="true">{EX_ICONS[href]}</svg>'
         f'<span class="kicker">{kick}</span><span class="ex-title">{title}</span>'
         f'<span class="ex-meta">{meta}</span><span class="ex-go" aria-hidden="true">→</span></a>'
         for n, (href, kick, title, meta) in enumerate(cards, 1))
@@ -1213,10 +1355,12 @@ Collider at CERN.</p>
 </section>
 
 <section class="chapter" id="teaching">
-<h2 class="chapter-title">Teaching &amp; Mentoring</h2>
-<h3 class="sect">Teaching</h3>
+<h2 class="chapter-title">Teaching</h2>
 {teaching}
-<h3 class="sect">Supervision</h3>
+</section>
+
+<section class="chapter" id="supervision">
+<h2 class="chapter-title">Supervision</h2>
 {supervision}
 </section>
 
@@ -1403,6 +1547,32 @@ Collider at CERN.</p>
       entries.forEach(function (e) {{ if (e.isIntersecting) {{ count(e.target); co.unobserve(e.target); }} }});
     }}, {{ threshold: 0.6 }});
     Array.prototype.forEach.call(counters, function (el) {{ co.observe(el); }});
+  }}
+
+  /* ---------- funding: each amount counts up in its own currency when it comes into view ---------- */
+  var amounts = document.querySelectorAll('.fund-amount');
+  if (amounts.length && !reduce && 'IntersectionObserver' in window) {{
+    var ao = new IntersectionObserver(function (entries) {{
+      entries.forEach(function (x) {{
+        if (!x.isIntersecting) return;
+        ao.unobserve(x.target);
+        var el = x.target, m = /^([^0-9]*)([0-9,]+)(.*)$/.exec(el.getAttribute('data-final'));
+        if (!m) return;
+        var target = parseInt(m[2].replace(/,/g, ''), 10), t0 = null;
+        (function step(ts) {{
+          if (!t0) t0 = ts;
+          var k = Math.min(1, (ts - t0) / 1600), v = Math.round(target * (1 - Math.pow(1 - k, 3)));
+          el.textContent = m[1] + v.toLocaleString('en-US') + m[3];
+          if (k < 1) requestAnimationFrame(step);
+        }})(performance.now());
+      }});
+    }}, {{ threshold: 0.6 }});
+    Array.prototype.forEach.call(amounts, function (el) {{
+      var final = el.textContent, m = /^([^0-9]*)([0-9,]+)(.*)$/.exec(final);
+      el.setAttribute('data-final', final);
+      if (m) el.textContent = m[1] + '0' + m[3];
+      ao.observe(el);
+    }});
   }}
 
   /* ---------- opening reveal: lift the curtain, then let the page animations run ---------- */
