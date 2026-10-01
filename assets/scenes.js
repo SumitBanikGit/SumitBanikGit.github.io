@@ -1946,6 +1946,200 @@
     }
   };
 
+  /* What is a Mellin-Barnes integral? The one-fold example of the paper, Eq. (2): the contour
+     must keep the poles of Gamma(-z) (z = 0, 1, 2, ...) on its right and those of Gamma(-1/2 + z)
+     (z = 1/2, -1/2, -3/2, ...) on its left, so it cannot be straight (Fig. 1). Closing it to the
+     right sums the residues of the first set, Eq. (4), valid for |x| < 1; closing it to the left
+     gives Eq. (5), valid for |x| > 1. Both resum to -2 sqrt(pi) (1 - x)^(1/2). */
+  var MB_PATH = [[-0.25, -1.5], [-0.25, 0.3], [0.25, 0.3], [0.25, -0.3], [0.75, -0.3], [0.75, 1.5]];
+  function roundedPath(P, r) {                      // a polyline with rounded corners, as points
+    var out = [P[0]];
+    for (var i = 1; i < P.length - 1; i++) {
+      var a = P[i - 1], b = P[i], c = P[i + 1];
+      var d1 = Math.hypot(b[0] - a[0], b[1] - a[1]), d2 = Math.hypot(c[0] - b[0], c[1] - b[1]), rr = Math.min(r, d1 / 2, d2 / 2);
+      var p = [b[0] + (a[0] - b[0]) / d1 * rr, b[1] + (a[1] - b[1]) / d1 * rr], q = [b[0] + (c[0] - b[0]) / d2 * rr, b[1] + (c[1] - b[1]) / d2 * rr];
+      out.push(p);
+      for (var k = 1; k < 8; k++) { var u = k / 8, w1 = (1 - u) * (1 - u), w2 = 2 * u * (1 - u), w3 = u * u; out.push([w1 * p[0] + w2 * b[0] + w3 * q[0], w1 * p[1] + w2 * b[1] + w3 * q[1]]); }
+      out.push(q);
+    }
+    out.push(P[P.length - 1]);
+    return out;
+  }
+  var MB_SNAKE = roundedPath(MB_PATH, 0.14);
+  var MBINTRO = {
+    key: 'mbintro', paper: '2402.04174', dur: 15, cap: 'What is a Mellin-Barnes integral?',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 44));
+      var top = v.y + v.S * 3, w = v.w * (v.w > 420 ? 0.62 : 0.56), h = v.h - (top - v.y) - 4, u = Math.min(w / 5.2, h / 3.1);
+      v.Z = { u: u, cx: v.x + 4 + 2.3 * u, cy: top + h / 2 };
+      v.px = v.x + 4 + 5.2 * u + 16;
+      v.geo = pathGeo(MB_SNAKE.map(function (p) { return [v.Z.cx + p[0] * u, v.Z.cy - p[1] * u]; }));
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, Z = v.Z, u = Z.u;
+      function X(x) { return Z.cx + x * u; }
+      function Y(y) { return Z.cy - y * u; }
+      var ak = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= ak;
+      drawMath(ctx, 'I=\\int\\frac{\\rm{d}z}{2πi}\\,(−x)^z\\,Γ(−z)\\,Γ(−\\frac{1}{2}+z)', v.x + 4, v.y + S * 1.6, S, ink('green', 0.95), 'left');
+      line(ctx, X(-2.3), Y(0), X(2.9), Y(0), ink('green', 0.35), 1); line(ctx, X(0), Y(-1.5), X(0), Y(1.5), ink('green', 0.35), 1);
+      drawMath(ctx, '\\rm{Re}\\,z', X(2.9), Y(0) - 6, S * 0.8, ink('slate', 0.9), 'right');
+      ctx.restore();
+      var right = [0, 1, 2], left = [0.5, -0.5, -1.5];
+      var cR = R ? 1 : ease((t - 4) / 0.7), cRout = R ? 0 : clamp01((t - 7.6) / 0.5), cL = R ? 0 : ease((t - 8.1) / 0.7);
+      function poles(list, col, pulseAt, live) {
+        list.forEach(function (x, i) {
+          var k = R ? 1 : ease((t - 0.3 - i * 0.12 - (col === 'pine' ? 0.5 : 0)) / 0.4);
+          if (k <= 0) return;
+          var px = X(x), py = Y(0), hit = live > 0 && !R ? clamp01((t - pulseAt - i * 0.35) / 0.3) : (R && live > 0 ? 1 : 0);
+          if (hit > 0) ring(ctx, px, py, 4 + 5 * hit, ink(col, 0.55 * live * (1 - 0.5 * hit)), 1.2);
+          dot(ctx, px, py, 3.2 * k, ink(col, 0.95));
+        });
+      }
+      poles(right, 'crimson', 4.6, cR * (1 - cRout));
+      poles(left, 'pine', 8.7, cL);
+      var ck = R ? 1 : clamp01((t - 1.2) / 1.8), g = v.geo;   // the contour, from below to above
+      if (ck > 0) {
+        ctx.strokeStyle = ink('brassD', 0.95); ctx.lineWidth = 1.6; ctx.beginPath();
+        var end = g.len * ck, s0 = pathAt(g, 0); ctx.moveTo(s0[0], s0[1]);
+        for (var i = 1; i < g.pts.length && g.L[i] <= end; i++) ctx.lineTo(g.pts[i][0], g.pts[i][1]);
+        var e = pathAt(g, end); ctx.lineTo(e[0], e[1]); ctx.stroke();
+        [0.18, 0.88].forEach(function (f) { if (ck > f + 0.04) { var q = pathAt(g, g.len * f); arrowHead(ctx, q[0] + q[2] * 4, q[1] + q[3] * 4, Math.atan2(q[3], q[2]), 6, ink('brassD', 0.95)); } });
+      }
+      function arc(dir, k) {                        // closing the contour at infinity, to the right or to the left
+        var T = MB_PATH[MB_PATH.length - 1], B = MB_PATH[0], c = dir > 0 ? 3.3 : -2.9;
+        ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = ink('brassD', 0.7 * k); ctx.lineWidth = 1.2; ctx.beginPath();
+        for (var j = 0; j <= 40 * k; j++) {
+          var w = j / 40, a0 = (1 - w) * (1 - w) * (1 - w), a1 = 3 * w * (1 - w) * (1 - w), a2 = 3 * w * w * (1 - w), a3 = w * w * w;
+          var x = X(a0 * T[0] + (a1 + a2) * c + a3 * B[0]), y = Y((a0 + a1) * T[1] + (a2 + a3) * B[1]);
+          if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        }
+        ctx.stroke(); ctx.restore();
+      }
+      if (cR > 0 && cRout < 1) { ctx.save(); ctx.globalAlpha *= 1 - cRout; arc(1, cR); ctx.restore(); }
+      if (cL > 0) arc(-1, cL);
+      var px = v.px, room = v.x + v.w - px, y0 = Y(1.3);   // what each closing gives
+      if (room < 110) return;
+      ctx.save(); ctx.globalAlpha *= ak;
+      [['Γ(−z)', 'crimson'], ['Γ(−\\frac{1}{2}+z)', 'pine']].forEach(function (L, i) {
+        dot(ctx, px + 4, y0 - 4 + i * S * 2, 3, ink(L[1], 0.95));
+        drawMath(ctx, L[0], px + 14, y0 + i * S * 2, S * 0.9, ink('green', 0.95), 'left');
+      });
+      ctx.restore();
+      var yr = y0 + S * 5.2;
+      if (cR > 0 && cRout < 1) {
+        ctx.save(); ctx.globalAlpha *= cR * (1 - cRout);
+        caps(ctx, 'CLOSING TO THE RIGHT', px, yr, ink('crimson', 0.9), 7);
+        drawMath(ctx, '\\sum_nΓ(n−\\frac{1}{2})\\,\\frac{x^n}{n!}', px, yr + S * 2.3, S * 0.95, ink('green', 0.95), 'left');
+        drawMath(ctx, '|x|<1', px, yr + S * 4.4, S * 0.9, ink('slate', 0.95), 'left');
+        ctx.restore();
+      }
+      if (cL > 0) {
+        var fk = R ? 0 : ease((t - 11.6) / 0.6);
+        ctx.save(); ctx.globalAlpha *= cL * (1 - fk);
+        caps(ctx, 'CLOSING TO THE LEFT', px, yr, ink('pine', 0.95), 7);
+        drawMath(ctx, '(−x)^{1/2}\\sum_nΓ(n−\\frac{1}{2})\\,\\frac{x^{−n}}{n!}', px, yr + S * 2.3, S * 0.95, ink('green', 0.95), 'left');
+        drawMath(ctx, '|x|>1', px, yr + S * 4.4, S * 0.9, ink('slate', 0.95), 'left');
+        ctx.restore();
+        if (fk > 0) {
+          ctx.save(); ctx.globalAlpha *= fk;
+          caps(ctx, 'BOTH SERIES RESUM TO', px, yr, ink('slate', 0.85), 7);
+          drawMath(ctx, '−2√π\\,(1−x)^{1/2}', px, yr + S * 2.3, S * 1.05, ink('crimson', 0.95), 'left');
+          ctx.restore();
+        }
+      }
+    }
+  };
+
+  /* Multiple polylogarithms from their MB representation (Sec. 4 of the paper): for
+     Li_{m1,m2}(x1, x2) the conic hull method gives five series representations whose regions of
+     convergence, cut out by x1 = 1, x2 = 1 and the hyperbola x1 x2 = 1, fill the whole quadrant
+     (Fig. 2). A point wanders through the plane and is always inside one of them. */
+  var PL_REG = [                                     // regions of Fig. 2, in the square from 0 to 5
+    { lab: 'R_1', col: 'plum', at: [1.7, 0.42] }, { lab: 'R_2', col: 'pine', at: [0.24, 2.2] }, { lab: 'R_3', col: 'crimson', at: [0.66, 3.4] },
+    { lab: 'R_4', col: 'brass', at: [3.3, 0.68] }, { lab: 'R_5', col: 'brassD', at: [3, 3] }
+  ];
+  function plRegion(x1, x2) { return x2 < 1 ? (x1 * x2 < 1 ? 0 : 3) : (x1 > 1 ? 4 : (x1 * x2 < 1 ? 1 : 2)); }
+  var PL_WAY = [[2.4, 0.3], [4.2, 0.62], [3.6, 3.1], [0.72, 3.7], [0.14, 2.4], [0.45, 0.55]];
+  var POLYLOG = {
+    key: 'polylog', paper: '2407.20120', dur: 14, cap: 'Multiple polylogarithms from MB integrals',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 44));
+      var side = Math.min(v.h - 30, v.w * 0.48);
+      v.Q = { x: v.x + 22, y: v.y + 10, s: side / 5 };
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, Q = v.Q, s = Q.s;
+      function X(x) { return Q.x + x * s; }
+      function Y(y) { return Q.y + (5 - y) * s; }
+      function hyp(a, b) { var p = []; for (var k = 0; k <= 30; k++) { var x = a + (b - a) * k / 30; p.push([X(x), Y(1 / x)]); } return p; }
+      var shapes = [                                // the five regions as polygons
+        [[X(0), Y(0)], [X(5), Y(0)], [X(5), Y(0.2)]].concat(hyp(5, 1), [[X(0), Y(1)]]),
+        [[X(0), Y(1)], [X(1), Y(1)]].concat(hyp(1, 0.2), [[X(0), Y(5)]]),
+        [[X(1), Y(1)], [X(1), Y(5)], [X(0.2), Y(5)]].concat(hyp(0.2, 1)),
+        [[X(1), Y(1)]].concat(hyp(1, 5), [[X(5), Y(1)]]),
+        [[X(1), Y(1)], [X(5), Y(1)], [X(5), Y(5)], [X(1), Y(5)]]
+      ];
+      var on = -1, probe = null;
+      if (R || t > 6) {                             // a point wandering through the plane
+        var n = PL_WAY.length, f = R ? 0.3 : ((t - 6) / 1.4) % n, i0 = Math.floor(f), u = f - i0;
+        var p0 = PL_WAY[(i0 - 1 + n) % n], p1 = PL_WAY[i0], p2 = PL_WAY[(i0 + 1) % n], p3 = PL_WAY[(i0 + 2) % n];
+        function cr(a, b, c, d) { return 0.5 * (2 * b + (c - a) * u + (2 * a - 5 * b + 4 * c - d) * u * u + (3 * b - a - 3 * c + d) * u * u * u); }
+        probe = [Math.max(0.05, cr(p0[0], p1[0], p2[0], p3[0])), Math.max(0.05, cr(p0[1], p1[1], p2[1], p3[1]))];
+        on = plRegion(probe[0], probe[1]);
+      }
+      PL_REG.forEach(function (Rg, i) {
+        var k = R ? 1 : ease((t - 1 - i * 0.55) / 0.5);
+        if (k <= 0) return;
+        ctx.fillStyle = ink(Rg.col, (on === i ? 0.32 : 0.15) * k); ctx.beginPath();
+        shapes[i].forEach(function (p, j) { if (j) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
+        ctx.closePath(); ctx.fill();
+        ctx.save(); ctx.globalAlpha *= k;
+        drawMath(ctx, Rg.lab, X(Rg.at[0]), Y(Rg.at[1]) + 4, S * (i === 1 ? 0.8 : 0.95), ink(Rg.col === 'brass' ? 'brassD' : Rg.col, on === i ? 1 : 0.85), 'center');
+        ctx.restore();
+      });
+      var bk = R ? 1 : ease((t - 3.8) / 0.8);       // the boundaries: x1 = 1, x2 = 1 and x1 x2 = 1
+      if (bk > 0) {
+        ctx.save(); ctx.globalAlpha *= bk; ctx.strokeStyle = ink('green', 0.6); ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(X(0), Y(1)); ctx.lineTo(X(5), Y(1)); ctx.moveTo(X(1), Y(1)); ctx.lineTo(X(1), Y(5));
+        hyp(0.2, 5).forEach(function (p, j) { if (j) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
+        ctx.stroke(); ctx.restore();
+      }
+      ctx.save(); ctx.globalAlpha *= R ? 1 : ease(t / 0.6);
+      ctx.strokeStyle = ink('green', 0.45); ctx.lineWidth = 1; ctx.strokeRect(X(0), Y(5), 5 * s, 5 * s);
+      [0, 1, 5].forEach(function (k) {
+        drawMath(ctx, String(k), X(k), Y(0) + 12, S * 0.75, ink('slate', 0.85), 'center');
+        if (k) drawMath(ctx, String(k), X(0) - 5, Y(k) + 3, S * 0.75, ink('slate', 0.85), 'right');
+      });
+      drawMath(ctx, 'x_1', X(5) + 6, Y(0) + 4, S * 0.85, ink('slate', 0.95), 'left');
+      drawMath(ctx, 'x_2', X(0) - 5, Y(5) + 20, S * 0.85, ink('slate', 0.95), 'right');
+      ctx.restore();
+      if (probe) {
+        var qx = X(probe[0]), qy = Y(probe[1]);
+        ring(ctx, qx, qy, 5, ink('green', 0.9), 1.3); dot(ctx, qx, qy, 1.8, ink('green', 1));
+      }
+      var px = X(5) + 30, room = v.x + v.w - px;    // the definition, and what the figure shows
+      if (room < 120) return;
+      var dk = R ? 1 : ease((t - 0.3) / 0.7);
+      ctx.save(); ctx.globalAlpha *= dk;
+      drawMath(ctx, '\\rm{Li}_{m_1,m_2}(x_1,x_2)', px, v.y + S * 2, S, ink('green', 0.95), 'left');
+      drawMath(ctx, '=\\sum_{0<k_1<k_2}\\frac{x_1^{k_1}\\,x_2^{k_2}}{k_1^{m_1}\\,k_2^{m_2}}', px + S * 0.6, v.y + S * 5, S, ink('green', 0.95), 'left');
+      ctx.restore();
+      var nk = R ? 1 : ease((t - 4.6) / 0.7);
+      if (nk > 0) {
+        ctx.save(); ctx.globalAlpha *= nk;
+        caps(ctx, 'FIVE SERIES REPRESENTATIONS', px, v.y + S * 8.6, ink('slate', 0.85), 7);
+        caps(ctx, 'NO WHITE ZONES', px, v.y + S * 8.6 + 13, ink('brassD', 0.95), 7);
+        ctx.restore();
+      }
+      if (probe && on >= 0) {
+        ctx.save(); ctx.globalAlpha *= R ? 1 : clamp01((t - 6) / 0.5);
+        drawMath(ctx, '(' + probe[0].toFixed(2) + ',\\,' + probe[1].toFixed(2) + ')\\,\\rm{in}\\,' + PL_REG[on].lab, px, v.y + S * 12.4, S * 0.9, ink(PL_REG[on].col === 'brass' ? 'brassD' : PL_REG[on].col, 1), 'left');
+        ctx.restore();
+      }
+    }
+  };
+
   /* Triangulations of point configurations, as in Figs. 1 and 2 of the paper. For the
      Appell F1 integral the point configuration lies in the plane x + y + z = 1: a triangle
      P3 P4 P5 with P1 and P2 at the midpoints of two edges. Its five regular triangulations
@@ -2062,8 +2256,8 @@
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
-  var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, SUNSET, EVIDENCE, BRACKETS, ANATOMY, QUADRATIC];
+  var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, ANATOMY, QUADRATIC];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
