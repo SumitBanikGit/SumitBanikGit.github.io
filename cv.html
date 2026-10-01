@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abea5fd">
+<link rel="stylesheet" href="assets/style.css?v=6abeb6d6">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
@@ -47,6 +47,7 @@
     <button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode" title="Switch to dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="tt-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></g><path class="tt-moon" d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/></svg></button>
   </div>
 </div>
+<button class="theme-toggle corner" type="button" aria-pressed="false" aria-label="Dark mode" title="Switch to dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="tt-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></g><path class="tt-moon" d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/></svg></button>
 <main id="main" class="wrap">
 
 <section class="chapter" id="cv">
@@ -352,21 +353,25 @@
   window.addEventListener('scroll', parallax, { passive: true });
 
   /* ---------- dark mode: follows the system until the reader chooses, then remembers the choice ---------- */
-  var root = document.documentElement, tbtn = document.querySelector('.theme-toggle');
+  var root = document.documentElement, tbtns = document.querySelectorAll('.theme-toggle');
+  function mark(dark) {
+    Array.prototype.forEach.call(tbtns, function (b) {
+      b.setAttribute('aria-pressed', dark ? 'true' : 'false'); b.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+    });
+  }
   function setTheme(dark, save) {
     if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
-    if (tbtn) { tbtn.setAttribute('aria-pressed', dark ? 'true' : 'false'); tbtn.title = dark ? 'Switch to light mode' : 'Switch to dark mode'; }
+    mark(dark);
     if (save) { try { localStorage.setItem('sb-theme', dark ? 'dark' : 'light'); } catch (e) {} }
     document.dispatchEvent(new CustomEvent('themechange', { detail: { dark: dark } }));
   }
-  if (tbtn) {
-    try {                                           // a soft pulse shows where the switch is, once per visit, until a theme is chosen
-      if (!reduce && !localStorage.getItem('sb-theme') && !sessionStorage.getItem('sb-tt-hint')) {
-        tbtn.classList.add('hint'); sessionStorage.setItem('sb-tt-hint', '1');
-      }
-    } catch (e) {}
-    tbtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark' ? 'true' : 'false');
-    tbtn.title = root.getAttribute('data-theme') === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  mark(root.getAttribute('data-theme') === 'dark');
+  try {                                             // a soft pulse shows where the switch is, once per visit, until a theme is chosen
+    if (!reduce && !localStorage.getItem('sb-theme') && !sessionStorage.getItem('sb-tt-hint')) {
+      Array.prototype.forEach.call(tbtns, function (b) { b.classList.add('hint'); }); sessionStorage.setItem('sb-tt-hint', '1');
+    }
+  } catch (e) {}
+  Array.prototype.forEach.call(tbtns, function (tbtn) {
     tbtn.addEventListener('click', function () {
       var dark = root.getAttribute('data-theme') !== 'dark';
       if (reduce || !document.startViewTransition) { setTheme(dark, true); return; }
@@ -380,6 +385,11 @@
       }).catch(function () {});
       vt.finished.then(function () { root.classList.remove('theme-vt'); }, function () { root.classList.remove('theme-vt'); });
     });
+  });
+  var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar');
+  if (corner && navbar) {                           // the corner switch steps aside once the menu bar with its own switch is at the top
+    var place = function () { corner.classList.toggle('away', navbar.getBoundingClientRect().top <= 1); };
+    window.addEventListener('scroll', place, { passive: true }); window.addEventListener('resize', place); place();
   }
   var dq = window.matchMedia('(prefers-color-scheme: dark)'), follow = function (ev) {
     var saved = null; try { saved = localStorage.getItem('sb-theme'); } catch (e) {}

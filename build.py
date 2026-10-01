@@ -1375,7 +1375,8 @@ def write_pages(html, n_articles, n_proc):
                   '<path class="tt-moon" d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/></svg></button>')
         return (f'<div class="navbar">\n  <div class="wrap nav-inner">\n'
                 f'    <a class="brand" href="index.html">{P["name"]}</a>\n'
-                f'    <nav aria-label="Pages">{links}</nav>\n    {toggle}\n  </div>\n</div>\n')
+                f'    <nav aria-label="Pages">{links}</nav>\n    {toggle}\n  </div>\n</div>\n'
+                + toggle.replace('class="theme-toggle"', 'class="theme-toggle corner"', 1) + '\n')
 
     def letters(text):
         out, i = [], 0
@@ -1923,21 +1924,25 @@ at CERN.</p>
   window.addEventListener('scroll', parallax, {{ passive: true }});
 
   /* ---------- dark mode: follows the system until the reader chooses, then remembers the choice ---------- */
-  var root = document.documentElement, tbtn = document.querySelector('.theme-toggle');
+  var root = document.documentElement, tbtns = document.querySelectorAll('.theme-toggle');
+  function mark(dark) {{
+    Array.prototype.forEach.call(tbtns, function (b) {{
+      b.setAttribute('aria-pressed', dark ? 'true' : 'false'); b.title = dark ? 'Switch to light mode' : 'Switch to dark mode';
+    }});
+  }}
   function setTheme(dark, save) {{
     if (dark) root.setAttribute('data-theme', 'dark'); else root.removeAttribute('data-theme');
-    if (tbtn) {{ tbtn.setAttribute('aria-pressed', dark ? 'true' : 'false'); tbtn.title = dark ? 'Switch to light mode' : 'Switch to dark mode'; }}
+    mark(dark);
     if (save) {{ try {{ localStorage.setItem('sb-theme', dark ? 'dark' : 'light'); }} catch (e) {{}} }}
     document.dispatchEvent(new CustomEvent('themechange', {{ detail: {{ dark: dark }} }}));
   }}
-  if (tbtn) {{
-    try {{                                           // a soft pulse shows where the switch is, once per visit, until a theme is chosen
-      if (!reduce && !localStorage.getItem('sb-theme') && !sessionStorage.getItem('sb-tt-hint')) {{
-        tbtn.classList.add('hint'); sessionStorage.setItem('sb-tt-hint', '1');
-      }}
-    }} catch (e) {{}}
-    tbtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark' ? 'true' : 'false');
-    tbtn.title = root.getAttribute('data-theme') === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+  mark(root.getAttribute('data-theme') === 'dark');
+  try {{                                             // a soft pulse shows where the switch is, once per visit, until a theme is chosen
+    if (!reduce && !localStorage.getItem('sb-theme') && !sessionStorage.getItem('sb-tt-hint')) {{
+      Array.prototype.forEach.call(tbtns, function (b) {{ b.classList.add('hint'); }}); sessionStorage.setItem('sb-tt-hint', '1');
+    }}
+  }} catch (e) {{}}
+  Array.prototype.forEach.call(tbtns, function (tbtn) {{
     tbtn.addEventListener('click', function () {{
       var dark = root.getAttribute('data-theme') !== 'dark';
       if (reduce || !document.startViewTransition) {{ setTheme(dark, true); return; }}
@@ -1951,6 +1956,11 @@ at CERN.</p>
       }}).catch(function () {{}});
       vt.finished.then(function () {{ root.classList.remove('theme-vt'); }}, function () {{ root.classList.remove('theme-vt'); }});
     }});
+  }});
+  var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar');
+  if (corner && navbar) {{                           // the corner switch steps aside once the menu bar with its own switch is at the top
+    var place = function () {{ corner.classList.toggle('away', navbar.getBoundingClientRect().top <= 1); }};
+    window.addEventListener('scroll', place, {{ passive: true }}); window.addEventListener('resize', place); place();
   }}
   var dq = window.matchMedia('(prefers-color-scheme: dark)'), follow = function (ev) {{
     var saved = null; try {{ saved = localStorage.getItem('sb-theme'); }} catch (e) {{}}

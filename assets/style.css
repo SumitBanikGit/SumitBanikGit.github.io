@@ -1939,3 +1939,12 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
   .theme-toggle.hint { animation: tt-hint 1.7s ease-out 1.4s 3; }
   @keyframes tt-hint { 0% { box-shadow: 0 0 0 0 rgba(220, 197, 143, .6); } 100% { box-shadow: 0 0 0 11px rgba(220, 197, 143, 0); } }
 }
+
+/* a second theme switch in the top corner while the header is on screen (the menu bar sits below the header) */
+.theme-toggle.corner { position: fixed; top: .85rem; right: .95rem; z-index: 30; width: 2.3rem; height: 2.3rem; margin: 0;
+                       background: rgba(28, 53, 47, .88); border-color: rgba(220, 197, 143, .6);
+                       box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5); transition: opacity .3s ease, transform .3s ease, border-color .2s, background .2s; }
+.theme-toggle.corner:hover { background: rgba(28, 53, 47, 1); border-color: #dcc58f; }
+.theme-toggle.corner.away { opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden;
+                            transition: opacity .3s ease, transform .3s ease, visibility 0s .3s; }   /* hidden from the keyboard too */
+@media print { .theme-toggle { display: none !important; } }
