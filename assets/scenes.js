@@ -2281,12 +2281,88 @@
     }
   };
 
+  /* Why the 95 GeV triplet Higgs stands out: Fig. 3 of the paper, the transverse momentum of the photon
+     pair over its invariant mass, normalized to unity, for gluon fusion pp -> H, associated production
+     pp -> HV and Drell-Yan production of the triplet pp -> H H+-. Bins of 0.1 from 0 to 2.9, read off the
+     figure (each set sums to about one). The triplet gives a much broader spectrum than gluon fusion. */
+  var PT_BINS = [
+    { lab: 'pp→H', col: 'pine', h: [0.118, 0.229, 0.208, 0.153, 0.100, 0.060, 0.036, 0.022, 0.014, 0.012, 0.008, 0.007, 0.006, 0.005, 0.004,
+                                    0.003, 0.003, 0.002, 0.002, 0.002, 0.002, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001] },
+    { lab: 'pp→HV', col: 'brassD', h: [0.015, 0.050, 0.082, 0.097, 0.099, 0.092, 0.079, 0.071, 0.066, 0.053, 0.047, 0.040, 0.034, 0.027, 0.024,
+                                       0.020, 0.018, 0.016, 0.013, 0.011, 0.009, 0.008, 0.007, 0.006, 0.005, 0.005, 0.004, 0.004, 0.003] },
+    { lab: 'pp→HH^±', col: 'crimson', h: [0.002, 0.007, 0.016, 0.027, 0.040, 0.049, 0.056, 0.057, 0.063, 0.065, 0.064, 0.063, 0.058, 0.054, 0.047,
+                                          0.043, 0.041, 0.036, 0.034, 0.028, 0.024, 0.022, 0.019, 0.017, 0.016, 0.013, 0.013, 0.012, 0.010] }
+  ];
+  var PTSPEC = {
+    key: 'ptspec', paper: '2306.15722', dur: 12, cap: 'Harder photons from a 95 GeV triplet Higgs',
+    layout: function (v) {
+      v.S = Math.max(9, Math.min(11.5, v.w / 46));
+      v.L = v.x + 30; v.R = v.x + v.w - 8; v.T = v.y + 24; v.B = v.y + v.h - 28;
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, L = v.L, Rr = v.R, T = v.T, B = v.B, S = v.S;
+      function X(x) { return L + x / 3 * (Rr - L); }
+      function Y(y) { return B - y / 0.25 * (B - T); }
+      var ak = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= ak;              // the axes, as in the paper
+      line(ctx, L, T, L, B, ink('green', 0.55), 1); line(ctx, L, B, Rr, B, ink('green', 0.55), 1);
+      [0, 1, 2, 3].forEach(function (x) { line(ctx, X(x), B, X(x), B + 4, ink('green', 0.55), 1); drawMath(ctx, String(x), X(x), B + 15, S * 0.9, ink('slate', 0.85), 'center'); });
+      [0.1, 0.2].forEach(function (y) { line(ctx, L - 3, Y(y), L, Y(y), ink('green', 0.55), 1); drawMath(ctx, String(y), L - 5, Y(y) + 3.5, S * 0.8, ink('slate', 0.85), 'right'); });
+      drawMath(ctx, 'p_T^{γγ}/m_{γγ}', X(1.5), B + 17, S, ink('slate', 0.95), 'center');   // below the axis, clear of the tails
+      caps(ctx, 'EVENTS PER BIN, NORMALIZED TO ONE', L, v.y + 10, ink('slate', 0.8), 7.5);
+      ctx.restore();
+      PT_BINS.forEach(function (set, si) {             // gluon fusion, then associated production, then the triplet
+        var t0 = 0.8 + si * 1.9, k = R ? 1 : clamp01((t - t0) / 1.6);
+        if (k <= 0) return;
+        var n = set.h.length, path = [];
+        for (var i = 0; i < n; i++) {
+          var g = R ? 1 : ease((t - t0 - i * 0.035) / 0.5), y = Y(set.h[i] * g);
+          path.push([X(i * 0.1), y], [X((i + 1) * 0.1), y]);
+        }
+        ctx.beginPath(); ctx.moveTo(X(0), B);
+        path.forEach(function (p) { ctx.lineTo(p[0], p[1]); });
+        ctx.lineTo(X(n * 0.1), B); ctx.closePath();
+        ctx.fillStyle = ink(set.col, si === 2 ? 0.12 : 0.07); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(X(0), B);
+        path.forEach(function (p) { ctx.lineTo(p[0], p[1]); });
+        ctx.lineTo(X(n * 0.1), B);
+        ctx.strokeStyle = ink(set.col, 0.95); ctx.lineWidth = si === 2 ? 1.9 : 1.4; ctx.lineJoin = 'miter'; ctx.stroke();
+        var lk = R ? 1 : ease((t - t0) / 0.5), ly = T + 6 + si * (S + 5), lx = Rr - 4;   // its entry in the legend
+        ctx.save(); ctx.globalAlpha *= lk;
+        var lw = mathBox(ctx, set.lab, S).w;
+        line(ctx, lx - lw - 26, ly - S * 0.33, lx - lw - 8, ly - S * 0.33, ink(set.col, 0.95), si === 2 ? 2.2 : 1.6);
+        drawMath(ctx, set.lab, lx, ly, S, ink(set.col, 1), 'right');
+        ctx.restore();
+      });
+      var ok = R ? 1 : ease((t - 7.2) / 0.7);
+      if (ok > 0) {                                   // the point of the figure
+        ctx.save(); ctx.globalAlpha *= ok;
+        var x0 = X(0.27), y0 = Y(0.2), x1 = X(0.95), y1 = Y(0.085), cx = X(0.75), cy = Y(0.205);
+        var e = R ? 1 : easeInOut((t - 7.2) / 1.2), px = x0, py = y0;
+        ctx.strokeStyle = ink('brassD', 0.9); ctx.lineWidth = 1.2; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(x0, y0);
+        for (var j = 1; j <= 24; j++) {
+          var u = e * j / 24; px = (1 - u) * (1 - u) * x0 + 2 * u * (1 - u) * cx + u * u * x1; py = (1 - u) * (1 - u) * y0 + 2 * u * (1 - u) * cy + u * u * y1; ctx.lineTo(px, py);
+        }
+        ctx.stroke(); ctx.setLineDash([]);
+        if (e > 0.97) {
+          var ang = Math.atan2(y1 - cy, x1 - cx);
+          ctx.fillStyle = ink('brassD', 0.95); ctx.beginPath();
+          ctx.moveTo(x1, y1); ctx.lineTo(x1 - 7 * Math.cos(ang - 0.45), y1 - 7 * Math.sin(ang - 0.45)); ctx.lineTo(x1 - 7 * Math.cos(ang + 0.45), y1 - 7 * Math.sin(ang + 0.45)); ctx.fill();
+        }
+        var narrow = v.w < 420, ty = Y(narrow ? 0.135 : 0.15);       // clear of the legend on a phone
+        caps(ctx, narrow ? 'BROADER THAN GLUON FUSION' : 'MUCH BROADER THAN GLUON FUSION', X(1.02), ty, ink('crimson', 0.9 * (R ? 1 : ease((t - 8.2) / 0.6))), 7.5);
+        drawMath(ctx, 'm_H=95\\,\\rm{GeV}', X(1.02), ty + S + 4, S * 0.9, ink('slate', 0.9 * (R ? 1 : ease((t - 8.6) / 0.6))), 'left');
+        ctx.restore();
+      }
+    }
+  };
+
   var SPECV = { key: 'excesses', paper: '2306.15722', dur: 11.5, cap: 'The di-photon excesses at 95 and 152 GeV',
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
   var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, PTSPEC];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
