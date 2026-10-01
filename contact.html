@@ -497,6 +497,11 @@
           var a = rnd(0, TAU);
           return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); } }
     ];
+    if (document.body.classList.contains('page-404')) EVENTS = [   // a missing page: events where something leaves unseen
+      { label: 'Z → ν<span class="ov">ν</span> + jet', make: function () {
+          var a = rnd(0, TAU); return jet(a, 9).concat([neutrino(a + Math.PI + rnd(-0.2, 0.2))], soft(6)); } },
+      EVENTS[3]
+    ];
     function spawn(now) {
       var ev = EVENTS[evIndex++ % EVENTS.length], list = ev.make();
       list.forEach(function (p) { p.born = now + (p.delay || 0) * 1000 + rnd(20, 90); });

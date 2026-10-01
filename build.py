@@ -1449,7 +1449,7 @@ def write_pages(html, n_articles, n_proc):
     # a friendly 404 page for mistyped addresses
     nf = (head.replace("<title>Sumit Banik | Theoretical Particle Physics</title>", "<title>Page not found | Sumit Banik</title>")
           + '<body id="top" class="page-404">\n' + INTRO + page_hero("Not found", "Page not found",
-            "The page you are looking for does not exist. It may have moved.")
+            "The page you are looking for does not exist. Like a neutrino, it left the detector without a trace.")
           + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
           '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
           + sections["contact"] + "\n\n" + tail)
@@ -2089,6 +2089,11 @@ at CERN.</p>
       {{ label: 'H → ZZ* → 4ℓ', make: function () {{
           var a = rnd(0, TAU);
           return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); }} }}
+    ];
+    if (document.body.classList.contains('page-404')) EVENTS = [   // a missing page: events where something leaves unseen
+      {{ label: 'Z → ν<span class="ov">ν</span> + jet', make: function () {{
+          var a = rnd(0, TAU); return jet(a, 9).concat([neutrino(a + Math.PI + rnd(-0.2, 0.2))], soft(6)); }} }},
+      EVENTS[3]
     ];
     function spawn(now) {{
       var ev = EVENTS[evIndex++ % EVENTS.length], list = ev.make();

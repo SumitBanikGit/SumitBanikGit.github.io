@@ -30,7 +30,7 @@
    <div class="hero-text">
     <p class="crumb"><a href="index.html">Sumit Banik</a><span aria-hidden="true">/</span>Not found</p>
     <h1 class="page-title" aria-label="Page not found"><span class="w" aria-hidden="true"><span class="ch" style="--i:0">P</span><span class="ch" style="--i:1">a</span><span class="ch" style="--i:2">g</span><span class="ch" style="--i:3">e</span></span> <span class="w" aria-hidden="true"><span class="ch" style="--i:5">n</span><span class="ch" style="--i:6">o</span><span class="ch" style="--i:7">t</span></span> <span class="w" aria-hidden="true"><span class="ch" style="--i:9">f</span><span class="ch" style="--i:10">o</span><span class="ch" style="--i:11">u</span><span class="ch" style="--i:12">n</span><span class="ch" style="--i:13">d</span></span></h1>
-    <p class="page-sub">The page you are looking for does not exist. It may have moved.</p>
+    <p class="page-sub">The page you are looking for does not exist. Like a neutrino, it left the detector without a trace.</p>
    </div>
    <div class="hero-stage" aria-hidden="true" title="Click for a new collision"></div>
   </div>
@@ -444,6 +444,11 @@
       { label: 'H → ZZ* → 4ℓ', make: function () {
           var a = rnd(0, TAU);
           return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); } }
+    ];
+    if (document.body.classList.contains('page-404')) EVENTS = [   // a missing page: events where something leaves unseen
+      { label: 'Z → ν<span class="ov">ν</span> + jet', make: function () {
+          var a = rnd(0, TAU); return jet(a, 9).concat([neutrino(a + Math.PI + rnd(-0.2, 0.2))], soft(6)); } },
+      EVENTS[3]
     ];
     function spawn(now) {
       var ev = EVENTS[evIndex++ % EVENTS.length], list = ev.make();
