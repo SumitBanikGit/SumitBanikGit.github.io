@@ -1926,3 +1926,12 @@ html[data-theme="dark"] .theme-toggle .tt-moon { opacity: 0; transform: rotate(4
 @media (prefers-reduced-motion: reduce) { .theme-toggle .tt-sun, .theme-toggle .tt-moon { transition: none; } }
 /* while the theme changes, the new page is revealed in a circle from the switch (set by JS) */
 html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+
+/* Funding: once its amount has counted up, the medal on the card gives a small wobble */
+@media (prefers-reduced-motion: no-preference) {
+  .fund.counted .fund-medal { transform-origin: 50% 40%; animation: medal-wobble 1.2s cubic-bezier(.3, .6, .3, 1) both; }
+  @keyframes medal-wobble {
+    0% { transform: none; } 20% { transform: rotate(-10deg) scale(1.12); } 45% { transform: rotate(7deg) scale(1.05); }
+    70% { transform: rotate(-3deg); } 100% { transform: none; }
+  }
+}

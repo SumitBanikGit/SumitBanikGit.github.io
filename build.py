@@ -1882,6 +1882,7 @@ at CERN.</p>
           var k = Math.min(1, (ts - t0) / 1600), v = Math.round(target * (1 - Math.pow(1 - k, 3)));
           el.textContent = m[1] + v.toLocaleString('en-US') + m[3];
           if (k < 1) requestAnimationFrame(step);
+          else if (el.closest('.fund')) el.closest('.fund').classList.add('counted');   // the medal answers
         }})(performance.now());
       }});
     }}, {{ threshold: 0.6 }});
