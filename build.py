@@ -961,39 +961,6 @@ def _talk_kind(event):
     return "meeting"
 
 
-TALK_YEARS_JS = """<script>
-(function () {                              // the bars grow once the chart is on screen
-  var el = document.querySelector('.talk-years');
-  if (!el) return;
-  if (!('IntersectionObserver' in window)) { el.classList.add('grown'); return; }
-  var io = new IntersectionObserver(function (en) {
-    if (en[0].isIntersecting) { el.classList.add('grown'); io.disconnect(); }
-  }, { threshold: 0.4 });
-  io.observe(el);
-})();
-</script>"""
-
-
-def talk_years():
-    """Talks per year, split into invited and contributed talks, as a small bar chart."""
-    years = list(range(min(t[0] for t in TALKS), max(t[0] for t in TALKS) + 1))
-    inv = {y: sum(1 for t in TALKS if t[0] == y and t[5]) for y in years}
-    con = {y: sum(1 for t in TALKS if t[0] == y and not t[5]) for y in years}
-    top = max(inv[y] + con[y] for y in years)
-    cols = "".join(
-        f'<div class="ty-col" style="--i:{i}"><span class="ty-n">{inv[y] + con[y]}</span>'
-        f'<div class="ty-stack" style="--h:{(inv[y] + con[y]) / top:.3f}">'
-        f'<span class="ty-inv" style="--n:{inv[y]}"></span><span class="ty-con" style="--n:{con[y]}"></span></div></div>'
-        for i, y in enumerate(years))
-    labels = "".join(f'<span>{y}</span>' for y in years)
-    n_inv, n_con = sum(inv.values()), sum(con.values())
-    return (f'<div class="talk-years" style="--cols:{len(years)}" role="img" '
-            f'aria-label="Talks per year from {years[0]} to {years[-1]}: {n_inv} invited and {n_con} contributed">'
-            f'<div class="ty-head"><span class="ty-title">Talks by year</span>'
-            f'<span class="ty-key"><i class="inv"></i>Invited {n_inv}<i class="con"></i>Contributed {n_con}</span></div>'
-            f'<div class="ty-bars">{cols}</div><div class="ty-years">{labels}</div></div>' + TALK_YEARS_JS)
-
-
 def render_talks():
     cards = []
     for year, event, city, title, note, invited in TALKS[:TALK_CARDS]:
@@ -1003,7 +970,7 @@ def render_talks():
             f'<article class="talk-card"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
     rest = [talk_row(y, ev, c, ti, no) for y, ev, c, ti, no, _ in TALKS[TALK_CARDS:]]
-    out = talk_years() + '<div class="talk-cards">' + "\n".join(cards) + '</div>'
+    out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
         out += (f'\n<details class="more"><summary>Show {len(rest)} earlier talks</summary>\n'
                 + "\n".join(rest) + "\n</details>")

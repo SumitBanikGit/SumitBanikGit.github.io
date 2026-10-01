@@ -1626,35 +1626,6 @@ main > #contact.chapter::before {
 .lt-zone { font-family: var(--sans); font-size: .64rem; font-weight: 500; letter-spacing: .12em; color: var(--grey); }
 @media (prefers-reduced-motion: reduce) { .local-time .s { display: none; } }
 
-/* Talks: a small chart of talks per year, invited and contributed */
-.talk-years { margin: 0 0 2.4rem; }
-.ty-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .4rem 1rem; margin-bottom: 1rem; }
-.ty-title { font-family: var(--sans); font-size: .62rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--grey); }
-.ty-key { font-family: var(--sans); font-size: .62rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--grey); }
-.ty-key i { display: inline-block; width: .7rem; height: .7rem; margin: 0 .45rem 0 1rem; vertical-align: -.06rem; border-radius: 1px; }
-.ty-key i:first-child { margin-left: 0; }
-.ty-key i.inv { background: var(--navy); }
-.ty-key i.con { background: var(--gold); opacity: .8; }
-.ty-bars { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: .7rem; align-items: end;
-           height: 8.2rem; border-bottom: 1px solid var(--rule); }
-.ty-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
-.ty-n { font-family: var(--display); font-size: 1.15rem; line-height: 1; color: var(--navy); margin-bottom: .3rem; }
-.ty-stack { width: min(2.6rem, 72%); height: calc(var(--h) * 6.4rem); display: flex; flex-direction: column-reverse;
-            border-radius: 2px 2px 0 0; overflow: hidden; transform-origin: 50% 100%; }
-.ty-inv { flex: var(--n) 0 0; background: var(--navy); }
-.ty-con { flex: var(--n) 0 0; background: var(--gold); opacity: .8; }
-.ty-stack span + span { border-bottom: 1px solid #fffefa; }
-.ty-years { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: .7rem; margin-top: .45rem;
-            font-family: var(--sans); font-size: .66rem; letter-spacing: .06em; color: var(--grey); text-align: center; }
-.js .talk-years .ty-stack { transform: scaleY(0); transition: transform 1s cubic-bezier(.2, .7, .2, 1) calc(var(--i) * 90ms); }
-.js .talk-years .ty-n { opacity: 0; transition: opacity .6s ease calc(var(--i) * 90ms + .6s); }
-.js .talk-years.grown .ty-stack { transform: none; }
-.js .talk-years.grown .ty-n { opacity: 1; }
-@media (prefers-reduced-motion: reduce) {
-  .js .talk-years .ty-stack { transform: none; transition: none; }
-  .js .talk-years .ty-n { opacity: 1; transition: none; }
-}
-
 /* Explore cards: the numeral sits on the line of the label, fully in view */
 .ex-num { top: 3.62rem; bottom: auto; right: 1.15rem; font-size: 1.85rem; opacity: .5; letter-spacing: .02em; }
 @media (hover: hover) { .ex-card:hover .ex-num { transform: translateY(-2px); opacity: .9; } }

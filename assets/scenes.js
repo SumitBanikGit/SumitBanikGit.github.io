@@ -3,7 +3,7 @@
    stage on the right, in the brass and green palette of the site:
      Research       a tour of the papers, one small animation for each
      Publications   a constellation of the papers, by year and field
-     Talks          the talks around the world, one year at a time
+     Talks          the talks around the world, one after another
      Funding        the fellowships and grants as medals along the years
      Teaching       equations from the courses taught, written on a blackboard
      Supervision    the students and their projects
@@ -69,12 +69,12 @@
   /* ---------- the engine: sizing, clock, pointer, captions ---------- */
   function swapper(el, fallback) {                  // fade a caption or hint from one text to the next
     var shown = el ? el.innerHTML : '', timer = null;
-    return function (html) {
+    return function (html, now) {                   // now: change the text at once, as for a running count
       if (!el) return;
       html = html || fallback();
       if (html === shown) return;
       shown = html;
-      if (reduce) { el.innerHTML = html; return; }
+      if (reduce || now) { clearTimeout(timer); el.innerHTML = html; el.classList.remove('swap'); return; }
       el.classList.add('swap');
       clearTimeout(timer);
       timer = setTimeout(function () { el.innerHTML = shown; el.classList.remove('swap'); }, 190);
@@ -2515,16 +2515,12 @@
   };
   SCENES.talkmap = {
     init: function (e) {
-      var d = e.data, talks = d.talks || [], years = [], seg = 2.4;
+      var d = e.data, talks = d.talks || [], step = 0.5;
       e.view = d.view || [0, 0, 1200, 482];
       e.land = d.land && window.Path2D ? new Path2D(d.land) : null;
       e.grat = d.grat && window.Path2D ? new Path2D(d.grat) : null;
-      talks.forEach(function (tk) { if (years.indexOf(tk.y) < 0) years.push(tk.y); });
-      years.forEach(function (yr, yi) {
-        var mates = talks.filter(function (tk) { return tk.y === yr; }), gap = Math.min(0.45, 1.8 / mates.length);
-        mates.forEach(function (tk, j) { tk.at = yi * seg + 0.35 + j * gap; });
-      });
-      e.talks = talks; e.years = years; e.seg = seg; e.end = years.length * seg; e.cycle = e.end + 4.5;
+      talks.forEach(function (tk, i) { tk.at = 0.35 + i * step; tk.k = i + 1; });   // one talk after another, at an even pace
+      e.talks = talks; e.end = talks.length ? talks[talks.length - 1].at + 1.4 : 0; e.cycle = e.end + 4.5;
     },
     layout: function (e) {                             // the map is drawn once per size
       var v = e.view, s = Math.min(e.w / v[2], e.h / v[3]), L = layer(e.w, e.h, e.dpr), c = L.ctx;
@@ -2544,13 +2540,14 @@
     frame: function (e, t) {
       var ctx = e.ctx, talks = e.talks, s = e.s, ox = e.ox, oy = e.oy;
       var c = e.reduce ? e.end + 1 : t % e.cycle, fade = e.reduce ? 1 : (c > e.cycle - 0.9 ? (e.cycle - c) / 0.9 : 1);
-      var yi = Math.floor(c / e.seg);
+      var last = null;
+      for (var q = 0; q < talks.length && talks[q].at <= c; q++) last = talks[q];
       if (e.map) ctx.drawImage(e.map, e.x, e.y, e.w, e.h);
-      if (!e.reduce) {                                 // the caption follows the year
-        if (yi < e.years.length && c > 0.2) {
-          var yr = e.years[yi], n = talks.filter(function (tk) { return tk.y === yr; }).length;
-          e.caption(yr + ' · ' + n + (n === 1 ? ' talk' : ' talks'));
-        } else e.caption(null);
+      if (!e.reduce) {                                 // the caption keeps a running total
+        if (last && c < e.end) {                       // a new year fades in, the count within a year just ticks
+          e.caption(last.y + ' · ' + last.k + (last.k === 1 ? ' talk' : ' talks') + ' so far', last.y === e.capYear);
+          e.capYear = last.y;
+        } else { e.caption(null); e.capYear = null; }
       }
       ctx.globalAlpha = fade;
 
@@ -2584,7 +2581,7 @@
         if (!m) { m = cities[tk.c] = { n: 0, live: 0, x: ox + tk.x * s, y: oy + tk.v * s, yr: 0, at: 0 }; order.push(m); }
         m.n++; if (!tk.o) m.live = 1; m.yr = tk.y; m.at = tk.at; newest = tk;
       });
-      var curYear = e.years[Math.min(yi, e.years.length - 1)];
+      var curYear = last ? last.y : null;
       order.forEach(function (m) {
         var r = 1.7 + 1.15 * Math.sqrt(m.n), age = c - m.at;
         if (!e.reduce && age < 1.4) {
