@@ -607,7 +607,8 @@ COURSE_ICONS = [
 STUDENT_ICONS = [
     ("Mellin-Barnes", _p("M24 2V28") + _dots([(16, 15), (10, 15), (4, 15)], 1.6) + _dots([(31, 15), (37, 15), (43, 15)], 1.6)),
     ("two-body", _p("M4 15H22") + _p("M22 15L42 5M22 15L42 25", "thin") + _dots([(22, 15)], 1.8)),
-    ("perturbative", _p("M2 15H10M14 15H22M26 15H34", "thin") + _p("M18 15A4 4 0 1 1 18 14.9M38 15A5 5 0 1 1 38 14.9") + _p("M33 15H43", "thin")),
+    # a propagator with a one-loop bubble and then the two-loop sunset: the line stops at each loop
+    ("perturbative", _p("M2 15H10M18 15H28M38 15H46", "thin") + _p("M18 15A4 4 0 1 1 18 14.9M38 15A5 5 0 1 1 38 14.9") + _p("M28 15H38", "thin")),
 ]
 REACH_ICONS = {
     "Email": _p("M6 6H42V25H6Z") + _p("M6 6L24 17L42 6", "thin"),
