@@ -194,7 +194,7 @@ PUBS = [
          title="On hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals with applications",
          authors="S. Banik",
          ref="PhD thesis, Indian Institute of Science, Bengaluru (2022)",
-         inspire="2614373", tour="2012.15108"),
+         inspire="2614373", tour="inspire:2614373"),
 ]
 
 # Recent news shown on the front page (newest first; keep ~5).
@@ -845,9 +845,10 @@ def tour_scene_data():
     for the high-precision vignette."""
     refs = {}
     for p in PUBS:
-        key = p.get("arxiv") or p.get("doi") or p["title"]
+        key = p.get("arxiv") or p.get("doi") or (f"inspire:{p['inspire']}" if p.get("inspire") else p["title"])
         url = (f"https://arxiv.org/abs/{p['arxiv']}" if p.get("arxiv") else
-               f"https://doi.org/{p['doi']}" if p.get("doi") else "")
+               f"https://doi.org/{p['doi']}" if p.get("doi") else
+               f"https://inspirehep.net/literature/{p['inspire']}" if p.get("inspire") else "")
         refs[key] = dict(r=_plain(p["ref"]), u=url)
     return dict(refs=refs, hp=_precision_digits())
 

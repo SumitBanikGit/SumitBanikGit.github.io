@@ -2473,12 +2473,112 @@
     }
   };
 
+  /* The PhD thesis (IISc 2022, INSPIRE 2614373): one method and four projects. The conic hull method turns
+     N-fold MB integrals into hypergeometric series (with the package MBConicHulls.wl). It then solves the
+     dual-conformal hexagon and double box, nine-fold MB integrals that were unsolved until then. It proves
+     two conjectures from the Yangian bootstrap, that every one-loop N-point massive conformal integral is a
+     single multi-fold hypergeometric series. And it shows where the method of brackets fails, through the
+     breakdown of one of its rules. From the abstract of the thesis. */
+  var TH_PARTS = [
+    { a: 'N-fold MB integrals as series', sa: 'N-fold MB integrals', b: 'the package MBConicHulls.wl', sb: 'MBConicHulls.wl', g: 'mb' },
+    { a: 'The hexagon and the double box', sa: 'Hexagon, double box', b: 'nine-fold MB integrals, first solved', sb: 'nine-fold, first solved', g: 'hex' },
+    { a: 'Massive conformal integrals', sa: 'Massive conformal', b: 'two Yangian bootstrap conjectures proved', sb: 'two conjectures proved', g: 'gon' },
+    { a: 'The method of brackets', sa: 'Method of brackets', b: 'where one of its rules breaks down', sb: 'where a rule breaks', g: 'brk' }
+  ];
+  function thGlyph(ctx, g, x, y, w, h, k, col) {     // the small drawing of one project, grown by k from 0 to 1
+    ctx.save(); ctx.lineWidth = 1.3; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = ink(col, 0.95);
+    var cx = x + w / 2, cy = y + h / 2, r = Math.min(w, h) * 0.46, i, a;
+    function poly(n, rot, f) {                      // a regular n-gon, drawn up to the fraction f of its perimeter
+      ctx.beginPath();
+      var m = n * f;
+      for (i = 0; i <= Math.ceil(m); i++) {
+        var u = Math.min(i, m), j = Math.floor(u), fr = u - j;
+        var a0 = rot + TAU * j / n, a1 = rot + TAU * (j + 1) / n;
+        var px = cx + r * ((1 - fr) * Math.cos(a0) + fr * Math.cos(a1)), py = cy + r * ((1 - fr) * Math.sin(a0) + fr * Math.sin(a1));
+        if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
+    if (g === 'mb') {                                 // a straight contour between the left and right poles
+      line(ctx, cx, cy + h * 0.5, cx, cy + h * 0.5 - h * k, ink(col, 0.95), 1.3);
+      for (i = 0; i < 3; i++) if (k > 0.25 + i * 0.2) { dot(ctx, cx - (5 + i * 5) * w / 30, cy, 1.5, ink('brassD', 0.9)); dot(ctx, cx + (5 + i * 5) * w / 30, cy, 1.5, ink('pine', 0.9)); }
+    } else if (g === 'hex') {                         // the one-loop hexagon in dual coordinates
+      poly(6, Math.PI / 6, k);
+      if (k > 0.95) for (i = 0; i < 6; i++) { a = Math.PI / 6 + TAU * i / 6; dot(ctx, cx + r * Math.cos(a), cy + r * Math.sin(a), 1.3, ink(col, 0.9)); }
+    } else if (g === 'gon') {                         // a one-loop polygon with massive propagators, drawn double
+      poly(5, -Math.PI / 2, k);
+      ctx.save(); ctx.globalAlpha *= 0.45; r *= 0.78; poly(5, -Math.PI / 2, k); ctx.restore();
+    } else if (g === 'brk') {                         // a bracket, as in the method of brackets
+      var kk = clamp01(k * 1.4);
+      ctx.beginPath(); ctx.moveTo(cx - w * 0.12, cy - h * 0.42 * kk); ctx.lineTo(cx - w * 0.32, cy); ctx.lineTo(cx - w * 0.12, cy + h * 0.42 * kk); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx + w * 0.12, cy - h * 0.42 * kk); ctx.lineTo(cx + w * 0.32, cy); ctx.lineTo(cx + w * 0.12, cy + h * 0.42 * kk); ctx.stroke();
+      if (k > 0.7) dot(ctx, cx, cy, 1.6, ink('crimson', 0.9));
+    }
+    ctx.restore();
+  }
+  var THESIS = {
+    key: 'thesis', paper: 'inspire:2614373', dur: 12.5, cap: 'Hypergeometric solutions of Feynman integrals',
+    ref: 'PhD thesis, IISc Bengaluru, 2022',
+    layout: function (v) {
+      var ctx = v.ctx;
+      v.S = Math.max(10, Math.min(13, v.w / 37));
+      v.hw = Math.min(74, v.w * 0.19); v.top = v.y + 24; v.rh = Math.min(50, (v.h - 30) / 4);
+      v.x0 = v.x + 6 + v.hw + Math.min(46, v.w * 0.1);           // where the spokes end and the rows begin
+      var room = v.x + v.w - (v.x0 + 40);
+      ctx.font = font(v.S, SERIF, 600, false);
+      var fitA = TH_PARTS.every(function (p) { return ctx.measureText(p.a).width <= room; });
+      ctx.font = font(v.S * 0.86, SERIF, 400, true);
+      var fitB = TH_PARTS.every(function (p) { return ctx.measureText(p.b).width <= room; });
+      v.long = fitA && fitB;
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, hw = v.hw, rh = v.rh, x0 = v.x0;
+      var hx = v.x + 6, hy = v.top + 2 * rh - hw * 0.32, hh = hw * 0.62;       // the hub: a cone with its lattice points
+      var hk = R ? 1 : ease(t / 0.9);
+      ctx.save(); ctx.globalAlpha *= R ? 1 : ease(t / 0.5);
+      caps(ctx, 'ONE METHOD, FOUR PROJECTS', v.x + 4, v.y + 11, ink('slate', 0.85), 8);
+      ctx.restore();
+      var ax = hx + hw * 0.06, ay = hy + hh, bx = hx + hw * 0.96, tx = hx + hw * 0.62, ty = hy;
+      ctx.save(); ctx.strokeStyle = ink('brassD', 0.95); ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax + (bx - ax) * hk, ay); ctx.moveTo(ax, ay); ctx.lineTo(ax + (tx - ax) * hk, ay + (ty - ay) * hk); ctx.stroke();
+      ctx.restore();
+      [[0.3, 0.84], [0.48, 0.84], [0.66, 0.84], [0.84, 0.84], [0.42, 0.6], [0.6, 0.6], [0.78, 0.6], [0.56, 0.36], [0.72, 0.36]].forEach(function (q, j) {
+        var dk = R ? 1 : clamp01((t - 0.6 - j * 0.07) / 0.3);
+        if (dk > 0) dot(ctx, hx + q[0] * hw, hy + q[1] * hh, 1.4 * dk, ink('brassD', 0.85));
+      });
+      ctx.save(); ctx.globalAlpha *= hk;
+      caps(ctx, 'CONIC HULLS', hx + hw / 2, ay + 15, ink('brassD', 0.95), 7.5, 'center');
+      ctx.restore();
+      var sx = hx + hw + 4, sy = hy + hh * 0.55;
+      TH_PARTS.forEach(function (p, i) {
+        var t0 = 1.4 + i * 1.7, sk = R ? 1 : ease((t - t0) / 0.6), gk = R ? 1 : ease((t - t0 - 0.45) / 0.7), tk = R ? 1 : ease((t - t0 - 0.8) / 0.6);
+        if (sk <= 0) return;
+        var yy = v.top + i * rh + rh / 2, col = i === 1 ? 'pine' : i === 3 ? 'crimson' : 'brassD';
+        ctx.save(); ctx.strokeStyle = ink('brass', 0.55); ctx.lineWidth = 1; ctx.beginPath();
+        for (var n = 0; n <= 24 * sk; n++) {          // a spoke from the hub to the project, curving into its row
+          var u = n / 24, mx = (sx + x0) / 2, px = (1 - u) * (1 - u) * sx + 2 * u * (1 - u) * mx + u * u * (x0 - 4);
+          var py = (1 - u) * (1 - u) * sy + 2 * u * (1 - u) * yy + u * u * yy;
+          if (n) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+        }
+        ctx.stroke(); ctx.restore();
+        if (gk > 0) thGlyph(ctx, p.g, x0, yy - rh * 0.3, 28, rh * 0.6, gk, col);
+        if (tk <= 0) return;
+        ctx.save(); ctx.globalAlpha *= tk; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.font = font(S, SERIF, 600, false); ctx.fillStyle = ink('green', 0.95);
+        ctx.fillText(v.long ? p.a : p.sa, x0 + 38, yy - 1);
+        ctx.font = font(S * 0.86, SERIF, 400, true); ctx.fillStyle = ink('slate', 0.95);
+        ctx.fillText(v.long ? p.b : p.sb, x0 + 38, yy + S * 0.95);
+        ctx.restore();
+      });
+    }
+  };
+
   var SPECV = { key: 'excesses', paper: '2306.15722', dur: 11.5, cap: 'The di-photon excesses at 95 and 152 GeV',
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
   var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, PTSPEC, REVIEW];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, PTSPEC, REVIEW, THESIS];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
