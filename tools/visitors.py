@@ -12,7 +12,7 @@ import json
 import os
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 API = "https://sumitbanik.goatcounter.com/api/v0"
@@ -29,8 +29,8 @@ def get(path, token, **params):
 
 
 def collect(token):
-    end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-    span = dict(start=START, end=end.strftime("%Y-%m-%dT%H:%M:%SZ"))
+    end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    span = dict(start=START, end=end.strftime("%Y-%m-%dT%H:%M:%SZ"))   # up to the end of the current hour
     total = int(get("/stats/total", token, **span).get("total") or 0)
     where = json.loads(Path("assets/map/countries.json").read_text(encoding="utf-8"))
     countries, offset = {}, 0
@@ -55,19 +55,28 @@ def collect(token):
     return dict(total=total, since=START[:10], countries=ranked)
 
 
+def report(line):
+    """Print a line, and put it on the summary page of the workflow run too."""
+    print(line)
+    if os.environ.get("GITHUB_STEP_SUMMARY"):
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+
+
 def main():
     token = os.environ.get("GOATCOUNTER_TOKEN")
     if not token:
-        print("GOATCOUNTER_TOKEN is not set, so there is nothing to fetch.")
+        report("The GOATCOUNTER_TOKEN secret is not set, so there is nothing to fetch.")
         return
     data = collect(token)
+    found = f"{data['total']} visits from {len(data['countries'])} countries since {data['since']}."
     old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     if {k: old.get(k) for k in data} == data:
-        print("No new visits since the last update.")
+        report(found + " Nothing new since the last update.")
         return
     data["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    print(f"{data['total']} visits from {len(data['countries'])} countries.")
+    report(found)
 
 
 if __name__ == "__main__":
