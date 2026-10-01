@@ -1795,3 +1795,134 @@ main > .chapter:nth-of-type(even)::before {
     radial-gradient(30% 34% at 80% 58%, rgba(168, 137, 79, .26), transparent 70%),
     radial-gradient(26% 28% at 58% 12%, rgba(110, 44, 52, .07), transparent 70%),
     radial-gradient(28% 30% at 34% 86%, rgba(168, 137, 79, .14), transparent 72%); }
+
+/* =====================================================================
+   Dark mode: a deep green-black page, cream type and brass accents.
+   <html data-theme="dark"> is set from the system setting until the reader
+   chooses with the button in the menu bar (remembered in localStorage).
+   ===================================================================== */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0e1714; --panel: #15201c; --ink: #e2ddd0; --grey: #a3aca4; --hair: rgba(226, 221, 208, .13);
+  --navy: #f0e9da;                 /* headings and strong type, light on the dark page */
+  --accent: #d6b979; --gold: #b4935a; --rule: rgba(214, 185, 121, .32);
+  --band: #1c352f;                 /* the menu bar, the contact band and the footer stay Oxford green */
+  --card: #15211d;
+  --c-fi: #d6b979;    --c-fi-bg: rgba(214, 185, 121, .12);
+  --c-pheno: #8fc3af; --c-pheno-bg: rgba(143, 195, 175, .11);
+  --c-soft: #aabbc5;  --c-soft-bg: rgba(170, 187, 197, .11);
+  --lift: 0 0 0 1px rgba(0, 0, 0, .35), 0 18px 34px -18px rgba(0, 0, 0, .8), 0 4px 10px -4px rgba(0, 0, 0, .45);
+  --lift-bg: #18261f;
+}
+html[data-theme="dark"] body { background: var(--paper); color: var(--ink); border-top-color: var(--band); }
+html[data-theme="dark"] .navbar, html[data-theme="dark"] footer, html[data-theme="dark"] .to-top,
+html[data-theme="dark"] .cm-tip { background: var(--band); }
+html[data-theme="dark"] .navbar { box-shadow: 0 2px 14px -6px rgba(0, 0, 0, .7); }
+
+/* headers, the ticker and the alternate bands */
+html[data-theme="dark"] .masthead { background:
+    radial-gradient(55rem 22rem at 90% -30%, rgba(214, 185, 121, .11), transparent 70%),
+    linear-gradient(180deg, #13201b 0%, var(--paper) 100%); }
+html[data-theme="dark"] .hero .aurora { background:
+    radial-gradient(32% 36% at 18% 28%, rgba(127, 184, 163, .09), transparent 70%),
+    radial-gradient(30% 34% at 80% 58%, rgba(214, 185, 121, .15), transparent 70%),
+    radial-gradient(26% 28% at 58% 12%, rgba(216, 132, 142, .07), transparent 70%),
+    radial-gradient(28% 30% at 34% 86%, rgba(214, 185, 121, .08), transparent 72%); }
+html[data-theme="dark"] .ticker { background: #111c18; }
+html[data-theme="dark"] main > .chapter:nth-of-type(even)::before {
+  background: #121d19; border-top-color: rgba(214, 185, 121, .15); border-bottom-color: rgba(214, 185, 121, .15); }
+html[data-theme="dark"] #contact { --tint: var(--band); }
+html[data-theme="dark"] .hero-text .tagline, html[data-theme="dark"] .page-sub { color: #d6b979; }
+
+/* section accents, lighter on the dark page */
+html[data-theme="dark"] #about, html[data-theme="dark"] #reach { --sec: #d6b979; }
+html[data-theme="dark"] #research { --sec: #a9c5a0; }
+html[data-theme="dark"] #publications { --sec: #d99aa3; }
+html[data-theme="dark"] #software, html[data-theme="dark"] #supervision { --sec: #8fc3af; }
+html[data-theme="dark"] #talks { --sec: #8fc1c7; }
+html[data-theme="dark"] #funding, html[data-theme="dark"] #explore { --sec: #dbb86f; }
+html[data-theme="dark"] #teaching { --sec: #caa6c4; }
+html[data-theme="dark"] #refereeing { --sec: #cfc07f; }
+html[data-theme="dark"] #cv { --sec: #c3d3c6; }
+html[data-theme="dark"] .theme.d1 { --c: #d6b979; --bg: rgba(214, 185, 121, .10); }
+html[data-theme="dark"] .theme.d2 { --c: #caa6c4; --bg: rgba(202, 166, 196, .09); }
+html[data-theme="dark"] .theme.d3 { --c: #8fc3af; --bg: rgba(143, 195, 175, .09); }
+html[data-theme="dark"] .theme.d4 { --c: #aabbc5; --bg: rgba(170, 187, 197, .09); }
+html[data-theme="dark"] .theme.d5 { --c: #8fc1c7; --bg: rgba(143, 193, 199, .09); }
+html[data-theme="dark"] .theme.d6 { --c: #d99aa3; --bg: rgba(217, 154, 163, .09); }
+html[data-theme="dark"] .tool, html[data-theme="dark"] .blk, html[data-theme="dark"] .ex-card { --c: #d6b979; }
+html[data-theme="dark"] .tool:nth-child(2), html[data-theme="dark"] .study .blk { --c: #a9c5a0; }
+html[data-theme="dark"] .tool:nth-child(3), html[data-theme="dark"] .ex-card:nth-child(6) { --c: #8fc3af; }
+html[data-theme="dark"] .tool:nth-child(4), html[data-theme="dark"] .ex-card:nth-child(3) { --c: #8fc1c7; }
+html[data-theme="dark"] .tool:nth-child(5), html[data-theme="dark"] .ex-card:nth-child(5) { --c: #caa6c4; }
+html[data-theme="dark"] .tool:nth-child(6), html[data-theme="dark"] .ex-card:nth-child(4) { --c: #dbb86f; }
+html[data-theme="dark"] .ex-card:nth-child(1) { --c: #a9c5a0; }
+html[data-theme="dark"] .ex-card:nth-child(2) { --c: #d99aa3; }
+html[data-theme="dark"] .fund .fund-medal { color: #dbb86f; }
+
+/* cards and panels */
+html[data-theme="dark"] .blk, html[data-theme="dark"] .ex-card, html[data-theme="dark"] .reach-card,
+html[data-theme="dark"] .talk-card, html[data-theme="dark"] .fund, html[data-theme="dark"] .course,
+html[data-theme="dark"] .student, html[data-theme="dark"] .journal, html[data-theme="dark"] .stop-node { background: var(--card); }
+html[data-theme="dark"] .stat, html[data-theme="dark"] .card, html[data-theme="dark"] .pick, html[data-theme="dark"] .interest,
+html[data-theme="dark"] .tool, html[data-theme="dark"] .tongues, html[data-theme="dark"] .contact a .ico { background: rgba(255, 255, 255, .035); }
+html[data-theme="dark"] .reach-links .ico { background: transparent; }
+html[data-theme="dark"] .blk-logos { background: #ece7dc; }          /* the logos keep a light plate */
+html[data-theme="dark"] .card:hover, html[data-theme="dark"] .pick:hover, html[data-theme="dark"] .blk:hover { box-shadow: var(--lift); }
+html[data-theme="dark"] .tag.grey { background: rgba(226, 221, 208, .07); box-shadow: inset 0 0 0 1px rgba(226, 221, 208, .16); }
+html[data-theme="dark"] .local-time .face { fill: var(--card); }
+html[data-theme="dark"] .local-time .s { stroke: #d99aa3; }
+
+/* buttons: light type on the bars, dark type on brass */
+html[data-theme="dark"] .btn { border-color: rgba(240, 233, 218, .32);
+  background-image: linear-gradient(#f0e9da, #f0e9da); }
+html[data-theme="dark"] .btn:hover { color: #0e1714; border-color: #f0e9da; }
+html[data-theme="dark"] .btn.solid { background-color: #d6b979; color: #0e1714; border-color: #d6b979; }
+html[data-theme="dark"] .btn.solid:hover { color: #0e1714; }
+html[data-theme="dark"] .button { background-color: var(--band); color: #eee7d6; }
+html[data-theme="dark"] .button:hover { background-color: var(--band); color: #0e1714; }
+html[data-theme="dark"] #contact .button, html[data-theme="dark"] #contact .button:hover { color: #1a2521; }
+html[data-theme="dark"] .filters button[aria-pressed="true"], html.js[data-theme="dark"] .pub-more:hover,
+html[data-theme="dark"] .j-now { color: #0e1714; }
+html[data-theme="dark"] .scroll-cue { border-color: rgba(240, 233, 218, .4); }
+html.js[data-theme="dark"] .pub-search { background-color: var(--card); }
+html.js[data-theme="dark"] .pub-search:focus { box-shadow: 0 0 0 3px rgba(214, 185, 121, .2); }
+html[data-theme="dark"] .copy-mail .cm-ok { stroke: #8fc3af; }
+html[data-theme="dark"] .copy-mail.done { border-color: #8fc3af; background: rgba(143, 195, 175, .1); }
+
+/* the journey map on the home page */
+html[data-theme="dark"] .journey-map { background: radial-gradient(60rem 22rem at 50% 0%, rgba(214, 185, 121, .08), transparent 70%), #111c18; }
+html[data-theme="dark"] .jm-land { fill: #1f2d27; stroke: #3b5047; }
+html[data-theme="dark"] .jm-grat { stroke: rgba(143, 195, 175, .12); }
+html[data-theme="dark"] .jm-glow { stroke: rgba(143, 195, 175, .14); }
+html[data-theme="dark"] .jm-halo { fill: rgba(143, 195, 175, .14); }
+html[data-theme="dark"] .jm-dot { stroke: #111c18; }
+html[data-theme="dark"] .jm-name, html[data-theme="dark"] .jm-year { stroke: #111c18; }
+html[data-theme="dark"] .jm-traveler { fill: #0e1714; }
+
+/* the legend of the event display */
+html[data-theme="dark"] .lg-q { stroke: rgba(201, 168, 104, .95); }
+html[data-theme="dark"] .lg-g { stroke: rgba(127, 184, 163, .95); }
+html[data-theme="dark"] .lg-a { stroke: rgba(214, 180, 110, .95); }
+html[data-theme="dark"] .lg-e { stroke: rgba(216, 132, 142, .95); }
+html[data-theme="dark"] .lg-m { stroke: rgba(232, 226, 208, .95); }
+html[data-theme="dark"] .lg-n { stroke: rgba(170, 182, 186, .95); }
+html[data-theme="dark"] .ev-legend .lg-n-head { fill: rgba(170, 182, 186, .95); }
+
+/* the switch in the menu bar: a moon by day, a sun by night */
+.theme-toggle { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem;
+                margin-left: .4rem; padding: 0; border-radius: 50%; border: 1px solid rgba(220, 197, 143, .4);
+                background: transparent; color: #dcc58f; cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
+.theme-toggle:hover { border-color: #dcc58f; background: rgba(220, 197, 143, .1); }
+.theme-toggle:active { transform: scale(.92); }
+.theme-toggle:focus-visible { outline: 2px solid #dcc58f; outline-offset: 2px; }
+.theme-toggle svg { width: 1.05rem; height: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.theme-toggle .tt-sun, .theme-toggle .tt-moon { transform-origin: 12px 12px; transition: opacity .35s ease, transform .5s cubic-bezier(.2, .7, .2, 1); }
+.theme-toggle .tt-moon { fill: currentColor; fill-opacity: .18; }
+.theme-toggle .tt-sun { opacity: 0; transform: rotate(-60deg) scale(.5); }
+html[data-theme="dark"] .theme-toggle .tt-sun { opacity: 1; transform: none; }
+html[data-theme="dark"] .theme-toggle .tt-moon { opacity: 0; transform: rotate(40deg) scale(.5); }
+@media (max-width: 51rem) { .theme-toggle { margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .theme-toggle .tt-sun, .theme-toggle .tt-moon { transition: none; } }
+/* while the theme changes, the new page is revealed in a circle from the switch (set by JS) */
+html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(root) { animation: none; mix-blend-mode: normal; }

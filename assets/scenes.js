@@ -16,8 +16,27 @@
   if (!host || !window.requestAnimationFrame) return;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var TAU = Math.PI * 2, D2R = Math.PI / 180;
-  var RGB = { green: '28,53,47', pine: '46,92,78', brass: '168,137,79', brassD: '122,95,42', slate: '74,90,102',
-              crimson: '110,44,52', cream: '238,231,214', paper: '252,251,248', plum: '90,61,85' };
+  /* the inks by day and by night (dark mode is <html data-theme="dark">), and the map and globe colours */
+  var INKS = {
+    light: { green: '28,53,47', pine: '46,92,78', brass: '168,137,79', brassD: '122,95,42', slate: '74,90,102',
+             crimson: '110,44,52', cream: '238,231,214', paper: '252,251,248', plum: '90,61,85' },
+    dark:  { green: '232,226,208', pine: '127,184,163', brass: '201,168,104', brassD: '214,180,110', slate: '170,182,186',
+             crimson: '216,132,142', cream: '238,231,214', paper: '14,23,20', plum: '200,160,192' }
+  };
+  var TONES = {
+    light: { land: '#e1e5d5', coast: '#b3bc9f', sea0: '#fbfaf4', sea1: '#e6eadf', gland: '#d9e0cc', gcoast: '#a9b596',
+             shadeHi: 'rgba(255,255,255,.18)', shadeLo: 'rgba(28,53,47,.12)' },
+    dark:  { land: '#1f2d27', coast: '#3b5047', sea0: '#17241f', sea1: '#0f1916', gland: '#26372f', gcoast: '#4a6155',
+             shadeHi: 'rgba(255,255,255,.05)', shadeLo: 'rgba(0,0,0,.35)' }
+  };
+  var RGB = {}, TC = {};
+  function palette() {
+    var mode = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', k;
+    for (k in INKS[mode]) RGB[k] = INKS[mode][k];
+    for (k in TONES[mode]) TC[k] = TONES[mode][k];
+  }
+  palette();
+  document.addEventListener('themechange', palette);
   var SANS = 'Inter, system-ui, sans-serif', SERIF = '"Source Serif 4", Georgia, serif',
       DISPLAY = '"Cormorant Garamond", Georgia, serif';
 
@@ -129,6 +148,7 @@
     if (reduce) env.t = scene.still || 0;
     size();
     start();
+    document.addEventListener('themechange', function () { size(); start(); });   // lay out again in the new inks
     var dragged = 0;
     if (scene.click) stage.addEventListener('click', function (ev) {
       if (ev.target.closest && ev.target.closest('a')) return;          // a link in the caption opens the paper
@@ -2606,8 +2626,8 @@
       c.translate(e.ox - e.x, e.oy - e.y); c.scale(s, s);
       if (e.grat) { c.lineWidth = 0.7 / s; c.strokeStyle = ink('pine', 0.14); c.stroke(e.grat); }
       if (e.land) {
-        c.fillStyle = '#e1e5d5'; c.fill(e.land);
-        c.lineWidth = 0.8 / s; c.lineJoin = 'round'; c.strokeStyle = '#b3bc9f'; c.stroke(e.land);
+        c.fillStyle = TC.land; c.fill(e.land);
+        c.lineWidth = 0.8 / s; c.lineJoin = 'round'; c.strokeStyle = TC.coast; c.stroke(e.land);
       }
       c.restore();
       edgeFade(c, vx, vy, vw, vh, 0.1, 0.16);
@@ -3288,7 +3308,7 @@
       halo.addColorStop(0, ink('brass', 0.16)); halo.addColorStop(1, ink('brass', 0));
       ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, Rg * 1.18, 0, TAU); ctx.fill();
       var sea = ctx.createRadialGradient(cx - Rg * 0.35, cy - Rg * 0.4, Rg * 0.1, cx, cy, Rg);
-      sea.addColorStop(0, '#fbfaf4'); sea.addColorStop(1, '#e6eadf');
+      sea.addColorStop(0, TC.sea0); sea.addColorStop(1, TC.sea1);
       ctx.fillStyle = sea; ctx.beginPath(); ctx.arc(cx, cy, Rg, 0, TAU); ctx.fill();
       ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, Rg, 0, TAU); ctx.clip();
       ctx.strokeStyle = ink('pine', 0.13); ctx.lineWidth = 0.7;                                      // graticule
@@ -3303,7 +3323,7 @@
         for (lon = -180; lon <= 180; lon += 4) { P = view(unit(lat * D2R, lon * D2R)); if (P[2] < 0) { first = true; continue; } if (first) ctx.moveTo(cx + Rg * P[0], cy - Rg * P[1]); else ctx.lineTo(cx + Rg * P[0], cy - Rg * P[1]); first = false; }
         ctx.stroke();
       }
-      ctx.fillStyle = '#d9e0cc'; ctx.strokeStyle = '#a9b596'; ctx.lineWidth = 0.8; ctx.lineJoin = 'round';   // land
+      ctx.fillStyle = TC.gland; ctx.strokeStyle = TC.gcoast; ctx.lineWidth = 0.8; ctx.lineJoin = 'round';   // land
       e.rings.forEach(function (ringPts) {
         var pts = ringPts.map(view), any = false;
         for (var i = 0; i < pts.length; i++) if (pts[i][2] > 0) { any = true; break; }
@@ -3322,7 +3342,7 @@
         ctx.stroke();
       });
       var shade = ctx.createRadialGradient(cx - Rg * 0.4, cy - Rg * 0.45, Rg * 0.2, cx, cy, Rg * 1.05);   // light from the upper left
-      shade.addColorStop(0, 'rgba(255,255,255,.18)'); shade.addColorStop(0.7, 'rgba(255,255,255,0)'); shade.addColorStop(1, 'rgba(28,53,47,.12)');
+      shade.addColorStop(0, TC.shadeHi); shade.addColorStop(0.7, 'rgba(255,255,255,0)'); shade.addColorStop(1, TC.shadeLo);
       ctx.fillStyle = shade; ctx.fillRect(cx - Rg, cy - Rg, 2 * Rg, 2 * Rg);
       ctx.restore();
       ring(ctx, cx, cy, Rg, ink('brass', 0.75), 1.2);
