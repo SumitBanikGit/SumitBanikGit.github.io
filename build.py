@@ -968,9 +968,19 @@ def render_positions(items):
     return "\n".join(out)
 
 
+TOOL_ICONS = [
+    ("Programming", _p("M16 7L8 15L16 23M32 7L40 15L32 23") + _p("M27 5L21 25", "thin")),
+    ("Event generation", _p("M24 15L7 6M24 15L41 4M24 15L44 19M24 15L31 28M24 15L5 24", "thin") + _dots([(24, 15)], 2.2)),
+    ("Analysis", _p("M4 27H44", "thin") + _p("M8 27V17M15 27V10M22 27V5M29 27V11M36 27V18M43 27V23")),
+    ("Model building", _p("M8 25H20M8 17H20M8 7H20M28 22H40M28 12H40M28 4H40")),
+    ("Diagrams", _p("M4 4L15 15L4 26M44 4L33 15L44 26", "thin") + _p("M15 15Q17 11 19 15T23 15T27 15T31 15T33 15") + _dots([(15, 15), (33, 15)], 1.7)),
+    ("Loop integrals", _p("M3 15H14M34 15H45", "thin") + _p("M24 5A10 10 0 1 1 23.9 5Z") + _dots([(14, 15), (34, 15)], 1.7)),
+]
+
+
 def render_toolkit():
     return "\n".join(
-        f'<div class="tool"><div class="kicker">{group}</div>'
+        f'<div class="tool">{_pick_icon(TOOL_ICONS, group)}<div class="kicker">{group}</div>'
         f'<ul>{"".join(f"<li>{x}</li>" for x in items)}</ul></div>'
         for group, items in TOOLKIT)
 
@@ -1237,6 +1247,7 @@ def main():
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
+        ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
         updated=date.today().strftime("%B %Y"), year=date.today().year,
     )
@@ -1439,7 +1450,7 @@ Collider at CERN.</p>
 
 <h3 class="sect">Research interests</h3>
 <div class="interests">
-  <div class="interest pheno">
+  <div class="interest pheno">{ix_pheno}
     <div class="kicker">Particle phenomenology</div>
     <ul>
       <li>Collider phenomenology</li>
@@ -1448,7 +1459,7 @@ Collider at CERN.</p>
       <li>Effective field theory</li>
     </ul>
   </div>
-  <div class="interest fi">
+  <div class="interest fi">{ix_fi}
     <div class="kicker">Mathematical &amp; computational methods</div>
     <ul>
       <li>Multi-loop Feynman integrals</li>
