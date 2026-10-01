@@ -56,8 +56,8 @@ def collect(token):
 
 
 def report(line):
-    """Print a line, and put it on the summary page of the workflow run too."""
-    print(line)
+    """Print a line, and show it on the workflow run too (as a notice and in the summary)."""
+    print(f"::notice title=Visitor statistics::{line}" if os.environ.get("GITHUB_ACTIONS") else line)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
             f.write(line + "\n")
