@@ -1829,6 +1829,123 @@
     }
   };
 
+  /* Anatomy of the real Higgs triplet model: the three ways the LHC makes the triplet-like Higgs
+     bosons, as in Fig. 1 of the paper, and the signatures each leads to (abstract, (i) to (iii)).
+     Drell-Yan through W*, Drell-Yan through a photon or Z, and gluon fusion, which only works
+     through the small mixing with the Higgs boson. */
+  var AN_W = { n: { q: [0.14, 0.1], qb: [0.14, 0.9], v1: [0.56, 0.5, 1], v2: [1.06, 0.5, 1], c: [1.62, 0.12], n0: [1.62, 0.88] },
+               e: [{ a: 'q', b: 'v1', t: 'f', lab: 'q', lo: [-10, -4] }, { a: 'qb', b: 'v1', t: 'f', rev: 1, lab: "\\bar{q}'", lo: [-12, 8] },
+                   { a: 'v1', b: 'v2', t: 'w', lab: 'W^{±∗}', lo: [0, -12] },
+                   { a: 'v2', b: 'c', t: 's', lab: 'Δ^±', lt: 0.7, lo: [-12, -6] }, { a: 'v2', b: 'n0', t: 's', lab: 'Δ^0', lt: 0.7, lo: [-12, 16] }],
+               stagger: 0.36, edgeDur: 0.5 };
+  var AN_Z = { n: { q: [0.14, 0.1], qb: [0.14, 0.9], v1: [0.56, 0.5, 1], v2: [1.06, 0.5, 1], c: [1.62, 0.12], n0: [1.62, 0.88] },
+               e: [{ a: 'q', b: 'v1', t: 'f', lab: 'q', lo: [-10, -4] }, { a: 'qb', b: 'v1', t: 'f', rev: 1, lab: '\\bar{q}', lo: [-12, 8] },
+                   { a: 'v1', b: 'v2', t: 'ph', lab: 'γ^∗/Z^∗', lo: [0, -12] },
+                   { a: 'v2', b: 'c', t: 's', lab: 'Δ^+', lt: 0.7, lo: [-12, -6] }, { a: 'v2', b: 'n0', t: 's', lab: 'Δ^−', lt: 0.7, lo: [-12, 16] }],
+               stagger: 0.36, edgeDur: 0.5 };
+  var AN_G = { n: { g1: [0.12, 0.1], g2: [0.12, 0.9], A: [0.58, 0.22, 1], B: [0.58, 0.78, 1], C: [1.06, 0.5, 1], d: [1.66, 0.5] },
+               e: [{ a: 'g1', b: 'A', t: 'g', lab: 'g', lt: 0.4, lo: [10, -8] }, { a: 'g2', b: 'B', t: 'g', lab: 'g', lt: 0.4, lo: [6, -10] },
+                   { a: 'A', b: 'C', t: 'f' }, { a: 'C', b: 'B', t: 'f' }, { a: 'B', b: 'A', t: 'f', lab: 't,b', lo: [-14, 4] },
+                   { a: 'C', b: 'd', t: 's', lab: 'Δ^0', lo: [0, -10] }],
+               stagger: 0.36, edgeDur: 0.5 };
+  var AN_STEPS = [
+    { D: AN_W, top: 'DRELL-YAN, CHARGED CURRENT', note: 'Δ^±Δ^0→W^±Z\\,W^+W^−\\quad\\rm{or}\\quad Δ^0→γγ' },
+    { D: AN_Z, top: 'DRELL-YAN, NEUTRAL CURRENT', note: 'Δ^+Δ^−→τ^+τ^−ν\\bar{ν}\\quad\\rm{or}\\quad W^+W^−ZZ' },
+    { D: AN_G, top: 'GLUON FUSION, ONLY THROUGH MIXING', note: 'σ(gg→Δ^0)=\\rm{sin}^2α\\,σ_{\\rm{SM}}' }
+  ];
+  var ANATOMY = {
+    key: 'anatomy', paper: '2411.18618', dur: 13.5, cap: 'Anatomy of the real Higgs triplet model',
+    layout: function (v) {
+      v.steps = AN_STEPS.map(function (s) { var w = Object.create(v); diagramLayout(w, s.D); return w; });
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, len = 4.5;
+      AN_STEPS.forEach(function (s, i) {
+        var lt = t - i * len, a = R ? (i === 0 ? 1 : 0) : clamp01(Math.min(lt / 0.4, (len - lt) / 0.4));
+        if (i === AN_STEPS.length - 1 && !R) a = clamp01(lt / 0.4);
+        if (a <= 0) return;
+        ctx.save(); ctx.globalAlpha *= a;
+        drawDiagram(ctx, v.steps[i], s.D, R ? 60 : lt);
+        caps(ctx, s.top, v.x + 4, v.y + 12, ink(i === 2 ? 'crimson' : 'slate', 0.85), 8);
+        caps(ctx, (i + 1) + ' OF 3', v.x + v.w - 4, v.y + 12, ink('slate', 0.55), 7, 'right');
+        ctx.globalAlpha *= R ? 1 : ease((lt - 2.2) / 0.5);
+        drawMath(ctx, s.note, v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        ctx.restore();
+      });
+    }
+  };
+
+  /* Growing evidence for a Higgs triplet: di-photons produced together with jets, leptons, top
+     quarks, missing energy or a tau, in the eight ATLAS signal regions of Table 1 of the paper.
+     Combined with their correlations, they prefer a di-photon decay of the neutral triplet Higgs
+     at about 152 GeV with a significance of 4.3 sigma, and Br = 0.87 to 1.47 per cent at 1 sigma. */
+  var EV_SR = [['≥4j', 'pine'], ['ℓb', 'brassD'], ['t_{\\rm{lep}}', 'brassD'], ['2ℓ', 'green'],
+               ['1ℓ', 'green'], ['E_T^{\\rm{miss}}>100', 'slate'], ['E_T^{\\rm{miss}}>200', 'slate'], ['1τ_{\\rm{had}}', 'crimson']];
+  var EVIDENCE = {
+    key: 'evidence', paper: '2404.14492', dur: 12, cap: 'Growing evidence for a Higgs triplet',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 44));
+      v.cols = v.w > 420 ? 4 : 2;
+      var gw = v.w * (v.w > 420 ? 0.6 : 0.56), rows = 8 / v.cols;
+      var th = Math.min(52, (v.h - 60) / rows), mid = v.y + 8 + (v.h - 26) / 2;
+      v.T = { x: v.x + 4, y: mid - rows * th / 2, w: gw / v.cols, h: th };
+      var r = Math.min((v.w - gw - 50) / 2.3, (v.h - 70) / 1.5);
+      v.Gc = { x: v.x + gw + 14 + (v.w - gw - 14) / 2, y: mid + r * 0.42, r: r };
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, T = v.T, Gc = v.Gc;
+      var hk = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= hk;
+      caps(ctx, 'γγ PLUS X, EIGHT SIGNAL REGIONS', v.x + 4, v.y + 12, ink('slate', 0.85), 8);
+      ctx.restore();
+      var ck = R ? 1 : ease((t - 4.4) / 1.2);
+      EV_SR.forEach(function (s, i) {               // the signal regions, one after another
+        var k = R ? 1 : ease((t - 0.5 - i * 0.38) / 0.45);
+        if (k <= 0) return;
+        var cx = T.x + (i % v.cols) * T.w, cy = T.y + Math.floor(i / v.cols) * T.h;
+        ctx.save(); ctx.globalAlpha *= k;
+        roundRect(ctx, cx + 2, cy + 2, T.w - 6, T.h - 8, 4);
+        ctx.fillStyle = ink(s[1], 0.08 + 0.06 * ck); ctx.fill();
+        ctx.strokeStyle = ink(s[1], 0.5); ctx.lineWidth = 1; ctx.stroke();
+        drawMath(ctx, s[0], cx + (T.w - 4) / 2, cy + (T.h - 6) / 2 + 4, S * (v.cols === 4 ? 0.9 : 0.95), ink('green', 0.95), 'center');
+        ctx.restore();
+      });
+      if (ck > 0) {                                 // the eight are combined, with their correlations
+        var gx = T.x + v.cols * T.w + 2, gy0 = T.y + 4, gy1 = T.y + 8 / v.cols * T.h - 10, ax = Gc.x - Gc.r - 26;
+        ctx.save(); ctx.globalAlpha *= ck; ctx.strokeStyle = ink('brassD', 0.7); ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(gx, gy0); ctx.quadraticCurveTo(gx + 6, gy0, gx + 6, gy0 + 8); ctx.lineTo(gx + 6, gy1 - 8); ctx.quadraticCurveTo(gx + 6, gy1, gx, gy1); ctx.stroke();
+        var my = (gy0 + gy1) / 2;
+        if (ax > gx + 16) { line(ctx, gx + 6, my, gx + 6 + (ax - gx - 6) * ck, my, ink('brassD', 0.7), 1.1); if (ck > 0.95) arrowHead(ctx, ax + 2, my, 0, 6, ink('brassD', 0.8)); }
+        ctx.restore();
+      }
+      var gk = R ? 1 : ease((t - 5.4) / 0.6), fill = R ? 1 : easeInOut((t - 5.8) / 2.2), sig = 4.3 * fill;
+      if (gk <= 0) return;
+      ctx.save(); ctx.globalAlpha *= gk;              // the combined significance, on a dial from 0 to 5 sigma
+      var a0 = Math.PI, a1 = 2 * Math.PI;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = ink('green', 0.15); ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(Gc.x, Gc.y, Gc.r, a0, a1); ctx.stroke();
+      ctx.strokeStyle = ink('brassD', 0.9); ctx.beginPath(); ctx.arc(Gc.x, Gc.y, Gc.r, a0, a0 + Math.PI * sig / 5); ctx.stroke();
+      ctx.lineCap = 'butt';
+      for (var s5 = 0; s5 <= 5; s5++) {
+        var an = a0 + Math.PI * s5 / 5, c = Math.cos(an), sn = Math.sin(an);
+        line(ctx, Gc.x + c * (Gc.r + 6), Gc.y + sn * (Gc.r + 6), Gc.x + c * (Gc.r + 10), Gc.y + sn * (Gc.r + 10), ink('slate', 0.6), 1);
+        drawMath(ctx, s5 + 'σ', Gc.x + c * (Gc.r + 19), Gc.y + sn * (Gc.r + 19) + 4, S * 0.75, ink('slate', 0.85), 'center');
+      }
+      ctx.font = font(Math.max(15, Gc.r * 0.42), SERIF, 600, false); ctx.fillStyle = ink('brassD', 1); ctx.textAlign = 'center';
+      ctx.fillText(sig.toFixed(1) + 'σ', Gc.x, Gc.y - Gc.r * 0.12);
+      caps(ctx, 'COMBINED', Gc.x, Gc.y + 12, ink('slate', 0.85), 7, 'center');
+      ctx.restore();
+      var bk = R ? 1 : ease((t - 8.4) / 0.6);
+      if (bk > 0) {
+        ctx.save(); ctx.globalAlpha *= bk;
+        drawMath(ctx, 'm_{Δ}≈152\\,\\rm{GeV}', Gc.x, Gc.y + 32, S * 0.95, ink('green', 0.95), 'center');
+        drawMath(ctx, '\\rm{Br}(Δ^0→γγ)=0.87\\,\\rm{to}\\,1.47\\,%', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        caps(ctx, 'AT 1σ', v.x + 4 + mathBox(ctx, '\\rm{Br}(Δ^0→γγ)=0.87\\,\\rm{to}\\,1.47\\,%', 11).w + 8, v.y + v.h - 9, ink('slate', 0.7), 7);
+        ctx.restore();
+      }
+    }
+  };
+
   /* Triangulations of point configurations, as in Figs. 1 and 2 of the paper. For the
      Appell F1 integral the point configuration lies in the plane x + y + z = 1: a triangle
      P3 P4 P5 with P1 and P2 at the midpoints of two edges. Its five regular triangulations
@@ -1946,7 +2063,7 @@
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
   var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, SUNSET, BRACKETS, QUADRATIC];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, SUNSET, EVIDENCE, BRACKETS, ANATOMY, QUADRATIC];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
@@ -1959,6 +2076,13 @@
       e.refs = (e.data && e.data.refs) || {};
       e.vs = TOUR.map(function (V) { var v = Object.create(e); v.V = V; return v; });
       e.i = 0; e.t0 = 0; e.begun = false;
+      var self = this;
+      window.addEventListener('hashchange', function () {   // a tour link on this very page
+        if (!/^#tour-/.test(window.location.hash) || !e.begun) return;
+        self.begin(e, tourStart(e), e.t);
+        if (e.redraw) e.redraw();
+        window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+      });
     },
     layout: function (e) {
       var m = 24;
