@@ -960,6 +960,39 @@ def _talk_kind(event):
     return "meeting"
 
 
+TALK_YEARS_JS = """<script>
+(function () {                              // the bars grow once the chart is on screen
+  var el = document.querySelector('.talk-years');
+  if (!el) return;
+  if (!('IntersectionObserver' in window)) { el.classList.add('grown'); return; }
+  var io = new IntersectionObserver(function (en) {
+    if (en[0].isIntersecting) { el.classList.add('grown'); io.disconnect(); }
+  }, { threshold: 0.4 });
+  io.observe(el);
+})();
+</script>"""
+
+
+def talk_years():
+    """Talks per year, split into invited and contributed talks, as a small bar chart."""
+    years = list(range(min(t[0] for t in TALKS), max(t[0] for t in TALKS) + 1))
+    inv = {y: sum(1 for t in TALKS if t[0] == y and t[5]) for y in years}
+    con = {y: sum(1 for t in TALKS if t[0] == y and not t[5]) for y in years}
+    top = max(inv[y] + con[y] for y in years)
+    cols = "".join(
+        f'<div class="ty-col" style="--i:{i}"><span class="ty-n">{inv[y] + con[y]}</span>'
+        f'<div class="ty-stack" style="--h:{(inv[y] + con[y]) / top:.3f}">'
+        f'<span class="ty-inv" style="--n:{inv[y]}"></span><span class="ty-con" style="--n:{con[y]}"></span></div></div>'
+        for i, y in enumerate(years))
+    labels = "".join(f'<span>{y}</span>' for y in years)
+    n_inv, n_con = sum(inv.values()), sum(con.values())
+    return (f'<div class="talk-years" style="--cols:{len(years)}" role="img" '
+            f'aria-label="Talks per year from {years[0]} to {years[-1]}: {n_inv} invited and {n_con} contributed">'
+            f'<div class="ty-head"><span class="ty-title">Talks by year</span>'
+            f'<span class="ty-key"><i class="inv"></i>Invited {n_inv}<i class="con"></i>Contributed {n_con}</span></div>'
+            f'<div class="ty-bars">{cols}</div><div class="ty-years">{labels}</div></div>' + TALK_YEARS_JS)
+
+
 def render_talks():
     cards = []
     for year, event, city, title, note, invited in TALKS[:TALK_CARDS]:
@@ -969,7 +1002,7 @@ def render_talks():
             f'<article class="talk-card"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
     rest = [talk_row(y, ev, c, ti, no) for y, ev, c, ti, no, _ in TALKS[TALK_CARDS:]]
-    out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
+    out = talk_years() + '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
         out += (f'\n<details class="more"><summary>Show {len(rest)} earlier talks</summary>\n'
                 + "\n".join(rest) + "\n</details>")
@@ -1151,6 +1184,34 @@ def render_explore(n_articles, n_proc):
             f'<div class="explore">\n{items}\n</div>\n</section>')
 
 
+# The local time at SLAC on the contact page: a small clock, set by the visitor's browser.
+LOCAL_TIME = """    <div class="local-time" data-tz="America/Los_Angeles">
+      <svg class="clock" viewBox="0 0 40 40" aria-hidden="true"><circle class="face" cx="20" cy="20" r="18.2"/><line class="tick" x1="20.00" y1="4.80" x2="20.00" y2="3.00"/><line class="tick" x1="27.60" y1="6.84" x2="28.50" y2="5.28"/><line class="tick" x1="33.16" y1="12.40" x2="34.72" y2="11.50"/><line class="tick" x1="35.20" y1="20.00" x2="37.00" y2="20.00"/><line class="tick" x1="33.16" y1="27.60" x2="34.72" y2="28.50"/><line class="tick" x1="27.60" y1="33.16" x2="28.50" y2="34.72"/><line class="tick" x1="20.00" y1="35.20" x2="20.00" y2="37.00"/><line class="tick" x1="12.40" y1="33.16" x2="11.50" y2="34.72"/><line class="tick" x1="6.84" y1="27.60" x2="5.28" y2="28.50"/><line class="tick" x1="4.80" y1="20.00" x2="3.00" y2="20.00"/><line class="tick" x1="6.84" y1="12.40" x2="5.28" y2="11.50"/><line class="tick" x1="12.40" y1="6.84" x2="11.50" y2="5.28"/><line class="h" x1="20" y1="21.5" x2="20" y2="11"/><line class="m" x1="20" y1="22" x2="20" y2="6.5"/><line class="s" x1="20" y1="23.5" x2="20" y2="5"/><circle class="hub" cx="20" cy="20" r="1.5"/></svg>
+      <div><span class="lt-label">Local time at SLAC</span><span class="lt-time" aria-live="off"></span></div>
+    </div>
+    <script>
+    (function () {                              // a clock showing the time in Menlo Park, wherever the visitor is
+      var box = document.querySelector('.local-time');
+      if (!box || !window.Intl || !Intl.DateTimeFormat.prototype.formatToParts) { if (box) box.style.display = 'none'; return; }
+      var tz = box.getAttribute('data-tz'), still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var hh = box.querySelector('.h'), mh = box.querySelector('.m'), sh = box.querySelector('.s'), out = box.querySelector('.lt-time');
+      var num = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' });
+      var zone = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' });
+      function part(p, t) { for (var i = 0; i < p.length; i++) if (p[i].type === t) return +p[i].value; return 0; }
+      function tick() {
+        var d = new Date(), p = num.formatToParts(d), H = part(p, 'hour') % 24, M = part(p, 'minute'), S = part(p, 'second');
+        hh.setAttribute('transform', 'rotate(' + ((H % 12) * 30 + M / 2) + ' 20 20)');
+        mh.setAttribute('transform', 'rotate(' + (M * 6 + S / 10) + ' 20 20)');
+        sh.setAttribute('transform', 'rotate(' + S * 6 + ' 20 20)');
+        var z = zone.formatToParts(d).filter(function (x) { return x.type === 'timeZoneName'; })[0];
+        out.innerHTML = ((H % 12) || 12) + ':' + (M < 10 ? '0' : '') + M + ' ' + (H < 12 ? 'am' : 'pm') + (z ? ' <span class="lt-zone">' + z.value + '</span>' : '');
+      }
+      tick();
+      setInterval(tick, still ? 20000 : 1000);
+    })();
+    </script>"""
+
+
 def render_reach():
     P = PROFILE
     profiles = [("ORCID", f"https://orcid.org/{P['orcid']}", "i_orcid"), ("INSPIRE", P["inspire"], "i_inspire"),
@@ -1168,6 +1229,7 @@ def render_reach():
   <article class="reach-card">{_ix(REACH_ICONS["Address"])}
     <div class="kicker">Address</div>
     <p class="reach-addr">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory<br>2575 Sand Hill Road<br>Menlo Park, CA 94025<br>United States</p>
+    {LOCAL_TIME}
   </article>
   <article class="reach-card">{_ix(REACH_ICONS["Profiles"])}
     <div class="kicker">Profiles</div>
