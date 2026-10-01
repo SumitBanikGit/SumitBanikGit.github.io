@@ -768,8 +768,8 @@ def talk_scene_data():
 
 def pub_scene_data():
     """Papers in time order, with the field, the kind and a link for each."""
-    pubs = []
-    for p in sorted(reversed(PUBS), key=lambda p: int(p["year"])):
+    pubs = []                                         # in time order: by year, and by arXiv number within a year
+    for p in sorted(reversed(PUBS), key=lambda p: (int(p["year"]), p.get("arxiv") or "9999.99999")):
         link = (f"https://arxiv.org/abs/{p['arxiv']}" if p.get("arxiv") else
                 f"https://doi.org/{p['doi']}" if p.get("doi") else
                 f"https://inspirehep.net/literature/{p['inspire']}" if p.get("inspire") else "")
@@ -1931,6 +1931,11 @@ at CERN.</p>
     document.dispatchEvent(new CustomEvent('themechange', {{ detail: {{ dark: dark }} }}));
   }}
   if (tbtn) {{
+    try {{                                           // a soft pulse shows where the switch is, once per visit, until a theme is chosen
+      if (!reduce && !localStorage.getItem('sb-theme') && !sessionStorage.getItem('sb-tt-hint')) {{
+        tbtn.classList.add('hint'); sessionStorage.setItem('sb-tt-hint', '1');
+      }}
+    }} catch (e) {{}}
     tbtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark' ? 'true' : 'false');
     tbtn.title = root.getAttribute('data-theme') === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
     tbtn.addEventListener('click', function () {{

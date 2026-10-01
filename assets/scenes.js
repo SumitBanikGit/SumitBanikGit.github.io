@@ -2474,29 +2474,20 @@
         if (e.redraw) e.redraw();
       });
     },
-    layout: function (e) {
+    layout: function (e) {                           // years along, and the running total of papers up the side
       var d = e.pubs;
       if (!d.length) return;
-      var y0 = Infinity, y1 = -Infinity;
-      d.forEach(function (p) { y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); });
-      e.y0 = y0; e.y1 = y1;
-      e.L = e.x + 6; e.R = e.x + e.w - 6; e.T = e.y + 30; e.B = e.y + e.h - 26;
-      var colW = (e.R - e.L) / (y1 - y0 + 1), bandH = (e.B - e.T) * 0.42, r = seeded(3), cells = {}, pos = [];
-      d.forEach(function (p, i) { var k = p.y + p.t; (cells[k] = cells[k] || []).push(i); });
-      Object.keys(cells).forEach(function (k) {         // spread the papers of one year and field over their cell
-        var list = cells[k], n = list.length, slot = list.map(function (_, j) { return j; });
-        for (var j = n - 1; j > 0; j--) { var q = Math.floor(r() * (j + 1)), tmp = slot[j]; slot[j] = slot[q]; slot[q] = tmp; }
-        list.forEach(function (i, j) {
-          var p = d[i], col = e.L + (p.y - y0) * colW, top = p.t === 'pheno' ? e.T + (e.B - e.T) * 0.58 : e.T;
-          var fx = n === 1 ? 0.5 : 0.16 + 0.68 * j / (n - 1), fy = (slot[j] + 0.5) / n;
-          pos[i] = [col + colW * fx + (r() - 0.5) * colW * 0.08, top + bandH * (0.1 + 0.8 * fy) + (r() - 0.5) * bandH * 0.08];
-        });
+      var y0 = Infinity, y1 = -Infinity, per = {}, seen = {};
+      d.forEach(function (p) { y0 = Math.min(y0, p.y); y1 = Math.max(y1, p.y); per[p.y] = (per[p.y] || 0) + 1; });
+      e.y0 = y0; e.y1 = y1; e.N = d.length;
+      e.L = e.x + 40; e.R = e.x + e.w - 6; e.T = e.y + 30; e.B = e.y + e.h - 26;
+      var colW = (e.R - e.L) / (y1 - y0 + 1), pos = [];
+      d.forEach(function (p, i) {                      // the papers of one year spread across its column
+        var j = seen[p.y] = (seen[p.y] || 0) + 1, m = per[p.y];
+        pos[i] = [e.L + (p.y - y0) * colW + colW * (0.14 + 0.72 * (j - 0.5) / m), e.B - (i + 1) / e.N * (e.B - e.T)];
       });
       e.pos = pos;
-      e.chains = ['fi', 'pheno'].map(function (f) {    // constellation lines, left to right within a field
-        return d.map(function (p, i) { return i; }).filter(function (i) { return d[i].t === f; })
-          .sort(function (a, b) { return pos[a][0] - pos[b][0]; });
-      });
+      e.chains = [d.map(function (p, i) { return i; })];   // one line through them all, rising with the count
     },
     frame: function (e, t) {
       var d = e.pubs;
@@ -2522,18 +2513,33 @@
         ctx.beginPath(); ctx.moveTo(x, e.B + 3); ctx.lineTo(x, e.B + 9); ctx.stroke();
         ctx.fillStyle = ink('slate', sx >= x - colW / 2 ? 0.9 : 0.45); ctx.fillText(String(yr), x, e.B + 21);
       }
-      // the two fields, and a legend when there is room
+      // the running total up the side
+      var step = e.N > 24 ? 10 : 5;
+      ctx.strokeStyle = ink('brass', 0.5); ctx.beginPath(); ctx.moveTo(e.L - 6, e.T); ctx.lineTo(e.L - 6, e.B + 6); ctx.stroke();
+      ctx.font = font(9.5, SANS, 500); ctx.textAlign = 'right';
+      for (var n = 0; n <= e.N; n += step) {
+        var yy = e.B - n / e.N * (e.B - e.T);
+        ctx.beginPath(); ctx.moveTo(e.L - 9, yy); ctx.lineTo(e.L - 6, yy); ctx.stroke();
+        ctx.fillStyle = ink('slate', 0.8); ctx.fillText(String(n), e.L - 12, yy + 3.5);
+        if (n > 0) { ctx.save(); ctx.strokeStyle = ink('green', 0.06); ctx.beginPath(); ctx.moveTo(e.L - 6, yy); ctx.lineTo(e.R, yy); ctx.stroke(); ctx.restore(); }
+      }
+      ctx.save(); ctx.translate(e.x + 7, (e.T + e.B) / 2); ctx.rotate(-Math.PI / 2);
+      caps(ctx, 'PUBLICATIONS SO FAR', 0, 3, ink('slate', 0.8), 7.5, 'center'); ctx.restore();
+      // the two fields by colour, and the kinds of paper when there is room
       tracking(ctx, 1.2); ctx.font = font(8.5, SANS, 600); ctx.textAlign = 'left';
-      ctx.fillStyle = ink('brassD', 0.9); ctx.fillText('FEYNMAN INTEGRALS', e.L, e.y + 12);
-      ctx.fillStyle = ink('pine', 0.9); ctx.fillText('PHENOMENOLOGY', e.L, e.T + (e.B - e.T) * 0.58 - 6);
-      if (e.w > 420) {
-        ctx.font = font(8, SANS, 600); ctx.textAlign = 'right'; tracking(ctx, 1);
-        var lx = e.R;
-        [['THESIS', 'thesis'], ['PROCEEDINGS', 'proceedings'], ['ARTICLE', 'article']].forEach(function (L) {
-          ctx.fillStyle = ink('slate', 0.85); ctx.fillText(L[0], lx, e.y + 12);
-          var ring = L[1] === 'thesis' ? 4 : 0, mx = lx - ctx.measureText(L[0]).width - 9 - ring, my = e.y + 9;
-          SCENES.constellation.star(ctx, mx, my, L[1], 'slate', 1, 0.9);
-          lx = mx - 16 - ring;
+      SCENES.constellation.star(ctx, e.L + 3, e.y + 9, 'article', 'brassD', 1, 0.95);
+      ctx.fillStyle = ink('brassD', 0.9); ctx.fillText('FEYNMAN INTEGRALS', e.L + 11, e.y + 12);
+      var fw = ctx.measureText('FEYNMAN INTEGRALS').width;
+      SCENES.constellation.star(ctx, e.L + fw + 27, e.y + 9, 'article', 'pine', 1, 0.95);
+      ctx.fillStyle = ink('pine', 0.9); ctx.fillText('PHENOMENOLOGY', e.L + fw + 35, e.y + 12);
+      if (e.w > 300) {                                // the kinds of paper, in the empty corner above the early years
+        ctx.font = font(8, SANS, 600); ctx.textAlign = 'left'; tracking(ctx, 1);
+        var kx = e.L + 6, ky = e.T + 14;
+        [['ARTICLE', 'article'], ['PROCEEDINGS', 'proceedings'], ['THESIS', 'thesis']].forEach(function (K) {
+          var rr = K[1] === 'thesis' ? 4 : 0;
+          SCENES.constellation.star(ctx, kx + rr, ky - 3, K[1], 'slate', 1, 0.9);
+          ctx.fillStyle = ink('slate', 0.85); ctx.fillText(K[0], kx + 2 * rr + 8, ky);
+          kx += 2 * rr + 8 + ctx.measureText(K[0]).width + 14;
         });
       }
       tracking(ctx, 0);
@@ -2545,7 +2551,7 @@
           var a = e.pos[chain[j - 1]], b = e.pos[chain[j]], dm = Math.min(e.dim[chain[j - 1]], e.dim[chain[j]]);
           if (sx <= a[0]) break;
           var k = clamp01((sx - a[0]) / Math.max(1, b[0] - a[0]));
-          ctx.strokeStyle = ci ? ink('pine', 0.34 * dm) : ink('brass', 0.45 * dm);
+          ctx.strokeStyle = ink('brass', 0.5 * dm);
           ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k); ctx.stroke();
         }
       });
@@ -3204,35 +3210,79 @@
   /* =====================================================================
      CV: the path from Kolkata to Stanford, on a timeline
      ===================================================================== */
+  function spreadRow(items, lo, hi, gap) {          // label centres in one row, pushed apart so that none overlap
+    var n = items.length, xs = items.map(function (it) { return it.x; }), i, moved = 0;
+    for (i = 0; i < n; i++) xs[i] = Math.max(xs[i], lo + items[i].w / 2);
+    for (i = 1; i < n; i++) xs[i] = Math.max(xs[i], xs[i - 1] + (items[i - 1].w + items[i].w) / 2 + gap);
+    if (n && xs[n - 1] + items[n - 1].w / 2 > hi) {
+      xs[n - 1] = hi - items[n - 1].w / 2;
+      for (i = n - 2; i >= 0; i--) xs[i] = Math.min(xs[i], xs[i + 1] - (items[i].w + items[i + 1].w) / 2 - gap);
+    }
+    for (i = 0; i < n; i++) moved = Math.max(moved, Math.abs(xs[i] - items[i].x));
+    return { xs: xs, ok: !n || (xs[0] - items[0].w / 2 >= lo - 0.5 && moved < 40) };
+  }
+  function placeLabels(items, lo, hi, gap) {        // one row if it fits, otherwise every other label on a second row
+    var one = spreadRow(items, lo, hi, gap);
+    if (one.ok) return items.map(function (it, i) { return { x: one.xs[i], row: 0 }; });
+    var out = [];
+    [0, 1].forEach(function (r) {
+      var idx = items.map(function (it, i) { return i; }).filter(function (i) { return i % 2 === r; });
+      var res = spreadRow(idx.map(function (i) { return items[i]; }), lo, hi, gap);
+      idx.forEach(function (i, j) { out[i] = { x: res.xs[j], row: r }; });
+    });
+    return out;
+  }
   SCENES.timeline = {
     touchHint: 'Tap for the next stage',
     init: function (e) { e.st = (e.data && e.data.stages) || []; e.now = (e.data && e.data.now) || 2026.8; e.c0 = 0; e.cur = -2; },
     layout: function (e) {
-      if (!e.st.length) return;
-      e.L = e.x + 16; e.R = e.x + e.w - 30; e.ay = e.y + e.h * 0.62;
-      e.y0 = Math.floor(e.st[0].s); e.y1 = e.now + 0.5;
+      var st = e.st, ctx = e.ctx;
+      if (!st.length) return;
+      e.open = !st[st.length - 1].e;                  // the present position is still going on
+      e.L = e.x + 16; e.R = e.x + e.w - 12; e.ay = e.y + e.h * 0.6;
+      e.y0 = Math.floor(st[0].s); e.y1 = e.now + (e.open ? 1.2 : 0.5);
+      var X = e.X = function (yr) { return e.L + (yr - e.y0) / (e.y1 - e.y0) * (e.R - e.L); };
+      var groups = [];                                // the cities, each bracketed above, with the institution below
+      st.forEach(function (s, i) { var g = groups[groups.length - 1]; if (g && g.c === s.c) g.e = i; else groups.push({ c: s.c, s: i, e: i }); });
+      groups.forEach(function (g) {
+        g.a = st[g.s].s; g.open = !st[g.e].e; g.b = st[g.e].e || e.now;
+        g.xa = X(g.a) + 2; g.xb = g.open ? X(e.y1) - 4 : X(g.b) - 2;
+        g.name = st[g.s].os || st[g.s].o;
+      });
+      var lo = e.x + 2, hi = e.x + e.w - 2;
+      ctx.font = font(7.5, SANS, 600); tracking(ctx, 1.1);
+      var cw = groups.map(function (g) { return { x: (g.xa + (g.open ? X(e.now) : g.xb)) / 2, w: ctx.measureText(g.c.toUpperCase()).width }; });
+      tracking(ctx, 0);
+      ctx.font = font(12.5, DISPLAY, 500, true);
+      var nw = groups.map(function (g) { return { x: (g.xa + (g.open ? X(e.now) : g.xb)) / 2, w: ctx.measureText(g.name).width }; });
+      var sw = st.map(function (s) { return { x: (X(s.s) + X(s.e || e.now)) / 2, w: mathBox(ctx, '\\rm{' + s.t + '}', 13).w }; });
+      e.cityAt = placeLabels(cw, lo, hi, 10);
+      e.nameAt = placeLabels(nw, lo, hi, 12);
+      e.stageAt = placeLabels(sw, lo, hi, 7);
+      e.groups = groups;
     },
     frame: function (e, t) {
       var ctx = e.ctx, st = e.st, R = e.reduce, T = 9.5, C = 14;
-      if (!st.length) return;
-      var c = R ? 99 : (t - e.c0) % C, yc = R ? e.now : e.y0 + (e.now - e.y0) * clamp01(c / T);
-      function X(yr) { return e.L + (yr - e.y0) / (e.y1 - e.y0) * (e.R - e.L); }
-      line(ctx, e.L, e.ay, e.R, e.ay, ink('green', 0.35), 1);                                        // the years
+      if (!st.length || !e.X) return;
+      var X = e.X, c = R ? 99 : (t - e.c0) % C, yc = R ? e.now : e.y0 + (e.now - e.y0) * clamp01(c / T), done = c > T || R;
+      line(ctx, e.L, e.ay, X(e.now), e.ay, ink('green', 0.35), 1);                                   // the years
       ctx.font = font(9, SANS, 500); ctx.textAlign = 'center'; ctx.fillStyle = ink('slate', 0.85);
       for (var yr = e.y0; yr <= Math.floor(e.now); yr += 2) { line(ctx, X(yr), e.ay + 7, X(yr), e.ay + 11, ink('green', 0.4), 1); ctx.fillText(String(yr), X(yr), e.ay + 23); }
-      var groups = [];                                                                                // cities, bracketed above
-      st.forEach(function (s, i) { var g = groups[groups.length - 1]; if (g && g.c === s.c) g.e = i; else groups.push({ c: s.c, s: i, e: i }); });
-      groups.forEach(function (g) {
-        var a = st[g.s].s, b = st[g.e].e || e.now, k = R ? 1 : clamp01((yc - a) / 0.8);
+      e.groups.forEach(function (g, gi) {
+        var k = R ? 1 : clamp01((yc - g.a) / 0.8);
         if (k <= 0) return;
-        var xa = X(a) + 2, xb = X(b) - 2, yb = e.ay - 44;
+        var yb = e.ay - 44, cp = e.cityAt[gi], np = e.nameAt[gi];
         ctx.save(); ctx.globalAlpha *= k;
-        line(ctx, xa, yb + 4, xa, yb, ink('brass', 0.8), 1); line(ctx, xa, yb, xb, yb, ink('brass', 0.8), 1); line(ctx, xb, yb, xb, yb + 4, ink('brass', 0.8), 1);
-        caps(ctx, g.c.toUpperCase(), (xa + xb) / 2, yb - 6, ink('brassD', 0.95), 7.5, 'center');
-        ctx.font = font(12.5, DISPLAY, 500, true);
-        var name = st[g.s].os || st[g.s].o, nw = ctx.measureText(name).width;
-        var nx = Math.max(e.x + nw / 2 + 2, Math.min(e.x + e.w - nw / 2 - 2, (xa + xb) / 2));
-        ctx.fillStyle = ink('slate', 0.9); ctx.textAlign = 'center'; ctx.fillText(name, nx, e.ay + 42);
+        line(ctx, g.xa, yb + 4, g.xa, yb, ink('brass', 0.8), 1);
+        if (g.open) {                                 // still going on: the bracket stays open and fades to the right
+          var gr = ctx.createLinearGradient(X(e.now), 0, g.xb, 0);
+          gr.addColorStop(0, ink('brass', 0.8)); gr.addColorStop(1, ink('brass', 0));
+          line(ctx, g.xa, yb, X(e.now), yb, ink('brass', 0.8), 1);
+          ctx.strokeStyle = gr; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(e.now), yb); ctx.lineTo(g.xb, yb); ctx.stroke();
+        } else { line(ctx, g.xa, yb, g.xb, yb, ink('brass', 0.8), 1); line(ctx, g.xb, yb, g.xb, yb + 4, ink('brass', 0.8), 1); }
+        caps(ctx, g.c.toUpperCase(), cp.x, yb - 6 - cp.row * 12, ink('brassD', 0.95), 7.5, 'center');
+        ctx.font = font(12.5, DISPLAY, 500, true); ctx.fillStyle = ink('slate', 0.9); ctx.textAlign = 'center';
+        ctx.fillText(g.name, np.x, e.ay + 42 + np.row * 16);
         ctx.restore();
       });
       var active = -1;
@@ -3240,12 +3290,19 @@
         var end = s.e || e.now;
         if (yc < s.s) return;
         if (yc <= end + 0.001) active = i;
-        var xa = X(s.s), xb = X(Math.min(end, yc)), col = s.k === 'edu' ? 'brass' : 'pine';
+        var xa = X(s.s), xb = X(Math.min(end, yc)), col = s.k === 'edu' ? 'brass' : 'pine', sp = e.stageAt[i];
         ctx.strokeStyle = ink(col, 0.95); ctx.lineWidth = 6; ctx.lineCap = 'butt';
         ctx.beginPath(); ctx.moveTo(xa + 1.5, e.ay); ctx.lineTo(Math.max(xa + 1.5, xb - 1.5), e.ay); ctx.stroke();
+        if (!s.e && done) {                             // the present position runs on beyond today
+          var ex = X(e.y1) - 6, fg = ctx.createLinearGradient(X(e.now), 0, ex, 0);
+          fg.addColorStop(0, ink(col, 0.7)); fg.addColorStop(1, ink(col, 0.05));
+          ctx.strokeStyle = fg; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(e.now), e.ay); ctx.lineTo(ex - 4, e.ay); ctx.stroke();
+          ctx.strokeStyle = ink(col, 0.35); ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(ex - 6, e.ay - 4); ctx.lineTo(ex, e.ay); ctx.lineTo(ex - 6, e.ay + 4); ctx.stroke(); ctx.lineCap = 'butt';
+        }
         var k = R ? 1 : clamp01((yc - s.s) / 0.6);
         ctx.save(); ctx.globalAlpha *= k;
-        drawMath(ctx, '\\rm{' + s.t + '}', (xa + X(end)) / 2, e.ay - 14, 13, ink(i === active ? 'green' : 'slate', 0.95), 'center');
+        drawMath(ctx, '\\rm{' + s.t + '}', sp.x, e.ay - 14 - sp.row * 14, 13, ink(i === active ? 'green' : 'slate', 0.95), 'center');
         ctx.restore();
         dot(ctx, xa, e.ay, 4, ink('paper', 1)); ring(ctx, xa, e.ay, 4, ink(col === 'brass' ? 'brassD' : 'pine', 1), 1.3);
       });
@@ -3254,10 +3311,10 @@
         g.addColorStop(0, ink('brass', 0.5)); g.addColorStop(1, ink('brass', 0));
         ctx.fillStyle = g; ctx.fillRect(xc - 12, e.ay - 12, 24, 24); dot(ctx, xc, e.ay, 2.8, ink('brassD', 1));
       }
-      if (c > T || R) {
+      if (done) {
         var pk = R ? 0.5 : ((t * 0.8) % 1);
         ring(ctx, X(e.now), e.ay, 4 + pk * 12, ink('pine', 0.6 * (1 - pk)), 1.2);
-        caps(ctx, 'NOW', X(e.now) + 4, e.ay + 23, ink('pine', 0.9), 7.5, 'left');
+        caps(ctx, 'NOW', X(e.now) + 6, e.ay + 23, ink('pine', 0.9), 7.5, 'left');
       }
       var show = c > T && !R ? -1 : active;
       if (show !== e.cur) {
