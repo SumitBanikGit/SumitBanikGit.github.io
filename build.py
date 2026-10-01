@@ -552,6 +552,14 @@ def _p(d, cls=""):
     return f'<path{attr} pathLength="1" d="{d}"/>'
 
 
+def _pf(d, length, cls=""):
+    """A line that, on hover, runs along its own direction: dashes 2.6 long with gaps of 2.2 (in drawing
+    units), given as fractions of the path length because the paths are normalized to pathLength 1."""
+    c = ("flow " + cls).strip()
+    return (f'<path class="{c}" pathLength="1" style="--da:{2.6 / length:.4f};--dg:{2.2 / length:.4f};--dp:{4.8 / length:.4f}"'
+            f' d="{d}"/>')
+
+
 def _dots(pts, r=1.6):
     return "".join(f'<circle cx="{x}" cy="{y}" r="{r}"/>' for x, y in pts)
 
@@ -599,16 +607,19 @@ SOFTWARE_ICONS = {
 }
 COURSE_ICONS = [
     ("Proseminar", _p("M7 3H41V20H7Z") + _p("M24 20V27M16 27H32M11 15Q17 6 23 11T37 7", "thin")),
-    ("Flavour", _p("M5 25H43L17 5Z") + _p("M10 25A5 5 0 0 0 8.4 21.4M38 25A5 5 0 0 1 39.9 21.9", "thin") + _dots([(5, 25), (43, 25), (17, 5)], 1.6)),
-    ("Quantum Field", _p("M4 27L22 15L4 3") + _p("M22 15Q24 11 26 15T30 15T34 15T38 15T42 15", "thin") + _dots([(22, 15)], 1.8)),
-    ("Introductory Physics", _p("M12 15H36") + _p("M12 15C17 6 31 6 36 15M12 15C17 24 31 24 36 15M12 15C15 -2 33 -2 36 15M12 15C15 32 33 32 36 15", "thin")
+    # on hover: the sides of the unitarity triangle run head to tail, the electron runs through the vertex
+    # and the photon leaves it, and the field lines run from the positive charge (left) to the negative one
+    ("Flavour", _pf("M5 25H43L17 5Z", 94.13) + _p("M10 25A5 5 0 0 0 8.4 21.4M38 25A5 5 0 0 1 39.9 21.9", "thin") + _dots([(5, 25), (43, 25), (17, 5)], 1.6)),
+    ("Quantum Field", _pf("M4 27L22 15L4 3", 43.27) + _pf("M22 15Q24 11 26 15T30 15T34 15T38 15T42 15", 29.58, "thin") + _dots([(22, 15)], 1.8)),
+    ("Introductory Physics", _pf("M12 15H36", 24) + _pf("M12 15C17 6 31 6 36 15M12 15C17 24 31 24 36 15M12 15C15 -2 33 -2 36 15M12 15C15 32 33 32 36 15", 133.99, "thin")
      + _dots([(12, 15), (36, 15)], 2.6)),
 ]
 STUDENT_ICONS = [
-    ("Mellin-Barnes", _p("M24 2V28") + _dots([(16, 15), (10, 15), (4, 15)], 1.6) + _dots([(31, 15), (37, 15), (43, 15)], 1.6)),
-    ("two-body", _p("M4 15H22") + _p("M22 15L42 5M22 15L42 25", "thin") + _dots([(22, 15)], 1.8)),
+    # on hover: the integration contour runs upwards, from -i infinity to +i infinity, and the decay products fly apart
+    ("Mellin-Barnes", _pf("M24 28V2", 26) + _dots([(16, 15), (10, 15), (4, 15)], 1.6) + _dots([(31, 15), (37, 15), (43, 15)], 1.6)),
+    ("two-body", _pf("M4 15H22", 18) + _pf("M22 15L42 5M22 15L42 25", 44.72, "thin") + _dots([(22, 15)], 1.8)),
     # a propagator with a one-loop bubble and then the two-loop sunset: the line stops at each loop
-    ("perturbative", _p("M2 15H10M18 15H28M38 15H46", "thin") + _p("M18 15A4 4 0 1 1 18 14.9M38 15A5 5 0 1 1 38 14.9") + _p("M28 15H38", "thin")),
+    ("perturbative", _pf("M2 15H10M18 15H28M38 15H46", 26, "thin") + _p("M18 15A4 4 0 1 1 18 14.9M38 15A5 5 0 1 1 38 14.9") + _p("M28 15H38", "thin")),
 ]
 REACH_ICONS = {
     "Email": _p("M6 6H42V25H6Z") + _p("M6 6L24 17L42 6", "thin"),

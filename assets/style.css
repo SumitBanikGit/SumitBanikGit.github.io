@@ -1987,3 +1987,12 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 @keyframes th-blink { 0% { opacity: 1; } 50% { opacity: 0; } }
 @keyframes th-flow { 0% { opacity: 0; transform: translate(0, 0); } 12%, 88% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
 @keyframes th-hop { 0% { opacity: 0; transform: translate(0, 0); } 15%, 85% { opacity: 1; } 100% { opacity: 0; transform: translate(16px, 0); } }
+
+/* Card drawings on the teaching and supervision pages: on hover their lines run the way the physics goes
+   (the dash sizes come from build.py, as fractions of each path's length) */
+@property --run { syntax: '<number>'; inherits: false; initial-value: 0; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .course:hover .ix path.flow, .student:hover .ix path.flow {
+    stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
+}
+@keyframes ix-flow { from { --run: 0; } to { --run: 1; } }
