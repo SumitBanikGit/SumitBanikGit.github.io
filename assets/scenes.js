@@ -263,7 +263,7 @@
         x += m.w + (it ? 0.04 * S : 0);
         if (op) x += pad;
         asc = Math.max(asc, m.a - y); desc = Math.max(desc, m.d + y);
-        prev = op ? 'op' : (nd.s === '(' || nd.s === '[' || nd.s === '⟨') ? 'open' : 'x';
+        prev = op ? 'op' : '([⟨,;'.indexOf(nd.s) >= 0 ? 'open' : 'x';      // a minus after these is a sign
         continue;
       }
       if (nd.k === 'grp') {
@@ -934,59 +934,383 @@
     }
   };
 
-  /* Double box and hexagon: the two conformal integrals of the paper, drawn in turn. */
-  var DOUBLEBOX = {
-    n: { a: [0.62, 0.2, 1], b: [0.95, 0.2, 1], c: [1.28, 0.2, 1], d: [0.62, 0.8, 1], e: [0.95, 0.8, 1], f: [1.28, 0.8, 1],
-         p1: [0.36, 0.02], p2: [0.36, 0.98], p3: [1.54, 0.02], p4: [1.54, 0.98] },
-    e: [{ a: 'p1', b: 'a', t: 'p', c: 'brassD', lab: 'p_1', lt: 0.1, lo: [-12, 6] }, { a: 'p2', b: 'd', t: 'p', c: 'brassD', lab: 'p_2', lt: 0.1, lo: [-12, -2] },
-        { a: 'a', b: 'b', t: 'p' }, { a: 'b', b: 'c', t: 'p' }, { a: 'a', b: 'd', t: 'p' }, { a: 'b', b: 'e', t: 'p' },
-        { a: 'c', b: 'f', t: 'p' }, { a: 'd', b: 'e', t: 'p' }, { a: 'e', b: 'f', t: 'p' },
-        { a: 'c', b: 'p3', t: 'p', c: 'brassD', lab: 'p_3', lt: 0.9, lo: [12, 6] }, { a: 'f', b: 'p4', t: 'p', c: 'brassD', lab: 'p_4', lt: 0.9, lo: [12, -2] }],
-    stagger: 0.22, edgeDur: 0.45
-  };
-  var HEXAGON = (function () {
-    var n = {}, e = [];
-    for (var k = 0; k < 6; k++) {
-      var an = (k * 60 - 90) * D2R;
-      n['v' + k] = [0.95 + 0.33 * Math.cos(an), 0.5 + 0.33 * Math.sin(an), 1];
-      n['x' + k] = [0.95 + 0.5 * Math.cos(an), 0.5 + 0.5 * Math.sin(an)];
-    }
-    for (k = 0; k < 6; k++) e.push({ a: 'v' + k, b: 'v' + ((k + 1) % 6), t: 'p' });
-    for (k = 0; k < 6; k++) e.push({ a: 'v' + k, b: 'x' + k, t: 'p', c: 'brassD' });
-    return { n: n, e: e, stagger: 0.2, edgeDur: 0.45 };
+  /* The double box and hexagon conformal integrals, as in Fig. 1 of the paper, drawn in dual
+     (position) space: the black vertices are the integration points, the open circles the
+     six external points x1 to x6, which both integrals share. Each line carries the power of
+     its propagator, and the dual momentum-space graph is dashed: each of its lines crosses
+     exactly one line of the position-space graph. Conformal invariance fixes the sum of the
+     powers at every vertex. The paper writes one representation of each integral as series of
+     Horn type: 44 for the double box and 26 for the hexagon. */
+  var CONF_X = (function () {                       // x1 ... x6 on a regular hexagon
+    var p = [];
+    for (var k = 0; k < 6; k++) { var an = (240 - k * 60) * D2R; p.push([2.02 * Math.cos(an), 2.02 * Math.sin(an)]); }
+    return p;
   })();
+  var CONF_BOX = {
+    v: [[-0.8, 0], [0.8, 0]],
+    l: [[0, 1, 'a'], [0, 2, 'b'], [0, 3, 'c'], [0, -2, 'ℓ'], [1, 4, 'd'], [1, 5, 'e'], [1, 6, 'f']],
+    dual: [[[-1.6, 0.9], [1.6, 0.9]], [[-1.6, -0.9], [1.6, -0.9]], [[-1.6, -0.9], [-1.6, 0.9]], [[1.6, -0.9], [1.6, 0.9]], [[0, -0.9], [0, 0.9]]],
+    legs: [[-1.6, 0.9, 150], [0, 0.9, 90], [1.6, 0.9, 30], [1.6, -0.9, -30], [0, -0.9, -90], [-1.6, -0.9, -150]],
+    cond: 'a+b+c+ℓ=D,\\quad d+e+f+ℓ=D', top: 'TWO LOOPS, SIX POINTS', n: '44 SERIES OF HORN TYPE'
+  };
+  var CONF_HEX = (function () {
+    var dual = [], legs = [], r = 1.155;
+    for (var k = 0; k < 6; k++) {
+      var a0 = (210 + k * 60) * D2R, a1 = (270 + k * 60) * D2R;
+      dual.push([[r * Math.cos(a0), r * Math.sin(a0)], [r * Math.cos(a1), r * Math.sin(a1)]]);
+      legs.push([r * Math.cos(a0), r * Math.sin(a0), 210 + k * 60]);
+    }
+    return { v: [[0, 0]], l: [[0, 1, 'a'], [0, 2, 'b'], [0, 3, 'c'], [0, 4, 'd'], [0, 5, 'e'], [0, 6, 'f']], dual: dual, legs: legs,
+             cond: 'a+b+c+d+e+f=D', top: 'ONE LOOP, SIX POINTS', n: '26 SERIES OF HORN TYPE' };
+  })();
+  function confGraph(ctx, v, G, t, R) {            // one position-space graph, drawn line by line
+    var P = v.P, u = P.u, i;
+    function Q(p) { return [P.cx + p[0] * u, P.cy - p[1] * u]; }
+    function end(j) { return j < 0 ? G.v[-j - 1] : CONF_X[j - 1]; }
+    var dk = R ? 1 : ease((t - 3.2) / 0.8);
+    if (dk > 0) {                                   // the dual momentum-space graph
+      ctx.save(); ctx.setLineDash([3, 3]); ctx.globalAlpha *= dk;
+      G.dual.forEach(function (s) { var a = Q(s[0]), b = Q(s[1]); line(ctx, a[0], a[1], b[0], b[1], ink('brass', 0.75), 1); });
+      G.legs.forEach(function (s) {
+        var a = Q(s), an = s[2] * D2R, b = Q([s[0] + 0.42 * Math.cos(an), s[1] + 0.42 * Math.sin(an)]);
+        line(ctx, a[0], a[1], b[0], b[1], ink('brass', 0.75), 1);
+      });
+      ctx.restore();
+    }
+    var shown = {};
+    G.l.forEach(function (L, j) {
+      var k = R ? 1 : ease((t - 0.6 - j * 0.3) / 0.45);
+      if (k <= 0) return;
+      shown[L[0]] = 1; if (L[1] < 0 && k > 0.95) shown[-L[1] - 1] = 1;
+      var a = Q(G.v[L[0]]), b = Q(end(L[1]));
+      line(ctx, a[0], a[1], a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, ink('green', 0.9), 1.5);
+      if (k > 0.8) {
+        var dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1, f = 0.74, sd = G.v.length > 1 && L[1] > 3 ? -1 : 1;
+        var lx = a[0] + dx * f + (-dy / n) * 9 * sd, ly = a[1] + dy * f + (dx / n) * 9 * sd;
+        if (L[1] < 0) { lx = a[0] + dx * 0.3; ly = a[1] - 8; }
+        ctx.save(); ctx.globalAlpha *= clamp01((k - 0.8) / 0.2);
+        drawMath(ctx, L[2], lx, ly + 4, v.S * 1.05, ink('brassD', 1), 'center');
+        ctx.restore();
+      }
+    });
+    G.v.forEach(function (p, j) { if (shown[j]) { var q = Q(p); dot(ctx, q[0], q[1], 3.4, ink('green', 1)); } });
+    var ck = R ? 1 : ease((t - 3.8) / 0.6);
+    if (ck > 0) {
+      ctx.save(); ctx.globalAlpha *= ck;
+      drawMath(ctx, G.cond, P.cx, v.y + v.h - 6, v.S * 0.95, ink('slate', 0.95), 'center');
+      ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha *= R ? 1 : ease(t / 0.5);
+    caps(ctx, G.top, v.x + 4, v.y + 11, ink('slate', 0.85), 7.5);
+    if (v.w > 400) caps(ctx, G.n, v.x + 4, v.y + 24, ink('brassD', 0.85), 7.5);
+    ctx.restore();
+  }
   var CONFORMAL = {
-    key: 'conformal', paper: '2007.08360', dur: 12, cap: 'Double box and hexagon conformal integrals',
+    key: 'conformal', paper: '2007.08360', dur: 13, cap: 'Double box and hexagon conformal integrals',
     layout: function (v) {
-      v.box = Object.create(v); diagramLayout(v.box, DOUBLEBOX);
-      v.hex = Object.create(v); diagramLayout(v.hex, HEXAGON);
+      v.S = Math.max(9, Math.min(12, v.w / 44));
+      var top = v.w < 400 ? 14 : 0, u = Math.min((v.h - 30 - top) / 4.15, (v.w - 20) / 5.4);   // room for the label on phones
+      v.P = { u: u, cx: v.x + v.w / 2, cy: v.y + 4 + top + (v.h - 30 - top) / 2 };
     },
     frame: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, split = 6;
-      var a1 = R ? 1 : clamp01((split - t) / 0.5), a2 = R ? 0 : clamp01((t - split) / 0.5);
-      if (a1 > 0) {
-        ctx.save(); ctx.globalAlpha *= a1; drawDiagram(ctx, v.box, DOUBLEBOX, t);
-        drawMath(ctx, 'k_1', v.box.F.x + 0.785 * v.box.F.s, v.box.F.y + 0.53 * v.box.F.s, 12, ink('slate', 0.9 * clamp01(t - 3)), 'center');
-        drawMath(ctx, 'k_2', v.box.F.x + 1.115 * v.box.F.s, v.box.F.y + 0.53 * v.box.F.s, 12, ink('slate', 0.9 * clamp01(t - 3)), 'center');
-        caps(ctx, 'TWO LOOPS', v.x + 4, v.y + 12, ink('slate', 0.85), 8); ctx.restore();
-      }
-      if (a2 > 0) {
-        ctx.save(); ctx.globalAlpha *= a2; drawDiagram(ctx, v.hex, HEXAGON, t - split);
-        caps(ctx, 'ONE LOOP, SIX POINTS', v.x + 4, v.y + 12, ink('slate', 0.85), 8); ctx.restore();
+      var ctx = v.ctx, R = v.reduce, P = v.P, split = 6.6, u = P.u;
+      var pk = R ? 1 : ease((t - 0.1) / 0.6);       // the six external points, shared by both graphs
+      CONF_X.forEach(function (p, i) {
+        var x = P.cx + p[0] * u, y = P.cy - p[1] * u, n = Math.hypot(p[0], p[1]);
+        ctx.save(); ctx.globalAlpha *= pk;
+        dot(ctx, x, y, 3.3, ink('paper', 1)); ring(ctx, x, y, 3.3, ink('slate', 0.9), 1.2);
+        drawMath(ctx, 'x_' + (i + 1), x + p[0] / n * 13, y - p[1] / n * 12 + 4, v.S * 0.85, ink('slate', 0.95), 'center');
+        ctx.restore();
+      });
+      var a1 = R ? 1 : clamp01((split - t) / 0.45), a2 = R ? 0 : clamp01((t - split) / 0.45);
+      if (a1 > 0) { ctx.save(); ctx.globalAlpha *= a1; confGraph(ctx, v, CONF_BOX, t, R); ctx.restore(); }
+      if (a2 > 0) { ctx.save(); ctx.globalAlpha *= a2; confGraph(ctx, v, CONF_HEX, t - split, R); ctx.restore(); }
+      var lk = R ? 1 : ease((t - 3.2) / 0.8) * Math.max(a1, ease((t - split - 3.2) / 0.8));
+      if (lk > 0 && v.w > 330) {                    // what the dashed lines are
+        ctx.save(); ctx.globalAlpha *= lk; ctx.setLineDash([3, 3]);
+        line(ctx, v.x + v.w - 102, v.y + 8, v.x + v.w - 88, v.y + 8, ink('brass', 0.85), 1.1); ctx.restore();
+        ctx.save(); ctx.globalAlpha *= lk; caps(ctx, 'MOMENTUM SPACE', v.x + v.w - 2, v.y + 11, ink('slate', 0.8), 7, 'right'); ctx.restore();
       }
     }
   };
 
-  /* The sunset integral with three different masses, as in chiral perturbation theory. */
+  /* Massive one-loop conformal integrals. The three-fold MB representation of the massive
+     conformal triangle has six Gamma functions in its numerator, with the vectors of Table 1
+     of the paper. Of the twenty triples, 17 span three-dimensional cones, which give 17
+     building blocks and 14 series representations. As in Figs. 3 and 4, the cones C125 and
+     C126 meet in the master cone spanned by (-1,0,0), (0,-1,0) and (0,0,1), and their two
+     building blocks form the series representation S2 = B125 + B126. */
+  var MC_E = [[-1, 0, 0], [0, -1, 0], [0, 0, -1], [1, 1, 0], [1, 0, 1], [0, 1, 1]];
+  var MC_CONES = [{ g: [0, 1, 4], col: 'crimson', lab: 'C_{125}', at: 2.1 }, { g: [0, 1, 5], col: 'brass', lab: 'C_{126}', at: 3.9 }];
+  var MASSCONF = {
+    key: 'massconf', paper: '2012.15646', dur: 13, cap: 'Massive one-loop conformal integrals',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 46));
+      var side = Math.min(v.h - 6, v.w * 0.52);
+      v.C = { cx: v.x + side * 0.5 + 4, cy: v.y + v.h * 0.55, u: side * 0.36 };
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, C = v.C, S = v.S;
+      var th = (27 + 13 * Math.sin((R ? 2 : t) * 0.42)) * D2R, ph = 0.46;   // rocking gently, seen a little from above
+      function pr(p) {
+        var x1 = p[0] * Math.cos(th) - p[1] * Math.sin(th), y1 = p[0] * Math.sin(th) + p[1] * Math.cos(th);
+        return [C.cx + x1 * C.u, C.cy - (p[2] * Math.cos(ph) + y1 * Math.sin(ph)) * C.u, y1 * Math.cos(ph) - p[2] * Math.sin(ph)];
+      }
+      function unit(e, L) { var n = Math.hypot(e[0], e[1], e[2]); return [e[0] / n * L, e[1] / n * L, e[2] / n * L]; }
+      function cone(gens, col, fill, edge, lw) {     // a cone cut off at the length of the arrows: three faces and a cap
+        var O = [0, 0, 0], G = gens.map(function (e) { return unit(e, 0.95); });
+        if (fill > 0) {
+          [[O, G[0], G[1]], [O, G[1], G[2]], [O, G[2], G[0]], [G[0], G[1], G[2]]].map(function (f) {
+            var q = f.map(pr); return { q: q, d: (q[0][2] + q[1][2] + q[2][2]) / 3 };
+          }).sort(function (A, B) { return B.d - A.d; }).forEach(function (f) {
+            ctx.fillStyle = ink(col, fill); ctx.beginPath();
+            ctx.moveTo(f.q[0][0], f.q[0][1]); ctx.lineTo(f.q[1][0], f.q[1][1]); ctx.lineTo(f.q[2][0], f.q[2][1]); ctx.closePath(); ctx.fill();
+          });
+        }
+        ctx.strokeStyle = ink(col, edge); ctx.lineWidth = lw || 1.1;
+        var q = G.map(pr);
+        ctx.beginPath(); ctx.moveTo(q[0][0], q[0][1]); ctx.lineTo(q[1][0], q[1][1]); ctx.lineTo(q[2][0], q[2][1]); ctx.closePath(); ctx.stroke();
+        var o = pr(O);
+        ctx.beginPath(); ctx.moveTo(o[0], o[1]); ctx.lineTo(q[2][0], q[2][1]); ctx.stroke();
+      }
+      var mk = R ? 1 : ease((t - 5.8) / 0.9);
+      MC_CONES.forEach(function (K, i) {             // the two cones of Fig. 3, one after the other, then as outlines
+        var k = R ? 1 : ease((t - K.at) / 0.9);
+        if (k <= 0) return;
+        var next = i === 0 ? (R ? 1 : ease((t - MC_CONES[1].at) / 0.9)) : mk;
+        cone(K.g.map(function (j) { return MC_E[j]; }), K.col, 0.15 * k * (1 - next), (0.75 - 0.25 * next) * k, 1.1);
+      });
+      if (mk > 0) cone([[-1, 0, 0], [0, -1, 0], [0, 0, 1]], 'brassD', 0.24 * mk, 0.95 * mk, 1.5);   // Fig. 4: their intersection
+      MC_E.forEach(function (e, i) {                // the six vectors, numbered as their Gamma functions
+        var k = R ? 1 : ease((t - 0.3 - i * 0.22) / 0.6);
+        if (k <= 0) return;
+        var o = pr([0, 0, 0]), tip = pr(unit(e, 0.95 * k)), lp = pr(unit(e, 1.24));
+        line(ctx, o[0], o[1], tip[0], tip[1], ink('green', 0.9), 1.4);
+        arrowHead(ctx, tip[0], tip[1], Math.atan2(tip[1] - o[1], tip[0] - o[0]), 6, ink('green', 0.9));
+        if (k > 0.9) {
+          dot(ctx, lp[0], lp[1], 7, ink('paper', 0.95)); ring(ctx, lp[0], lp[1], 7, ink('green', 0.6), 0.8);
+          ctx.font = font(9, SANS, 600); ctx.fillStyle = ink('green', 1); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(i + 1), lp[0], lp[1] + 0.5); ctx.textBaseline = 'alphabetic';
+        }
+      });
+      var px = C.cx + C.u * 1.55, room = v.x + v.w - px, ks = S * 0.8;   // the Gamma functions, the cones, and what they give
+      if (room < 120) return;
+      ctx.save(); ctx.globalAlpha *= R ? 1 : ease(t / 0.8);
+      var col2 = px + ks * 4.6;
+      ['1\\,Γ(−z_1)', '2\\,Γ(−z_2)', '3\\,Γ(−z_3)'].forEach(function (s, i) { drawMath(ctx, s, px, v.y + 14 + i * ks * 1.75, ks, ink('slate', 0.9), 'left'); });
+      ['4\\,Γ(a_1+z_1+z_2)', '5\\,Γ(a_2+z_1+z_3)', '6\\,Γ(a_3+z_2+z_3)'].forEach(function (s, i) { drawMath(ctx, s, col2, v.y + 14 + i * ks * 1.75, ks, ink('slate', 0.9), 'left'); });
+      ctx.restore();
+      var ly = Math.max(v.y + 14 + ks * 6.2, v.y + v.h * 0.4);
+      MC_CONES.concat([{ col: 'brassD', lab: '', at: 5.8 }]).forEach(function (K, i) {
+        var k = R ? 1 : ease((t - K.at) / 0.6);
+        if (k <= 0) return;
+        var yy = ly + i * S * 1.75;
+        ctx.save(); ctx.globalAlpha *= k;
+        ctx.fillStyle = ink(K.col, i === 2 ? 0.35 : 0.22); ctx.fillRect(px, yy - 8, 12, 8);
+        ctx.strokeStyle = ink(K.col, 0.9); ctx.lineWidth = 1; ctx.strokeRect(px, yy - 8, 12, 8);
+        if (K.lab) drawMath(ctx, K.lab, px + 18, yy, S * 0.95, ink('green', 0.95), 'left');
+        else caps(ctx, 'MASTER CONE', px + 18, yy - 0.5, ink('brassD', 1), 7.5);
+        ctx.restore();
+      });
+      if (mk > 0) {
+        ctx.save(); ctx.globalAlpha *= mk;
+        drawMath(ctx, 'S_2=B_{125}+B_{126}', px, ly + 3 * S * 1.75 + S * 0.9, S * 1.05, ink('green', 0.95), 'left');
+        ctx.restore();
+      }
+      var nk = R ? 1 : ease((t - 7.8) / 0.7);
+      if (nk > 0) {
+        ctx.save(); ctx.globalAlpha *= nk;
+        caps(ctx, '17 BUILDING BLOCKS', px, v.y + v.h - 22, ink('slate', 0.85), 7.5);
+        caps(ctx, '14 SERIES REPRESENTATIONS', px, v.y + v.h - 9, ink('slate', 0.85), 7.5);
+        ctx.restore();
+      }
+    }
+  };
+
+  /* Multiple MB integrals with polygamma functions. First the functions themselves: psi(m, x)
+     has a pole at every non-positive integer, of order m + 1, and the reflection formula of the
+     paper isolates its singular part. Then the toy integral of Sec. 3, whose straight contours at
+     Re z1 = -7/9 and Re z2 = -3/5 split the poles of Gamma(1 + z1 + z2) and psi(1, 1 + z1 + z2).
+     The limiting approach writes the polygamma as a limit of derivatives of a ratio of Gamma
+     functions, after which the straight-contour method applies. */
+  function polygamma(m, x) {                        // psi(m, x) for real x: recurrence, then the asymptotic series
+    var s = 0, f = m === 2 ? 2 : 1, sg = m % 2 ? 1 : -1;
+    while (x < 9) { s += m === 0 ? -1 / x : sg * f / Math.pow(x, m + 1); x += 1; }
+    var i1 = 1 / x, i2 = i1 * i1;
+    if (m === 0) return s + Math.log(x) - 0.5 * i1 - i2 / 12 + i2 * i2 / 120 - i2 * i2 * i2 / 252;
+    if (m === 1) return s + i1 + i2 / 2 + i1 * i2 / 6 - i1 * i2 * i2 / 30 + i1 * i2 * i2 * i2 / 42;
+    return s - i2 - i1 * i2 - i2 * i2 / 2 + i2 * i2 * i2 / 6 - i2 * i2 * i2 * i2 / 6;
+  }
+  var PG_CURVES = null;
+  function pgCurves() {
+    if (PG_CURVES) return PG_CURVES;
+    PG_CURVES = [0, 1, 2].map(function (m) {
+      var pts = [];
+      for (var x = -3.6; x <= 3.4; x += 0.004) {
+        if (Math.abs(x - Math.round(x)) < 0.0021 && Math.round(x) <= 0) { pts.push(null); continue; }
+        pts.push([x, polygamma(m, x)]);
+      }
+      return pts;
+    });
+    return PG_CURVES;
+  }
+  function mathRow(ctx, parts, x, y, S) {           // formula pieces side by side, each in its own colour
+    parts.forEach(function (p) { var b = drawMath(ctx, p[0], x, y, S, p[1], 'left'); x += b.w; });
+    return x;
+  }
+  var POLYGAMMA = {
+    key: 'polygamma', paper: '2512.19803', dur: 14.5, cap: 'MB integrals with polygamma functions',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 44));
+      v.A = { L: v.x + 8, R: v.x + v.w * (v.w > 420 ? 0.6 : 0.64), T: v.y + 6, B: v.y + v.h - 18 };
+      var side = Math.min(v.h - v.S * 3.4 - 6, v.w * 0.5);
+      v.Bp = { u: side / 4.4, x0: v.x + 4, y0: v.y + v.S * 3.2 };
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, split = 7;
+      var a1 = R ? 1 : clamp01((split - t) / 0.45), a2 = R ? 0 : clamp01((t - split) / 0.45);
+      if (a1 > 0) { ctx.save(); ctx.globalAlpha *= a1; this.plot(v, t, R); ctx.restore(); }
+      if (a2 > 0) { ctx.save(); ctx.globalAlpha *= a2; this.plane(v, t - split, R); ctx.restore(); }
+    },
+    plot: function (v, t, R) {                      // psi(0, x), psi(1, x) and psi(2, x) on the real line
+      var ctx = v.ctx, A = v.A, S = v.S, cols = ['green', 'brassD', 'crimson'], lim = 12;
+      function X(x) { return A.L + (x + 3.6) / 7 * (A.R - A.L); }
+      function Y(y) { return (A.T + A.B) / 2 - y / lim * (A.B - A.T) / 2; }
+      var ak = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= ak;
+      line(ctx, A.L, Y(0), A.R, Y(0), ink('green', 0.45), 1);
+      line(ctx, X(0), A.T, X(0), A.B, ink('green', 0.45), 1);
+      [-3, -2, -1].forEach(function (n) {
+        ctx.save(); ctx.setLineDash([2, 3]); line(ctx, X(n), A.T, X(n), A.B, ink('slate', 0.35), 1); ctx.restore();
+        drawMath(ctx, String(n).replace('-', '−'), X(n), A.B + 12, S * 0.85, ink('slate', 0.9), 'center');
+      });
+      drawMath(ctx, '0', X(0) + 6, A.B + 12, S * 0.85, ink('slate', 0.9), 'center');
+      drawMath(ctx, '1', X(1), A.B + 12, S * 0.85, ink('slate', 0.9), 'center');
+      line(ctx, X(1), Y(0) - 2, X(1), Y(0) + 2, ink('green', 0.45), 1);
+      drawMath(ctx, 'x', A.R - 2, Y(0) + 14, S * 0.9, ink('slate', 0.9), 'right');
+      ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(A.L, A.T, A.R - A.L, A.B - A.T); ctx.clip();
+      pgCurves().forEach(function (pts, m) {
+        var k = R ? 1 : easeInOut((t - 0.6 - m * 1.6) / 1.5);
+        if (k <= 0) return;
+        var xr = -3.6 + 7 * k, on = false;
+        ctx.strokeStyle = ink(cols[m], 0.9); ctx.lineWidth = 1.5; ctx.beginPath();
+        for (var i = 0; i < pts.length; i++) {
+          var p = pts[i];
+          if (!p) { on = false; continue; }
+          if (p[0] > xr) break;
+          var yy = Math.max(-lim * 1.6, Math.min(lim * 1.6, p[1]));
+          if (on) ctx.lineTo(X(p[0]), Y(yy)); else { ctx.moveTo(X(p[0]), Y(yy)); on = true; }
+        }
+        ctx.stroke();
+      });
+      ctx.restore();
+      var lx = A.R + 16, room = v.x + v.w - lx;     // the legend: the order of the poles grows with m
+      ['SIMPLE POLES', 'DOUBLE POLES', 'TRIPLE POLES'].forEach(function (s, m) {
+        var k = R ? 1 : ease((t - 0.8 - m * 1.6) / 0.6);
+        if (k <= 0 || room < 90) return;
+        var yy = v.y + 18 + m * S * 3;
+        ctx.save(); ctx.globalAlpha *= k;
+        line(ctx, lx, yy - 4, lx + 14, yy - 4, ink(cols[m], 0.9), 1.6);
+        drawMath(ctx, 'ψ(' + m + ',x)', lx + 20, yy, S, ink('green', 0.95), 'left');
+        caps(ctx, s, lx + 20, yy + S * 1.25, ink(cols[m], 0.9), 7);
+        ctx.restore();
+      });
+      var fk = R ? 1 : ease((t - 5.2) / 0.7);
+      if (fk > 0) {
+        ctx.save(); ctx.globalAlpha *= fk;
+        if (room >= 90) {
+          caps(ctx, 'NEAR EACH POLE', lx, v.y + v.h - S * 4.6, ink('slate', 0.85), 7);
+          drawMath(ctx, 'ψ(m,z−n)=', lx, v.y + v.h - S * 2.9, S * 0.92, ink('green', 0.95), 'left');
+          drawMath(ctx, '\\frac{(−1)^{m+1}\\,m!}{z^{m+1}}+\\rm{regular}', lx, v.y + v.h - S * 0.55, S * 0.92, ink('green', 0.95), 'left');
+        }
+        ctx.restore();
+      }
+    },
+    plane: function (v, t, R) {                     // the toy integral of Sec. 3 and its straight contours
+      var ctx = v.ctx, S = v.S, B = v.Bp, u = B.u, c1 = -7 / 9, c2 = -3 / 5, lo = -2.8, hi = 1.6, span = hi - lo;
+      function X(z) { return B.x0 + (z - lo) * u; }
+      function Y(z) { return B.y0 + (hi - z) * u; }
+      var ak = R ? 1 : ease(t / 0.6), pulse = R ? 1 : 0.5 + 0.5 * Math.sin(t * 5);
+      ctx.save(); ctx.globalAlpha *= ak;
+      mathRow(ctx, [['Γ(−z_1)', ink('pine', 1)], ['Γ(−z_2)', ink('plum', 1)], ['Γ(1+z_1+z_2)\\,ψ(1,1+z_1+z_2)', ink('crimson', 1)]],
+        v.x + 4, v.y + S * 1.3, S * Math.min(1, (v.w - 8) / (mathBox(ctx, 'Γ(−z_1)Γ(−z_2)Γ(1+z_1+z_2)\\,ψ(1,1+z_1+z_2)', S).w)));
+      ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(X(lo), Y(hi), span * u, span * u); ctx.clip();
+      ctx.globalAlpha *= ak;
+      line(ctx, X(lo), Y(0), X(hi), Y(0), ink('green', 0.3), 1); line(ctx, X(0), Y(lo), X(0), Y(hi), ink('green', 0.3), 1);
+      var lk = R ? 1 : ease((t - 0.5) / 0.6);
+      [0, 1].forEach(function (c) {
+        ctx.save(); ctx.setLineDash([3, 3]);
+        line(ctx, X(c), Y(hi), X(c), Y(lo), ink('pine', 0.55 * lk), 1);
+        line(ctx, X(lo), Y(c), X(hi), Y(c), ink('plum', 0.55 * lk), 1);
+        ctx.restore();
+      });
+      var sk = R ? 1 : ease((t - 2.4) / 0.6);
+      [1, 2, 3, 4].forEach(function (n) {    // z1 + z2 = -n: poles of order three, the first one split off
+        var first = n === 1, al = first && sk > 0 ? 0.5 + 0.45 * pulse * sk : 0.55;
+        ctx.save(); if (!(first && sk > 0)) ctx.setLineDash([3, 3]);
+        line(ctx, X(lo), Y(-n - lo), X(hi), Y(-n - hi), ink('crimson', al * lk), first && sk > 0 ? 1.8 : 1.2);
+        ctx.restore();
+      });
+      var ck = R ? 1 : ease((t - 1.4) / 0.6);       // the straight contours
+      if (ck > 0) {
+        ctx.save(); ctx.setLineDash([5, 4]);
+        line(ctx, X(c1), Y(hi), X(c1), Y(lo), ink('brassD', 0.75 * ck), 1.1); line(ctx, X(lo), Y(c2), X(hi), Y(c2), ink('brassD', 0.75 * ck), 1.1);
+        ctx.restore();
+        dot(ctx, X(c1), Y(c2), 3.8 * ck, ink('brassD', 1)); ring(ctx, X(c1), Y(c2), 7, ink('brassD', 0.6 * ck), 1);
+      }
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha *= ak;
+      ctx.strokeStyle = ink('green', 0.4); ctx.lineWidth = 1; ctx.strokeRect(X(lo), Y(hi), span * u, span * u);
+      drawMath(ctx, '\\rm{Re}\\,z_1', X(hi) - 3, Y(0) - 5, S * 0.8, ink('slate', 0.95), 'right');
+      drawMath(ctx, '\\rm{Re}\\,z_2', X(0) + 5, Y(hi) + 12, S * 0.8, ink('slate', 0.95), 'left');
+      ctx.restore();
+      var px = X(hi) + 16, room = v.x + v.w - px, y0 = B.y0 + 6;
+      if (room < 110) return;
+      var k1 = R ? 1 : ease((t - 1.4) / 0.6);
+      ctx.save(); ctx.globalAlpha *= k1;
+      drawMath(ctx, 'c_1=−\\frac{7}{9},\\quad c_2=−\\frac{3}{5}', px, y0 + S * 0.6, S * 0.9, ink('brassD', 1), 'left');
+      ctx.restore();
+      var k2 = R ? 1 : ease((t - 2.4) / 0.6);
+      ctx.save(); ctx.globalAlpha *= k2;
+      caps(ctx, 'THE CONTOURS SPLIT THESE POLES', px, y0 + S * 3.3, ink('crimson', 0.9), 7);
+      ctx.restore();
+      var k3 = R ? 1 : ease((t - 3.6) / 0.7);
+      if (k3 > 0) {
+        ctx.save(); ctx.globalAlpha *= k3;
+        caps(ctx, 'SO THE POLYGAMMA IS WRITTEN AS', px, y0 + S * 5.6, ink('slate', 0.85), 7);
+        drawMath(ctx, 'ψ(m,z)=\\rm{lim}_{a,b→0}\\,∂_b^m\\,∂_a\\frac{Γ(z+a+b)}{Γ(z+b)}', px, y0 + S * 8.4, S * 0.92, ink('green', 0.95), 'left');
+        ctx.restore();
+      }
+    }
+  };
+
+  /* The sunset integral with three different masses, as in chiral perturbation theory, where
+     the masses are those of the pion, kaon and eta. Small pulses run along the three lines. */
   var SUNSET = diagramVignette({
-    key: 'sunset', paper: '2512.07727', dur: 9.5, cap: 'Sunset integrals with three mass scales',
+    key: 'sunset', paper: '2512.07727', dur: 10, cap: 'Sunset integrals with three mass scales',
     D: { n: { i: [0.1, 0.5], v1: [0.5, 0.5, 1], v2: [1.4, 0.5, 1], o: [1.8, 0.5] },
          e: [{ a: 'i', b: 'v1', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] },
              { a: 'v1', b: 'v2', t: 'p', bend: -0.36, c: 'brassD', lab: 'm_1', lo: [0, -10] },
              { a: 'v1', b: 'v2', t: 'p', c: 'pine', lab: 'm_2', lo: [0, -8] },
              { a: 'v1', b: 'v2', t: 'p', bend: 0.36, c: 'crimson', lab: 'm_3', lo: [0, 20] },
-             { a: 'v2', b: 'o', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] }], stagger: 0.5, edgeDur: 0.7 }
+             { a: 'v2', b: 'o', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] }], stagger: 0.5, edgeDur: 0.7 },
+    extra: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, k = R ? 1 : ease((t - 3.4) / 0.7);
+      if (k <= 0) return;
+      ctx.save(); ctx.globalAlpha *= k;
+      drawMath(ctx, 'H_{1,1,1}(m_1,m_2,m_3;\\,p^2)', v.x + 4, v.y + 16, 12, ink('green', 0.95), 'left');
+      caps(ctx, 'MASSES OF THE PION, KAON AND ETA', v.x + 4, v.y + v.h - 8, ink('slate', 0.85), 7.5);
+      ctx.restore();
+      if (R) return;
+      [1, 2, 3].forEach(function (i, j) {           // momentum flowing through the three lines
+        var g = v.geo[i], ph = ((t - 3.4) * 0.42 + j * 0.31) % 1, q = pathAt(g, g.len * ph);
+        dot(ctx, q[0], q[1], 2.4, ink(['brassD', 'pine', 'crimson'][j], 0.85 * k * Math.sin(Math.PI * ph)));
+      });
+    }
   });
+
 
   /* Baryon number violation in the SMEFT. A heavy S1 leptoquark generates the four
      baryon-number-violating operators at tree level: as its mass is sent to the matching
@@ -1137,100 +1461,219 @@
     }
   };
 
-  /* The Newton polytope of the two-loop sunset: the exponents of the monomials of its
-     Lee-Pomeransky polynomial G = U + F, the point configuration behind its GKZ system. */
-  var POLY_PTS = [[1, 1, 0], [0, 1, 1], [1, 0, 1], [2, 1, 0], [2, 0, 1], [1, 0, 2], [0, 1, 2], [0, 2, 1], [1, 2, 0], [1, 1, 1]];
-  var POLY_EDGES = [[0, 1], [1, 2], [2, 0], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 3],
-                    [0, 3], [0, 8], [2, 4], [2, 5], [1, 6], [1, 7]];
-  var POLYTOPE = {
-    key: 'polytope', paper: '2211.01285', dur: 10.5, cap: 'GKZ systems and Newton polytopes',
-    layout: function (v) { v.sc = Math.min(v.h * 0.3, v.w * 0.19); v.cx = v.x + v.w * 0.36; v.cy = v.y + v.h * 0.52; v.S = Math.max(9.5, Math.min(12.5, v.w / 42)); },
+  /* FeynGKZ, with the worked example of the paper: the one-loop bubble with two masses. The five
+     monomials of its Lee-Pomeransky polynomial G = U + F are points of the plane, their
+     exponents. Their convex hull, the Newton polytope, has normalized volume 3, the number of
+     independent solutions. Each of its three unimodular regular triangulations gives a basis of
+     three Gamma-series, and the second gives two Horn H3 functions and one Horn G1 function. */
+  var GKZ_P = [[2, 0], [1, 1], [1, 0], [0, 2], [0, 1]];          // columns 1 to 5 of the A-matrix
+  var GKZ_LAB = [['x_1^2', 0, 17, 'center'], ['x_1x_2', 9, -6, 'left'], ['x_1', 0, 17, 'center'], ['x_2^2', -10, 4, 'right'], ['x_2', -10, 4, 'right']];
+  var GKZ_T = [[[1, 2, 3], [2, 3, 4], [3, 4, 5]], [[1, 2, 3], [2, 4, 5], [2, 3, 5]], [[2, 4, 5], [1, 3, 5], [1, 2, 5]]];
+  var FEYNGKZ = {
+    key: 'gkz', paper: '2211.01285', dur: 14, cap: 'GKZ systems and Newton polytopes',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 44));
+      var top = v.y + v.S * 2.9, side = Math.min(v.h - (top - v.y) - 26, v.w * 0.4);
+      v.G = { x: v.x + 30, y: top + 8, s: side / 2 };
+    },
     frame: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, th = (R ? 0.7 : t * 0.45) + 0.4, tilt = 0.55;
-      var cxm = 1, cym = 1, czm = 1;                              // rotate about the centre of the configuration
-      var P = POLY_PTS.map(function (p) {
-        var x = p[0] - cxm * 0.9, y = p[1] - cym * 0.9, z = p[2] - czm * 0.9;
-        var x1 = x * Math.cos(th) - y * Math.sin(th), y1 = x * Math.sin(th) + y * Math.cos(th);
-        var y2 = y1 * Math.cos(tilt) - z * Math.sin(tilt), z2 = y1 * Math.sin(tilt) + z * Math.cos(tilt);
-        return [v.cx + x1 * v.sc, v.cy + z2 * -v.sc + y2 * 0.12 * v.sc, y2];
-      });
-      var ek = R ? 1 : ease((t - 0.6) / 1.6);
-      POLY_EDGES.forEach(function (ed, i) {
-        var a = P[ed[0]], b = P[ed[1]], k = R ? 1 : ease((t - 0.6 - i * 0.1) / 0.5), back = (a[2] + b[2]) / 2 > 0.3;
+      var ctx = v.ctx, R = v.reduce, S = v.S, G = v.G, cols = ['brass', 'pine', 'crimson'];
+      function P(i) { var p = GKZ_P[i - 1]; return [G.x + p[0] * G.s, G.y + (2 - p[1]) * G.s]; }
+      var gsrc = 'G=x_1+x_2+m_1^2x_1^2+(s+m_1^2+m_2^2)\\,x_1x_2+m_2^2x_2^2';
+      var gs = S * Math.min(1, (v.w - 8) / mathBox(ctx, gsrc, S).w);
+      drawMath(ctx, gsrc, v.x + 4, v.y + S * 1.25, gs, ink('green', 0.95), 'left', R ? undefined : Math.max(0, (t - 0.2) * 42));
+      var lk = R ? 1 : ease((t - 0.9) / 0.6);       // the lattice of exponents
+      ctx.save(); ctx.globalAlpha *= lk;
+      line(ctx, G.x, G.y + 2 * G.s, G.x + 2.45 * G.s, G.y + 2 * G.s, ink('green', 0.35), 1);
+      line(ctx, G.x, G.y + 2 * G.s, G.x, G.y - 0.2 * G.s, ink('green', 0.35), 1);
+      for (var i = 0; i <= 2; i++) for (var j = 0; j <= 2; j++) dot(ctx, G.x + i * G.s, G.y + (2 - j) * G.s, 1.3, ink('slate', 0.35));
+      ctx.restore();
+      var hk = R ? 1 : ease((t - 3.5) / 0.8), idx = R ? 1 : Math.max(0, Math.min(2, Math.floor((t - 4.7) / 2.9)));
+      var into = R ? 1 : clamp01((t - 4.7 - idx * 2.9) / 0.45);
+      function cells(T, a) {
+        T.forEach(function (tri, j) {
+          var p = tri.map(P);
+          ctx.fillStyle = ink(cols[j], 0.17 * a); ctx.beginPath();
+          ctx.moveTo(p[0][0], p[0][1]); ctx.lineTo(p[1][0], p[1][1]); ctx.lineTo(p[2][0], p[2][1]); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = ink('green', 0.7 * a); ctx.lineWidth = 1.1; ctx.stroke();
+        });
+      }
+      if (t > 4.7 || R) {                           // the current triangulation, faded in over the last
+        if (idx > 0 && into < 1) { ctx.save(); ctx.globalAlpha *= 1 - into; cells(GKZ_T[idx - 1], 1); ctx.restore(); }
+        cells(GKZ_T[idx], into);
+      }
+      if (hk > 0) {                                 // the Newton polytope
+        var hull = [3, 1, 4, 5].map(P);
+        ctx.save(); ctx.globalAlpha *= hk;
+        ctx.strokeStyle = ink('brassD', 0.95); ctx.lineWidth = 1.6; ctx.beginPath();
+        hull.forEach(function (p, j) { if (j) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }); ctx.closePath(); ctx.stroke();
+        ctx.restore();
+      }
+      [3, 5, 1, 2, 4].forEach(function (i, n) {     // the monomials, in the order they appear in G
+        var k = R ? 1 : ease((t - 1.3 - n * 0.4) / 0.5);
         if (k <= 0) return;
-        ctx.save(); if (back) ctx.setLineDash([3, 3]);
-        line(ctx, a[0], a[1], a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, ink(i < 3 ? 'brassD' : i < 9 ? 'pine' : 'green', back ? 0.35 : 0.85), 1.2);
+        var p = P(i), L = GKZ_LAB[i - 1];
+        dot(ctx, p[0], p[1], 3.6 * k, ink('paper', 1)); ring(ctx, p[0], p[1], 3.6 * k, ink('green', 0.95), 1.3);
+        ctx.save(); ctx.globalAlpha *= k;
+        drawMath(ctx, L[0], p[0] + L[1], p[1] + L[2], S * 0.95, ink('green', 0.95), L[3]);
         ctx.restore();
       });
-      var hex = [3, 4, 5, 6, 7, 8], fk = R ? 1 : ease((t - 3.4) / 1);                 // the hexagonal face, fanned from its inner point
-      if (fk > 0) {
-        ctx.fillStyle = ink('pine', 0.08 * fk); ctx.beginPath();
-        hex.forEach(function (i, j) { if (j) ctx.lineTo(P[i][0], P[i][1]); else ctx.moveTo(P[i][0], P[i][1]); }); ctx.closePath(); ctx.fill();
-        hex.forEach(function (i, j) { var k2 = R ? 1 : ease((t - 3.8 - j * 0.18) / 0.4); if (k2 > 0) line(ctx, P[9][0], P[9][1], P[9][0] + (P[i][0] - P[9][0]) * k2, P[9][1] + (P[i][1] - P[9][1]) * k2, ink('crimson', 0.6), 1); });
-      }
-      P.forEach(function (p, i) {
-        var k = R ? 1 : ease((t - 0.2 - i * 0.07) / 0.4);
-        if (k <= 0) return;
-        dot(ctx, p[0], p[1], (i === 9 ? 3.1 : 2.7) * k, ink('paper', 1)); ring(ctx, p[0], p[1], (i === 9 ? 3.1 : 2.7) * k, ink(i === 9 ? 'crimson' : 'green', 0.95), 1.2);
+      var px = G.x + 2 * G.s + 40, room = v.x + v.w - px;   // the three unimodular triangulations
+      if (room < 110) return;
+      var tk = R ? 1 : ease((t - 4.4) / 0.6), m = S * 0.95;
+      ctx.save(); ctx.globalAlpha *= hk;
+      caps(ctx, 'NEWTON POLYTOPE', px, G.y + 2, ink('brassD', 0.95), 7.5);
+      caps(ctx, 'NORMALIZED VOLUME 3', px, G.y + 15, ink('slate', 0.85), 7.5);
+      ctx.restore();
+      if (tk <= 0) return;
+      ctx.save(); ctx.globalAlpha *= tk;
+      caps(ctx, 'UNIMODULAR TRIANGULATIONS', px, G.y + 40, ink('slate', 0.85), 7.5);
+      ctx.restore();
+      GKZ_T.forEach(function (T, j) {
+        var shown = R || t > 4.7 + j * 2.9;
+        if (!shown) return;
+        var on = j === idx, yy = G.y + 62 + j * m * 3.3, s = m * 1.25;
+        ctx.save(); ctx.globalAlpha *= on ? 1 : 0.45;
+        T.forEach(function (tri, q) {               // a thumbnail of the triangulation
+          var p = tri.map(function (i) { var c = GKZ_P[i - 1]; return [px + c[0] * s, yy + (1 - c[1]) * s]; });
+          ctx.fillStyle = ink(cols[q], 0.3); ctx.beginPath();
+          ctx.moveTo(p[0][0], p[0][1]); ctx.lineTo(p[1][0], p[1][1]); ctx.lineTo(p[2][0], p[2][1]); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = ink('green', 0.8); ctx.lineWidth = 0.8; ctx.stroke();
+        });
+        drawMath(ctx, 'T_' + (j + 1), px + 2 * s + 12, yy + 4, m, ink(on ? 'brassD' : 'slate', 1), 'left');
+        if (j === 1 && v.w > 420) drawMath(ctx, 'H_3,\\,H_3,\\,G_1', px + 2 * s + 12 + m * 2.2, yy + 4, m * 0.92, ink('slate', 0.95), 'left');
+        ctx.restore();
       });
-      var S = v.S, tx = v.x + v.w * 0.66, fk2 = R ? 1 : ease((t - 0.3) / 0.8);
-      ctx.save(); ctx.globalAlpha *= fk2;
-      drawMath(ctx, 'G=U+F', tx, v.y + v.h * 0.3, S * 1.1, ink('green', 0.95), 'left');
-      drawMath(ctx, 'U=x_1x_2+x_2x_3+x_3x_1', tx, v.y + v.h * 0.3 + S * 2.1, S * 0.85, ink('slate', 0.95), 'left');
-      caps(ctx, 'SUNSET, TWO LOOPS', tx, v.y + v.h * 0.3 + S * 4, ink('slate', 0.85), 7.5);
-      ctx.restore();
+      var nk = R ? 1 : ease((t - 6) / 0.6);
+      if (nk > 0) { ctx.save(); ctx.globalAlpha *= nk; caps(ctx, 'THREE SERIES EACH', px, G.y + 62 + 3 * m * 3.3 - 2, ink('slate', 0.85), 7.5); ctx.restore(); }
     }
   };
 
-  /* HyperPrecision: the partial sums of an Appell F1 series settle digit by digit on its
-     exact value, 6 ln(4/3). The sums were computed exactly when the site was built. */
-  var PRECISION = {
-    key: 'precision', paper: '2605.30216', dur: 11, cap: 'Hypergeometric functions to high precision',
-    layout: function (v) { v.S = Math.max(9, Math.min(13, v.w / 38)); v.D = Math.max(9, Math.min(15.5, v.w / 31)); },
+  /* HyperPrecision: numerical values of multivariable hypergeometric functions anywhere, to
+     as many digits as asked for. The Pfaffian system is restricted to the straight ray from the
+     origin, where the defining series converges, to the target point, and solved there with
+     series expansions matched along the ray. The example is the Appell function
+     F1(1; 1, 1; 2; x, y) at (x, y) = (-2, -3), outside the unit square where its series
+     converges. Its value is ln(4/3). The digits shown come from such a chain of expansions,
+     run at increasing order when the site was built (build.py). */
+  var HYPERPREC = {
+    key: 'hyperprecision', paper: '2605.30216', dur: 13.5, cap: 'Hypergeometric functions to high precision',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12, v.w / 44));
+      var sc = Math.min((v.h - 14) / 5, v.w * 0.46 / 4.2);         // the plane: x from -2.6 to 1.6, y from -3.4 to 1.6
+      v.P = { sc: sc, L: v.x + 6, T: v.y + 7 };
+      v.D = Math.max(8.5, Math.min(13.5, (v.x + v.w - (v.P.L + 4.2 * sc) - 26) / 11.2));
+    },
     frame: function (v, t) {
-      var ctx = v.ctx, hp = (v.data && v.data.hp) || null, R = v.reduce;
+      var ctx = v.ctx, R = v.reduce, S = v.S, P = v.P, sc = P.sc, hp = (v.data && v.data.hp) || null;
       if (!hp) return;
-      var S = v.S, fk = R ? 1 : ease(t / 0.7), sums = hp.sums, exact = hp.exact;
-      ctx.save(); ctx.globalAlpha *= fk;
-      drawMath(ctx, 'F_1(x,y)=\\sum_{m,n≥0}\\frac{x^m\\,y^n}{m+n+1}', v.x + 4, v.y + 26, S, ink('green', 0.95), 'left');
-      drawMath(ctx, 'x=\\frac{1}{2},\\quad y=\\frac{1}{3}', v.x + v.w - 4, v.y + 26, S * 0.9, ink('slate', 0.95), 'right');
-      drawMath(ctx, 'a=b_1=b_2=1,\\quad c=2', v.x + 4, v.y + 26 + S * 2.4, S * 0.82, ink('slate', 0.9), 'left');
+      function X(x) { return P.L + (x + 2.6) * sc; }
+      function Y(y) { return P.T + (1.6 - y) * sc; }
+      var ak = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= ak;
+      ctx.fillStyle = ink('pine', 0.1); ctx.fillRect(X(-1), Y(1), 2 * sc, 2 * sc);   // where the series converges
+      ctx.strokeStyle = ink('pine', 0.45); ctx.lineWidth = 1; ctx.strokeRect(X(-1), Y(1), 2 * sc, 2 * sc);
+      line(ctx, X(-2.6), Y(0), X(1.6), Y(0), ink('green', 0.4), 1); line(ctx, X(0), Y(-3.4), X(0), Y(1.6), ink('green', 0.4), 1);
+      drawMath(ctx, 'x', X(1.6) - 2, Y(0) - 5, S * 0.9, ink('slate', 0.9), 'right');
+      drawMath(ctx, 'y', X(0) + 6, Y(1.6) + 9, S * 0.9, ink('slate', 0.9), 'left');
       ctx.restore();
-      var prog = R ? 1 : easeInOut((t - 0.8) / 6.5), idx = Math.min(sums.length - 1, Math.floor(prog * (sums.length - 1) + 1e-9));
-      var cur = sums[idx][1], order = sums[idx][0], good = 0;
-      while (good < cur.length && cur[good] === exact[good]) good++;
-      var digits = cur.replace('.', '').length, correct = Math.max(0, (good > 1 ? good - 1 : good));
-      var Dz = v.D, y = v.y + v.h * 0.5;                                // the value: 1. then two lines of thirty decimals
-      ctx.font = font(Dz, SERIF, 400, false); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
-      var cw = ctx.measureText('0').width, x0 = v.x + 4, pre = ctx.measureText('1.').width + cw * 0.35;
-      ctx.fillStyle = good > 1 ? ink('brassD', 1) : ink('slate', 0.3); ctx.fillText(cur.slice(0, 2) || '1.', x0, y);
-      for (var i = 0; i < 60; i++) {
-        var ch = cur[i + 2] || '·', ok = i + 2 < good, ln = Math.floor(i / 30), col = i % 30;
-        ctx.fillStyle = ok ? ink('brassD', 1) : ink('slate', ch === '·' ? 0.18 : 0.3);
-        ctx.fillText(ch, x0 + pre + col * cw + Math.floor(col / 5) * cw * 0.5, y + ln * Dz * 1.55);
+      var lk = R ? 1 : ease((t - 0.8) / 0.7);       // the singular lines of F1 off the axes: x = 1, y = 1, x = y
+      ctx.save(); ctx.setLineDash([4, 3]); ctx.globalAlpha *= lk;
+      line(ctx, X(1), Y(1.6), X(1), Y(-3.4), ink('crimson', 0.6), 1.1);
+      line(ctx, X(-2.6), Y(1), X(1.6), Y(1), ink('crimson', 0.6), 1.1);
+      line(ctx, X(-2.6), Y(-2.6), X(1.6), Y(1.6), ink('crimson', 0.6), 1.1);
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha *= lk;
+      drawMath(ctx, 'x=1', X(1) + 4, Y(-3.4) - 3, S * 0.8, ink('crimson', 0.95), 'left');
+      drawMath(ctx, 'y=1', X(-2.6) + 2, Y(1) - 4, S * 0.8, ink('crimson', 0.95), 'left');
+      ctx.save(); ctx.translate(X(-2.1), Y(-2.1)); ctx.rotate(-Math.PI / 4);   // along its line
+      drawMath(ctx, 'x=y', 0, -4, S * 0.8, ink('crimson', 0.95), 'center'); ctx.restore();
+      ctx.restore();
+      var tx = X(-2), ty = Y(-3), gk = R ? 1 : ease((t - 1.8) / 0.5);
+      if (gk > 0) {                                 // the target point
+        ring(ctx, tx, ty, 5.5, ink('brassD', gk), 1.3); dot(ctx, tx, ty, 2, ink('brassD', gk));
+        ctx.save(); ctx.globalAlpha *= gk;
+        drawMath(ctx, '(−2,−3)', tx + 9, ty + 4, S * 0.85, ink('brassD', 1), 'left');
+        ctx.restore();
       }
-      caps(ctx, 'ORDER ' + order + ' · ' + correct + (correct === 1 ? ' CORRECT DIGIT' : ' CORRECT DIGITS'), v.x + 4, v.y + v.h - 6, ink('slate', 0.9), 8);
-      var ek = R ? 1 : ease((t - 7.6) / 0.8);
-      if (ek > 0) { ctx.save(); ctx.globalAlpha *= ek; drawMath(ctx, '=6\\,\\rm{ln}(4/3)', v.x + v.w - 4, v.y + v.h - 6, S, ink('crimson', 0.95), 'right'); ctx.restore(); }
+      var rk = R ? 1 : easeInOut((t - 2.4) / 2.8), marks = [0.2, 0.32, 0.512, 0.8192];   // along the ray, expansions matched at the marks
+      if (rk > 0) {
+        var segs = [0].concat(marks, [1]);
+        for (var s = 0; s < segs.length - 1; s++) {
+          var u0 = segs[s], u1 = Math.min(segs[s + 1], rk);
+          if (u1 <= u0) break;
+          line(ctx, X(-2 * u0), Y(-3 * u0), X(-2 * u1), Y(-3 * u1), ink(s ? 'brassD' : 'pine', 0.95), 1.8);
+        }
+        marks.forEach(function (m) { if (rk >= m) { dot(ctx, X(-2 * m), Y(-3 * m), 2.6, ink('paper', 1)); ring(ctx, X(-2 * m), Y(-3 * m), 2.6, ink('brassD', 1), 1.1); } });
+        if (rk < 1) dot(ctx, X(-2 * rk), Y(-3 * rk), 3.4, ink('brassD', 1));
+        dot(ctx, X(0), Y(0), 2.6, ink('pine', 1));
+      }
+      var px = X(1.6) + 22, Dz = v.D, room = v.x + v.w - px;       // the value, digit by digit
+      if (room < 120) return;
+      var fk = R ? 1 : ease((t - 0.3) / 0.6);
+      ctx.save(); ctx.globalAlpha *= fk;
+      drawMath(ctx, 'F_1(1;1,1;2;\\,−2,−3)', px, v.y + S * 1.3, S, ink('green', 0.95), 'left');
+      ctx.restore();
+      var runs = hp.runs, exact = hp.exact, prog = R ? 1 : easeInOut((t - 5.4) / 5), cur = null, order = 0, good = 0;
+      if (R || t > 5.3) {
+        var idx = Math.min(runs.length - 1, Math.floor(prog * (runs.length - 1) + 1e-9));
+        cur = runs[idx][1]; order = runs[idx][0];
+        while (good < cur.length && cur[good] === exact[good]) good++;
+      }
+      ctx.font = font(Dz, SERIF, 400, false); ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      var cw = ctx.measureText('0').width, y0 = v.y + S * 1.3 + Dz * 2.6, pre = ctx.measureText('0.').width + cw * 0.3;
+      ctx.fillStyle = ink(cur ? 'brassD' : 'slate', cur ? 1 : 0.3); ctx.fillText('0.', px, y0);
+      for (var i = 0; i < 30; i++) {                // two lines of fifteen decimals, in groups of five
+        var ch = cur ? cur[i + 2] : '·', ok = cur && i + 2 < good, ln = Math.floor(i / 15), col = i % 15;
+        ctx.fillStyle = ok ? ink('brassD', 1) : ink('slate', cur ? 0.32 : 0.2);
+        ctx.fillText(ch, px + pre + col * cw + Math.floor(col / 5) * cw * 0.5, y0 + ln * Dz * 1.55);
+      }
+      if (cur) {
+        var correct = Math.min(30, Math.max(0, good - 2));
+        caps(ctx, 'ORDER ' + order + ' · ' + correct + (correct === 1 ? ' CORRECT DIGIT' : ' CORRECT DIGITS'), px, y0 + Dz * 3.4, ink('slate', 0.9), 7.5);
+      }
+      var ek = R ? 1 : ease((t - 10.6) / 0.7);
+      if (ek > 0) { ctx.save(); ctx.globalAlpha *= ek; drawMath(ctx, '=\\rm{ln}(4/3)', px, y0 + Dz * 3.4 + S * 2.2, S * 1.05, ink('crimson', 0.95), 'left'); ctx.restore(); }
+      var ky = v.y + v.h - 8 - 2 * 14;              // the key to the picture
+      ctx.save(); ctx.globalAlpha *= ak;
+      ctx.fillStyle = ink('pine', 0.18); ctx.fillRect(px, ky - 7, 10, 7); ctx.strokeStyle = ink('pine', 0.5); ctx.lineWidth = 1; ctx.strokeRect(px, ky - 7, 10, 7);
+      caps(ctx, 'THE SERIES CONVERGES', px + 16, ky, ink('slate', 0.85), 7);
+      ctx.restore();
+      ctx.save(); ctx.globalAlpha *= lk; ctx.setLineDash([4, 3]); line(ctx, px, ky + 10, px + 10, ky + 10, ink('crimson', 0.7), 1.1); ctx.restore();
+      ctx.save(); ctx.globalAlpha *= lk; caps(ctx, 'SINGULAR LINES', px + 16, ky + 14, ink('slate', 0.85), 7); ctx.restore();
+      if (rk > 0.2) {
+        ctx.save(); ctx.globalAlpha *= clamp01((rk - 0.2) / 0.2);
+        dot(ctx, px + 5, ky + 24, 2.6, ink('paper', 1)); ring(ctx, px + 5, ky + 24, 2.6, ink('brassD', 1), 1.1);
+        caps(ctx, 'EXPANSIONS MATCHED', px + 16, ky + 28, ink('slate', 0.85), 7);
+        ctx.restore();
+      }
     }
   };
 
-  /* The method of brackets: its two basic rules, written out. */
+  /* The method of brackets: the bracket, the bracket series of a sum (Rule 2) and the rule
+     that evaluates a bracket series (Rule 4), as listed in Sec. 2.1 of the paper. */
   var BRACKETS = {
-    key: 'brackets', paper: '2112.09679', dur: 10.5, cap: 'The method of brackets',
-    lines: ['\\int_0^∞x^{α−1}\\,\\rm{d}x=\\langle α\\rangle',
-            '\\sum_nφ_n\\,f(n)\\,\\langle an+b\\rangle=\\frac{1}{|a|}\\,f(n^∗)\\,Γ(−n^∗)',
-            'φ_n=\\frac{(−1)^n}{Γ(n+1)},\\quad n^∗=−\\frac{b}{a}'],
-    layout: function (v) { v.S = Math.max(10, Math.min(16, v.w / 30)); },
+    key: 'brackets', paper: '2112.09679', dur: 12, cap: 'The method of brackets',
+    lines: [['BRACKET', '\\int_0^∞x^{α−1}\\,\\rm{d}x=\\langle α\\rangle'],
+            ['RULE 2', '(A+B)^α=\\frac{1}{Γ(−α)}\\sum_{m,n}φ_{m,n}\\,A^mB^n\\,\\langle −α+m+n\\rangle'],
+            ['RULE 4', '\\sum_nφ_n\\,f(n)\\,\\langle an+b\\rangle=\\frac{1}{|a|}\\,f(n^∗)\\,Γ(−n^∗)'],
+            ['', 'φ_n=\\frac{(−1)^n}{Γ(n+1)},\\quad φ_{m,n}=φ_mφ_n,\\quad n^∗=−\\frac{b}{a}']],
+    layout: function (v) {
+      var lab = v.w > 430 ? 58 : 0, S = Math.max(9, Math.min(15, v.w / 30)), ctx = v.ctx, wmax = 0;
+      BRACKETS.lines.forEach(function (L) { wmax = Math.max(wmax, mathBox(ctx, L[1], S).w); });
+      v.S = Math.min(S, S * (v.w - lab - 8) / wmax); v.lab = lab;
+    },
     frame: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, S = v.S, rate = 16, sizes = [S * 1.05, S, S * 0.88], t0 = 0.4, total = 0;
-      BRACKETS.lines.forEach(function (src, i) { var ex = extent(mathBox(ctx, src, sizes[i]).prims); total += ex[1] - ex[0] + (i ? S * 1.3 : 0); });
-      var y = v.y + (v.h - total) / 2 + S * 1.1;
-      BRACKETS.lines.forEach(function (src, i) {
-        var b = mathBox(ctx, src, sizes[i]), n = b.prims.length, k = R ? n : Math.max(0, (t - t0) * rate);
-        drawMath(ctx, src, v.x + (v.w - b.w) / 2, y, sizes[i], ink(i === 2 ? 'slate' : 'green', 0.95), 'left', k);
-        t0 += n / rate + 0.5;
-        var ex = extent(b.prims); y += (ex[1] - ex[0]) + S * 1.3;
+      var ctx = v.ctx, R = v.reduce, S = v.S, rate = 18, sizes = [S * 1.05, S, S, S * 0.86], t0 = 0.4, total = 0, gap = S * 1.15;
+      BRACKETS.lines.forEach(function (L, i) { var ex = extent(mathBox(ctx, L[1], sizes[i]).prims); total += ex[1] - ex[0] + (i ? gap : 0); });
+      var y = v.y + (v.h - total) / 2, x = v.x + 4 + v.lab;
+      BRACKETS.lines.forEach(function (L, i) {
+        var b = mathBox(ctx, L[1], sizes[i]), ex = extent(b.prims), n = b.prims.length, k = R ? n : Math.max(0, (t - t0) * rate);
+        y -= ex[0];
+        drawMath(ctx, L[1], x, y, sizes[i], ink(i === 3 ? 'slate' : 'green', 0.95), 'left', k);
+        if (L[0] && v.lab && k > 0) caps(ctx, L[0], v.x + 4, y - 0.3 * S, ink('brassD', 0.9), 7.5);
+        t0 += n / rate + 0.45;
+        y += ex[1] + gap;
       });
     }
   };
@@ -1351,7 +1794,8 @@
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
-  var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, SUNSET, DIHIGGS, POLYTOPE, TTBAR, PRECISION, RUNNING, BRACKETS];
+  var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
+              HYPERPREC, SUNSET, RUNNING, POLYGAMMA, BRACKETS];
 
   SCENES.tour = {
     touchHint: 'Tap for the next paper',

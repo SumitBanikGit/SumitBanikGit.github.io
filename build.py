@@ -697,20 +697,34 @@ def _plain(text):
 
 
 def _precision_digits():
-    """Partial sums of the Appell F1 series F1(1; 1, 1; 2; x, y) = sum x^m y^n / (m + n + 1)
-    at x = 1/2, y = 1/3, whose value is 6 ln(4/3), computed to 90 digits."""
+    """Digits for the HyperPrecision vignette: the Appell function F1(1; 1, 1; 2; x, y) at
+    (x, y) = (-2, -3), outside the unit square where its series converges, reached along the
+    ray (x, y) = (-2u, -3u) from the origin (u = 0) to the target (u = 1). Along the ray
+    F(u) = F1(-2u, -3u) obeys u F' + F = 3/(1 + 3u) - 2/(1 + 2u). It is expanded about the
+    regular singular point u = 0 and about the regular points u = 0.2, 0.32, 0.512 and 0.8192,
+    each expansion truncated at order N and matched to the next, as in the paper's method.
+    Higher N gives more correct digits of the exact value ln(4/3)."""
     from decimal import Decimal, getcontext
-    getcontext().prec = 90
-    x, y = Decimal(1) / 2, Decimal(1) / 3
-    keep = {0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 18, 22, 26, 30, 35, 40, 46, 52, 60, 68, 76, 85, 95, 105,
-            116, 128, 140, 153, 166, 180, 195, 200}
-    sums, total, xp, yp = [], Decimal(0), x, y
-    for k in range(201):                              # order k collects the terms with m + n = k
-        total += (xp - yp) / ((x - y) * (k + 1))
-        xp, yp = xp * x, yp * y
-        if k in keep:
-            sums.append([k, format(total, "f")[:62]])
-    return dict(exact=format(6 * (Decimal(4) / 3).ln(), "f")[:62], sums=sums)
+    getcontext().prec = 80
+    centres = [Decimal(0), Decimal("0.2"), Decimal("0.32"), Decimal("0.512"), Decimal("0.8192")]
+
+    def run(n):
+        F, ends = None, centres[1:] + [Decimal(1)]
+        for c, e in zip(centres, ends):
+            a, b = 1 + 3 * c, 1 + 2 * c                 # Taylor coefficients of the right-hand side about c
+            h = [3 * Decimal(-3) ** j / a ** (j + 1) - 2 * Decimal(-2) ** j / b ** (j + 1) for j in range(n + 1)]
+            if c == 0:
+                f = [h[j] / (j + 1) for j in range(n + 1)]
+            else:
+                f = [F]
+                for j in range(n):
+                    f.append((h[j] - (j + 1) * f[j]) / (c * (j + 1)))
+            F = sum(f[j] * (e - c) ** j for j in range(n + 1))
+        return F
+
+    orders = [4, 6, 8, 10, 12, 15, 18, 22, 26, 30, 35, 40, 46, 52, 60, 70, 80, 90, 100, 110, 120, 130]
+    runs = [[n, format(run(n), "f")[:34]] for n in orders]
+    return dict(exact=format((Decimal(4) / 3).ln(), "f")[:34], runs=runs)
 
 
 def tour_scene_data():
