@@ -1470,11 +1470,11 @@ TEMPLATE = """<!doctype html>
 <div class="about-grid">
 {portrait}
 <div class="about-text">
-<p class="statement" data-hold="2600">My research spans a broad range of topics in theoretical particle
-physics, from the mathematics of special functions and the analytic
-and numerical computation of Feynman integrals, to
-effective field theories, renormalization group evolution,
-Higgs physics and the search for new phenomena at the Large Hadron
+<p class="statement" data-hold="3200">My research spans a broad range of topics in theoretical particle
+physics, from the mathematics of <span class="hl">special functions</span> and the analytic
+and numerical computation of <span class="hl">Feynman integrals</span>, to
+<span class="hl pine">effective field theories</span>, <span class="hl pine">renormalization group evolution</span>,
+<span class="hl claret">Higgs physics</span> and the search for <span class="hl claret">new phenomena</span> at the Large Hadron
 Collider at CERN.</p>
 <p class="about-links"><a href="assets/cv/Sumit_Banik_CV.pdf">Read the full CV <span aria-hidden="true">→</span></a>
 <a href="contact.html">Get in touch <span aria-hidden="true">→</span></a></p>

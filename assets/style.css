@@ -1697,3 +1697,18 @@ main > #contact.chapter::before {
   }
 }
 @keyframes shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* About: the highlighter sweeps take the colours of the research areas */
+.hl.pine { background-image: linear-gradient(transparent 58%, rgba(46, 92, 78, .24) 58%); }
+.hl.claret { background-image: linear-gradient(transparent 58%, rgba(110, 44, 52, .17) 58%); }
+.js .statement.reveal .hl:nth-of-type(6) { transition-delay: 1.7s; }
+
+/* Home: once the page has settled, a brass sheen passes over the first button */
+@media (prefers-reduced-motion: no-preference) {
+  .hero .btn.solid { position: relative; overflow: hidden; }
+  .hero .btn.solid::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(105deg, transparent 30%, rgba(240, 223, 180, .42) 50%, transparent 70%);
+    transform: translateX(-120%); animation: btn-sheen 1.5s cubic-bezier(.2, .7, .2, 1) 3s 1 both; }
+  .intro-on .hero .btn.solid::after { animation-play-state: paused; }
+  @keyframes btn-sheen { to { transform: translateX(120%); } }
+}
