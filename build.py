@@ -485,7 +485,8 @@ LANGUAGES = [("English", "Professional"), ("Bengali", "Native"), ("Hindi", "Flue
 def authors_html(s):
     parts = [a.strip() for a in s.split(",")]
     keep = lambda a: a.replace(" ", "&nbsp;")          # "S. Banik" never splits across lines
-    return ", ".join(f'<span class="me">{keep(a)}</span>' if a == ME else keep(a) for a in parts)
+    return ", ".join(f'<span class="me">{keep(a)}</span>' if a == ME else
+                     f'<span class="au">{keep(a)}</span>' if "-" in a else keep(a) for a in parts)   # nor "U.-G. Meißner" at its hyphen
 
 
 TOPIC_LABEL = {"fi": "Feynman integrals", "pheno": "Phenomenology", "soft": "Software"}
@@ -503,9 +504,17 @@ def tour_papers():
     return _TOUR
 
 
+DOWNLOAD_ICON = ('<svg class="dl" viewBox="0 0 16 16" aria-hidden="true">'
+                 '<path d="M8 2.5v7.5M4.6 6.8 8 10.2l3.4-3.4M3 13.5h10"/></svg>')
+
+
 def pub_entry(n, p):
+    import html as _html
     links = []
-    if p.get("arxiv"):
+    if p.get("arxiv"):                         # the PDF on arXiv, as a small version of the CV button
+        label = _html.escape(f"Download the PDF of {_plain(p['title'])} from arXiv", quote=True)
+        links.append(f'<a class="button pdf" href="https://arxiv.org/pdf/{p["arxiv"]}" aria-label="{label}">'
+                     f'{DOWNLOAD_ICON}Download PDF</a>')
         links.append(f'<a href="https://arxiv.org/abs/{p["arxiv"]}">arXiv:{p["arxiv"]}</a>')
     if p.get("doi"):
         links.append(f'<a href="https://doi.org/{p["doi"]}">DOI</a>')

@@ -2007,3 +2007,16 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
   .card:hover .ix path.focus { transform-box: view-box; transform-origin: 24px 15px; animation: ix-focus 1.6s ease-in-out .3s infinite; }
 }
 @keyframes ix-focus { 0%, 100% { transform: scale(1); } 50% { transform: scale(.5); } }
+
+/* Publications: a Download PDF button for every paper on arXiv, a small version of the CV button */
+.links a.button.pdf { display: inline-flex; align-items: center; gap: .42rem; margin-right: .1rem;
+                      font-size: .6rem; letter-spacing: .12em; padding: .36rem .72rem .34rem;
+                      border: 1px solid var(--gold); color: #eee7d6; }
+.links a.button.pdf:hover { color: #eee7d6; border-color: var(--gold); }
+.links a.button.pdf .dl { width: .8rem; height: .8rem; flex: none; fill: none; stroke: currentColor;
+                          stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .links a.button.pdf:hover .dl path { animation: dl-drop .7s cubic-bezier(.2, .7, .2, 1); }
+}
+@keyframes dl-drop { 0% { transform: translateY(-3px); opacity: .3; } 100% { transform: none; opacity: 1; } }
+.meta .au { white-space: nowrap; }
