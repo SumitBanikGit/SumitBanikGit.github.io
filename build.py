@@ -27,6 +27,7 @@ PROFILE = {
     "github": "https://github.com/SumitBanikGit",
     "linkedin": "https://www.linkedin.com/in/waytosumitbanik",
     "portrait": "assets/portrait.jpg",          # set to None to show a monogram
+    "goatcounter": "",                           # GoatCounter site code for private visitor statistics, e.g. "sumitbanik"
 }
 
 # --------------------------------------------------------------------------
@@ -1207,6 +1208,13 @@ def render_reach():
 </section>'''
 
 
+def stats_tag():
+    """GoatCounter's counting script (no cookies, no personal data), once a site code is set in PROFILE."""
+    code = PROFILE.get("goatcounter")
+    return (f'<script data-goatcounter="https://{code}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>\n'
+            if code else "")
+
+
 def write_pages(html, n_articles, n_proc):
     import json
     import re
@@ -1293,6 +1301,7 @@ def write_pages(html, n_articles, n_proc):
                 + '<main id="main" class="wrap">\n\n' + "\n\n".join(parts) + "\n\n" + tail)
         if file in scenes:                                # the page scenes live in their own script
             body = body.replace("</body>", f'<script src="assets/scenes.js?v={_ver("assets/scenes.js")}" defer></script>\n</body>', 1)
+        body = body.replace("</body>", stats_tag() + "</body>", 1)
         Path(file).write_text(relink(h + body, file), encoding="utf-8")
         written.append(file)
 
@@ -1303,6 +1312,7 @@ def write_pages(html, n_articles, n_proc):
           + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
           '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
           + sections["contact"] + "\n\n" + tail)
+    nf = nf.replace("</body>", stats_tag() + "</body>", 1)
     Path("404.html").write_text(relink(nf, "404.html"), encoding="utf-8")
 
     # sitemap for search engines
