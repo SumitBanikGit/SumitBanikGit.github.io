@@ -2623,10 +2623,18 @@
       e.grat = d.grat && window.Path2D ? new Path2D(d.grat) : null;
       talks.forEach(function (tk, i) { tk.at = 0.35 + i * step; tk.k = i + 1; });   // one talk after another, at an even pace
       e.talks = talks; e.end = talks.length ? talks[talks.length - 1].at + 1.4 : 0; e.cycle = e.end + 4.5;
+      e.clock = 0; e.hoverCity = null; e.hoverKey = null;
     },
     layout: function (e) {                             // the map is drawn once per size
       var v = e.view, s = Math.min(e.w / v[2], e.h / v[3]), L = layer(e.w, e.h, e.dpr), c = L.ctx;
       e.s = s; e.ox = e.x + (e.w - v[2] * s) / 2 - v[0] * s; e.oy = e.y + (e.h - v[3] * s) / 2 - v[1] * s;
+      var by = {};                                    // every city once, for the pointer: where it is and how many talks
+      e.cities = [];
+      e.talks.forEach(function (tk) {
+        var m = by[tk.c];
+        if (!m) { m = by[tk.c] = { c: tk.c, x: e.ox + tk.x * s, y: e.oy + tk.v * s, live: 0, online: 0, first: tk.at }; e.cities.push(m); }
+        if (tk.o) m.online++; else m.live++;
+      });
       var vx = e.ox - e.x + v[0] * s, vy = e.oy - e.y + v[1] * s, vw = v[2] * s, vh = v[3] * s;
       c.save(); c.beginPath(); c.rect(vx, vy, vw, vh); c.clip();
       c.translate(e.ox - e.x, e.oy - e.y); c.scale(s, s);
@@ -2641,11 +2649,12 @@
     },
     frame: function (e, t) {
       var ctx = e.ctx, talks = e.talks, s = e.s, ox = e.ox, oy = e.oy;
-      var c = e.reduce ? e.end + 1 : t % e.cycle, fade = e.reduce ? 1 : (c > e.cycle - 0.9 ? (e.cycle - c) / 0.9 : 1);
+      if (!e.hoverCity) e.clock += e.dt;              // the map holds still while a city is looked at
+      var c = e.reduce ? e.end + 1 : e.clock % e.cycle, fade = e.reduce ? 1 : (c > e.cycle - 0.9 ? (e.cycle - c) / 0.9 : 1);
       var last = null;
       for (var q = 0; q < talks.length && talks[q].at <= c; q++) last = talks[q];
       if (e.map) ctx.drawImage(e.map, e.x, e.y, e.w, e.h);
-      if (!e.reduce) {                                 // the caption keeps a running total
+      if (!e.reduce && !e.hoverCity) {                 // the caption keeps a running total
         if (last && c < e.end) {                       // a new year fades in, the count within a year just ticks
           e.caption(last.y + ' · ' + last.k + (last.k === 1 ? ' talk' : ' talks') + ' so far', last.y === e.capYear);
           e.capYear = last.y;
@@ -2699,8 +2708,12 @@
         else { ctx.fillStyle = ink('paper', 0.95); ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = ink('green', 0.9); ctx.stroke(); }
       });
 
+      if (e.hoverCity && cities[e.hoverCity]) {        // the city under the pointer
+        var hm = cities[e.hoverCity], hr = 1.7 + 1.15 * Math.sqrt(hm.n) + 4.5;
+        ctx.strokeStyle = ink('brassD', 0.95); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(hm.x, hm.y, hr, 0, TAU); ctx.stroke();
+      }
       // the city of the newest talk, named for a moment
-      if (newest && !e.reduce) {
+      if (newest && !e.reduce && !e.hoverCity) {
         var la = c - newest.at, lk = la < 0.15 ? la / 0.15 : la < 1.1 ? 1 : 1 - (la - 1.1) / 0.3;
         if (lk > 0) {
           var m2 = cities[newest.c], right = m2.x > e.x + e.w - 90;
@@ -2712,7 +2725,29 @@
           tracking(ctx, 0);
         }
       }
-    }
+    },
+    move: function (e, p) {                            // a city under the pointer names itself and its number of talks
+      var c = e.reduce ? e.end + 1 : e.clock % e.cycle, best = null, bd = 13;
+      if (p && e.cities) e.cities.forEach(function (m) {
+        if (m.first > c) return;
+        var d = Math.hypot(m.x - p.x, m.y - p.y);
+        if (d < bd) { bd = d; best = m; }
+      });
+      var group = best ? e.cities.filter(function (m) {   // cities that sit on top of each other are named together
+        return m.first <= c && Math.hypot(m.x - best.x, m.y - best.y) < 3;
+      }).sort(function (a, b) { return (b.live + b.online) - (a.live + a.online); }) : [];
+      var names = group.map(function (m) { return m.c; }), key = names.join('|') || null;
+      if (key === e.hoverKey) return;
+      e.hoverKey = key; e.hoverCity = best ? best.c : null; e.stage.style.cursor = best ? 'pointer' : '';
+      if (best) {
+        var live = 0, online = 0;
+        group.forEach(function (m) { live += m.live; online += m.online; });
+        var n = live + online, list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names[0];
+        e.caption(list + ' · ' + n + (n === 1 ? ' talk' : ' talks'));
+        e.hint(!online ? 'In person' : !live ? 'Online' : live + ' in person, ' + online + ' online');
+      } else { e.caption(null); e.hint(null); e.capYear = null; }
+    },
+    click: function (e, x, y) { SCENES.talkmap.move(e, { x: x, y: y }); }   // on a touch screen, a tap names the city
   };
 
   /* =====================================================================
