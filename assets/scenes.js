@@ -1653,7 +1653,7 @@
   /* The method of brackets: the bracket, the bracket series of a sum (Rule 2) and the rule
      that evaluates a bracket series (Rule 4), as listed in Sec. 2.1 of the paper. */
   var BRACKETS = {
-    key: 'brackets', paper: '2112.09679', dur: 12, cap: 'The method of brackets',
+    key: 'brackets', paper: '2112.09679', dur: 12, cap: 'Revisiting the method of brackets',
     lines: [['BRACKET', '\\int_0^∞x^{α−1}\\,\\rm{d}x=\\langle α\\rangle'],
             ['RULE 2', '(A+B)^α=\\frac{1}{Γ(−α)}\\sum_{m,n}φ_{m,n}\\,A^mB^n\\,\\langle −α+m+n\\rangle'],
             ['RULE 4', '\\sum_nφ_n\\,f(n)\\,\\langle an+b\\rangle=\\frac{1}{|a|}\\,f(n^∗)\\,Γ(−n^∗)'],
@@ -1675,6 +1675,157 @@
         t0 += n / rate + 0.45;
         y += ex[1] + gap;
       });
+    }
+  };
+
+  /* The 152 GeV excesses in the 2HDM: Drell-Yan production pp -> W* -> H+ H, with H -> gamma gamma
+     and H+ -> tau nu or t b-bar, as in Fig. 1 of the paper. The di-photon branching ratio of a
+     percent or so can come from the Z2-breaking term lambda6, through a loop of charged Higgs
+     bosons (Eqs. 3.2 and 3.3). */
+  var HD_DY = { n: { q: [0.12, 0.1], qb: [0.12, 0.9], v1: [0.5, 0.5, 1], v2: [0.95, 0.5, 1], vc: [1.32, 0.24, 1], vn: [1.32, 0.76, 1],
+                     ta: [1.8, 0.06], nu: [1.82, 0.4], g1: [1.82, 0.62], g2: [1.8, 0.96] },
+                e: [{ a: 'q', b: 'v1', t: 'f', lab: 'q', lo: [-10, -4] }, { a: 'qb', b: 'v1', t: 'f', rev: 1, lab: "\\bar{q}'", lo: [-12, 8] },
+                    { a: 'v1', b: 'v2', t: 'w', lab: 'W^{+∗}', lo: [0, -12] },
+                    { a: 'v2', b: 'vc', t: 's', lab: 'H^+', lo: [-10, -8] }, { a: 'v2', b: 'vn', t: 's', lab: 'H', lo: [-12, 16] },
+                    { a: 'vc', b: 'ta', t: 'f', rev: 1, lab: 'τ^+', lt: 0.85, lo: [0, -9] }, { a: 'vc', b: 'nu', t: 'f', lab: 'ν', lt: 0.85, lo: [4, 13] },
+                    { a: 'vn', b: 'g1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'vn', b: 'g2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
+                stagger: 0.36, edgeDur: 0.55 };
+  var HD_LOOP = { n: { h: [0.14, 0.5], A: [0.66, 0.5, 1], B: [1.16, 0.2, 1], C: [1.16, 0.8, 1], g1: [1.8, 0.04], g2: [1.8, 0.96] },
+                  e: [{ a: 'h', b: 'A', t: 's', lab: 'H', lo: [0, -10] },
+                      { a: 'A', b: 'B', t: 's' }, { a: 'B', b: 'C', t: 's', lab: 'H^±', lo: [17, 4] }, { a: 'C', b: 'A', t: 's' },
+                      { a: 'B', b: 'g1', t: 'ph', lab: 'γ', lt: 0.6, lo: [0, -10] }, { a: 'C', b: 'g2', t: 'ph', lab: 'γ', lt: 0.6, lo: [2, 16] }],
+                  stagger: 0.42, edgeDur: 0.55 };
+  var HDM152 = {
+    key: 'hdm152', paper: '2407.06267', dur: 12, cap: 'Di-photon excesses at 152 GeV in the 2HDM',
+    layout: function (v) { v.dy = Object.create(v); diagramLayout(v.dy, HD_DY); v.lp = Object.create(v); diagramLayout(v.lp, HD_LOOP); },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, split = 6.2;
+      var a1 = R ? 1 : clamp01((split - t) / 0.5), a2 = R ? 0 : clamp01((t - split) / 0.5);
+      if (a1 > 0) {
+        ctx.save(); ctx.globalAlpha *= a1; drawDiagram(ctx, v.dy, HD_DY, t);
+        caps(ctx, 'DRELL-YAN PRODUCTION', v.x + 4, v.y + 12, ink('slate', 0.85), 8);
+        ctx.globalAlpha *= R ? 1 : ease((t - 3.9) / 0.6);
+        drawMath(ctx, 'm_H=152\\,\\rm{GeV},\\quad H^+→τ^+ν,\\,t\\bar{b}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        ctx.restore();
+      }
+      if (a2 > 0) {
+        var tl = t - split, F = v.lp.F, A = HD_LOOP.n.A;
+        ctx.save(); ctx.globalAlpha *= a2; drawDiagram(ctx, v.lp, HD_LOOP, tl);
+        caps(ctx, 'H → γγ VIA A CHARGED HIGGS LOOP', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
+        ctx.globalAlpha *= R ? 1 : ease((tl - 1.2) / 0.5);
+        drawMath(ctx, 'λ_6', F.x + A[0] * F.s - 6, F.y + A[1] * F.s + 22, 13, ink('brassD', 1), 'center');
+        drawMath(ctx, '\\rm{from}\\quad −λ_6\\,H_1^†H_1\\,H_2^†H_1+\\rm{h.c.}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        ctx.restore();
+      }
+    }
+  };
+
+  /* Quadratic and quartic integrals with the method of brackets. First the warm-up of the paper,
+     the generalized Gaussian: e^(-x^p) is expanded, the integral becomes a bracket, and the rule
+     gives (1/p) Gamma(1/p), shown as the area under the curve while p grows. Then the quadratic
+     integral of Gradshteyn and Ryzhik 3.252.1: its bracket series has three indices and two
+     brackets, so one index stays free. With n2 free there is one series, for b^2 < ac; the
+     solutions with n1 and with n3 free converge together, for b^2 > ac, and are added. */
+  function gammaFn(x) {                             // Lanczos approximation
+    var c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+             12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.PI / (Math.sin(Math.PI * x) * gammaFn(1 - x));
+    x -= 1;
+    var a = c[0], tt = x + 7.5;
+    for (var i = 1; i < 9; i++) a += c[i] / (x + i);
+    return Math.sqrt(TAU) * Math.pow(tt, x + 0.5) * Math.exp(-tt) * a;
+  }
+  var QUADRATIC = {
+    key: 'quadratic', paper: '1909.00962', dur: 14, cap: 'Quadratic and quartic integrals',
+    layout: function (v) {
+      v.S = Math.max(8.5, Math.min(12.5, v.w / 42));
+      var w = Math.min(v.w * 0.5, (v.h - 30) * 1.7);
+      v.G = { L: v.x + 8, R: v.x + 8 + w, T: v.y + 14, B: v.y + v.h - 22 };
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, split = 7;
+      var a1 = R ? 1 : clamp01((split - t) / 0.45), a2 = R ? 0 : clamp01((t - split) / 0.45);
+      if (a1 > 0) { ctx.save(); ctx.globalAlpha *= a1; this.gauss(v, t, R); ctx.restore(); }
+      if (a2 > 0) { ctx.save(); ctx.globalAlpha *= a2; this.quad(v, t - split, R); ctx.restore(); }
+    },
+    gauss: function (v, t, R) {                     // the area under e^(-x^p) is (1/p) Gamma(1/p)
+      var ctx = v.ctx, G = v.G, S = v.S, xm = 2.4;
+      function X(x) { return G.L + x / xm * (G.R - G.L); }
+      function Y(y) { return G.B - y / 1.12 * (G.B - G.T); }
+      var p = R ? 2 : t < 1.6 ? 1 : t < 2.6 ? 1 + easeInOut((t - 1.6) / 1) : t < 4 ? 2 : 2 * Math.pow(4, easeInOut((t - 4) / 1.8));
+      var ak = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= ak;
+      line(ctx, G.L, G.B, G.R, G.B, ink('green', 0.5), 1); line(ctx, G.L, G.B, G.L, G.T, ink('green', 0.5), 1);
+      ctx.save(); ctx.setLineDash([3, 3]); line(ctx, X(0), Y(1), X(1), Y(1), ink('slate', 0.35), 1); line(ctx, X(1), Y(1), X(1), G.B, ink('slate', 0.35), 1); ctx.restore();
+      drawMath(ctx, '1', G.L - 5, Y(1) + 4, S * 0.85, ink('slate', 0.9), 'right');
+      drawMath(ctx, '1', X(1), G.B + 13, S * 0.85, ink('slate', 0.9), 'center');
+      drawMath(ctx, 'x', G.R, G.B + 13, S * 0.9, ink('slate', 0.9), 'right');
+      ctx.fillStyle = ink('brass', 0.2); ctx.beginPath(); ctx.moveTo(X(0), G.B);
+      for (var x = 0; x <= xm + 1e-9; x += 0.02) ctx.lineTo(X(x), Y(Math.exp(-Math.pow(x, p))));
+      ctx.lineTo(X(xm), G.B); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = ink('brassD', 0.95); ctx.lineWidth = 1.6; ctx.beginPath();
+      for (x = 0; x <= xm + 1e-9; x += 0.02) { var yy = Y(Math.exp(-Math.pow(x, p))); if (x) ctx.lineTo(X(x), yy); else ctx.moveTo(X(x), yy); }
+      ctx.stroke();
+      drawMath(ctx, 'e^{−x^p}', X(Math.min(1.1, 0.25 + 0.5 / p)) + 10, Y(Math.exp(-Math.pow(Math.min(1.1, 0.25 + 0.5 / p), p))) - 6, S, ink('brassD', 1), 'left');
+      ctx.restore();
+      var px = G.R + 26, room = v.x + v.w - px;      // the derivation and the area, as p changes
+      if (room < 120) return;
+      var lines = ['\\int_0^∞e^{−x^p}\\,\\rm{d}x', '=\\sum_nφ_n\\,\\langle pn+1\\rangle', '=\\frac{1}{p}\\,Γ(1/p)'], y = v.y + S * 2;
+      lines.forEach(function (src, i) {
+        var k = R ? 1 : ease((t - 0.5 - i * 0.9) / 0.6);
+        if (k > 0) { ctx.save(); ctx.globalAlpha *= k; drawMath(ctx, src, px + (i ? S * 1.2 : 0), y, S, ink(i === 2 ? 'crimson' : 'green', 0.95), 'left'); ctx.restore(); }
+        y += S * (i === 1 ? 2.9 : 2.5);
+      });
+      var vk = R ? 1 : ease((t - 2.4) / 0.6);
+      if (vk > 0) {
+        ctx.save(); ctx.globalAlpha *= vk;
+        var area = gammaFn(1 / p) / p;
+        drawMath(ctx, 'p=' + p.toFixed(2), px, y + S * 0.6, S * 0.95, ink('slate', 0.95), 'left');
+        drawMath(ctx, '\\rm{area}=' + area.toFixed(4), px, y + S * 2.4, S * 0.95, ink('brassD', 1), 'left');
+        if (Math.abs(p - 2) < 0.005) drawMath(ctx, '=√π/2', px + S * 7.6, y + S * 2.4, S * 0.95, ink('crimson', 0.95), 'left');
+        ctx.restore();
+      }
+    },
+    quad: function (v, t, R) {                      // the quadratic integral and its two representations
+      var ctx = v.ctx, S = v.S, x0 = v.x + 4;
+      var k1 = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= k1;
+      drawMath(ctx, 'I=\\int_0^∞\\frac{\\rm{d}x}{(ax^2+2bx+c)^n}', x0, v.y + S * 2.2, S, ink('green', 0.95), 'left');
+      ctx.restore();
+      var bs = '=\\sum_{n_1,n_2,n_3}φ_{1,2,3}\\,\\frac{a^{n_1}(2b)^{n_2}c^{n_3}}{Γ(n)}\\,\\langle n+n_1+n_2+n_3\\rangle\\,\\langle 2n_1+n_2+1\\rangle';
+      var bsz = S * Math.min(0.95, (v.w - 8) / mathBox(ctx, bs, S).w), k2 = R ? 1 : ease((t - 0.9) / 0.6);
+      ctx.save(); ctx.globalAlpha *= k2;
+      drawMath(ctx, bs, x0, v.y + S * 5.3, bsz, ink('green', 0.95), 'left');
+      ctx.restore();
+      var k3 = R ? 1 : ease((t - 2) / 0.6);
+      ctx.save(); ctx.globalAlpha *= k3;
+      caps(ctx, 'THREE INDICES AND TWO BRACKETS, SO ONE INDEX STAYS FREE', x0, v.y + S * 7.6, ink('slate', 0.85), 7);
+      ctx.restore();
+      var bx0 = x0 + 6, bx1 = v.x + v.w - 26, bm = (bx0 + bx1) / 2, by = v.y + v.h * 0.74;   // the line of b^2/ac
+      var k4 = R ? 1 : ease((t - 2.8) / 0.7), k5 = R ? 1 : ease((t - 3.8) / 0.7);
+      if (k4 > 0) {
+        ctx.save(); ctx.globalAlpha *= k4;
+        line(ctx, bx0, by, bx0 + (bm - bx0) * k4, by, ink('pine', 0.95), 3);
+        drawMath(ctx, 'n_2\\,\\rm{free}', (bx0 + bm) / 2, by - 12, S * 0.95, ink('pine', 1), 'center');
+        caps(ctx, 'ONE SERIES', (bx0 + bm) / 2, by + 17, ink('pine', 0.95), 7, 'center');
+        drawMath(ctx, '0', bx0, by + 30, S * 0.8, ink('slate', 0.9), 'center');
+        ctx.restore();
+      }
+      if (k5 > 0) {
+        ctx.save(); ctx.globalAlpha *= k5;
+        line(ctx, bm, by, bm + (bx1 - bm) * k5, by, ink('brassD', 0.95), 3);
+        arrowHead(ctx, bx1 + 8, by, 0, 7, ink('brassD', 0.95 * k5));
+        drawMath(ctx, 'n_1\\,\\rm{and}\\,n_3\\,\\rm{free}', (bm + bx1) / 2, by - 12, S * 0.95, ink('brassD', 1), 'center');
+        caps(ctx, 'TWO SERIES, ADDED', (bm + bx1) / 2, by + 17, ink('brassD', 0.95), 7, 'center');
+        ctx.restore();
+      }
+      if (k4 > 0.5) {
+        ctx.save(); ctx.globalAlpha *= k4;
+        dot(ctx, bm, by, 4, ink('paper', 1)); ring(ctx, bm, by, 4, ink('green', 0.9), 1.3);
+        drawMath(ctx, '1', bm, by + 30, S * 0.8, ink('slate', 0.9), 'center');
+        drawMath(ctx, 'b^2/ac', bx1 + 14, by + 30, S * 0.85, ink('slate', 0.95), 'right');
+        ctx.restore();
+      }
     }
   };
 
@@ -1795,7 +1946,7 @@
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
   var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, SUNSET, RUNNING, POLYGAMMA, BRACKETS];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, SUNSET, BRACKETS, QUADRATIC];
 
   SCENES.tour = {
     touchHint: 'Tap for the next paper',
