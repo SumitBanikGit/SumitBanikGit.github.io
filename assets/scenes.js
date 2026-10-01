@@ -1545,18 +1545,20 @@
       var px = G.x + 2 * G.s + 40, room = v.x + v.w - px;   // the three unimodular triangulations
       if (room < 110) return;
       var tk = R ? 1 : ease((t - 4.4) / 0.6), m = S * 0.95;
+      var f = Math.min(1, (v.y + v.h - G.y) / (62 + 9.9 * m));   // on a low stage the column closes up, clear of the pager
+      function cy(o) { return G.y + o * f; }
       ctx.save(); ctx.globalAlpha *= hk;
-      caps(ctx, 'NEWTON POLYTOPE', px, G.y + 2, ink('brassD', 0.95), 7.5);
-      caps(ctx, 'NORMALIZED VOLUME 3', px, G.y + 15, ink('slate', 0.85), 7.5);
+      caps(ctx, 'NEWTON POLYTOPE', px, cy(2), ink('brassD', 0.95), 7.5);
+      caps(ctx, 'NORMALIZED VOLUME 3', px, cy(15), ink('slate', 0.85), 7.5);
       ctx.restore();
       if (tk <= 0) return;
       ctx.save(); ctx.globalAlpha *= tk;
-      caps(ctx, 'UNIMODULAR TRIANGULATIONS', px, G.y + 40, ink('slate', 0.85), 7.5);
+      caps(ctx, 'UNIMODULAR TRIANGULATIONS', px, cy(40), ink('slate', 0.85), 7.5);
       ctx.restore();
       GKZ_T.forEach(function (T, j) {
         var shown = R || t > 4.7 + j * 2.9;
         if (!shown) return;
-        var on = j === idx, yy = G.y + 62 + j * m * 3.3, s = m * 1.25;
+        var on = j === idx, yy = cy(62 + j * m * 3.3), s = m * 1.25;
         ctx.save(); ctx.globalAlpha *= on ? 1 : 0.45;
         T.forEach(function (tri, q) {               // a thumbnail of the triangulation
           var p = tri.map(function (i) { var c = GKZ_P[i - 1]; return [px + c[0] * s, yy + (1 - c[1]) * s]; });
@@ -1569,7 +1571,7 @@
         ctx.restore();
       });
       var nk = R ? 1 : ease((t - 6) / 0.6);
-      if (nk > 0) { ctx.save(); ctx.globalAlpha *= nk; caps(ctx, 'THREE SERIES EACH', px, G.y + 62 + 3 * m * 3.3 - 2, ink('slate', 0.85), 7.5); ctx.restore(); }
+      if (nk > 0) { ctx.save(); ctx.globalAlpha *= nk; caps(ctx, 'THREE SERIES EACH', px, cy(62 + 3 * m * 3.3) - 2, ink('slate', 0.85), 7.5); ctx.restore(); }
     }
   };
 
@@ -2292,12 +2294,20 @@
         ctx.save(); ctx.globalAlpha *= lk;
         ctx.save(); ctx.setLineDash([2, 3]); line(ctx, X(lq), T, X(lq), B, ink('brass', 0.8), 1); ctx.restore();
         drawMath(ctx, 'Φ_3\\,\\rm{at}\\,10^6\\,\\rm{TeV}', X(lq) + 5, T + 10, 11, ink('brassD', 0.95), 'left');
+        var ends = [], le = Math.min(reach2, 17);
         inv.forEach(function (a0, i) {
           ctx.strokeStyle = ink(cols[i], 0.95); ctx.lineWidth = 1.7; ctx.beginPath();
           for (var l = lq; l <= reach2; l += 0.05) { var y = Y(lqv(i, l)); if (l === lq) ctx.moveTo(X(l), y); else ctx.lineTo(X(l), y); }
           ctx.stroke();
-          if (reach2 > lq + 0.5) drawMath(ctx, 'α_' + (i + 1) + '^{−1}', X(Math.min(reach2, 17)) + 6, Y(lqv(i, Math.min(reach2, 17))) + 4 + (i - 1) * 9, 10.5, ink(cols[i], 0.95), 'left');
+          ends.push({ i: i, y: Y(lqv(i, le)) + 4 });
         });
+        if (reach2 > lq + 0.5) {                      // the line labels, kept at least 12 px apart around the line ends
+          ends.sort(function (p, q) { return p.y - q.y; });
+          var y0 = ends.reduce(function (a, p) { return a + p.y; }, 0) / ends.length;
+          for (var j = 1; j < ends.length; j++) ends[j].y = Math.max(ends[j].y, ends[j - 1].y + 12);
+          var shift = ends.reduce(function (a, p) { return a + p.y; }, 0) / ends.length - y0;
+          ends.forEach(function (p) { drawMath(ctx, 'α_' + (p.i + 1) + '^{−1}', X(le) + 6, p.y - shift, 10.5, ink(cols[p.i], 0.95), 'left'); });
+        }
         var uk = R ? 1 : ease((t - 9.4) / 0.6);
         if (uk > 0) { ring(ctx, X(14.3), Y(40), 9, ink('brassD', 0.8 * uk), 1.2); drawMath(ctx, '\\rm{near}\\,10^{14}\\,\\rm{GeV}', X(14.3), Y(40) - 14, 10.5, ink('brassD', 0.95 * uk), 'center'); }
         ctx.restore();
