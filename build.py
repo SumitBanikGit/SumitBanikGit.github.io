@@ -701,7 +701,7 @@ def pub_scene_data():
                 f"https://doi.org/{p['doi']}" if p.get("doi") else
                 f"https://inspirehep.net/literature/{p['inspire']}" if p.get("inspire") else "")
         pubs.append(dict(y=int(p["year"]), t="pheno" if p["topic"] == "pheno" else "fi",
-                         k=p["kind"], n=p["title"], u=link))
+                         k=p["kind"], n=p["title"], u=link, p=_plain(p["title"]).strip()))
     return dict(pubs=pubs)
 
 
@@ -1662,11 +1662,11 @@ Collider at CERN.</p>
   var empty = document.querySelector('.pub-empty');
   var LIMIT = 8, topic = 'all', query = '', open = false;
   function applyPubs() {{
-    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '';
+    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '', keys = [];
     pubs.forEach(function (p) {{
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
                (!query || p.textContent.toLowerCase().indexOf(query) >= 0);
-      if (ok) matches++;
+      if (ok) {{ matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/\u00a0/g, ' ').trim()); }}
       var vis = ok && (open || narrowed || shown < LIMIT);
       if (vis) shown++;
       p.hidden = !vis;
@@ -1679,6 +1679,7 @@ Collider at CERN.</p>
     }});
     if (more) more.hidden = open || narrowed || matches <= LIMIT;
     if (empty) empty.hidden = matches > 0;
+    if (window.CustomEvent) document.dispatchEvent(new CustomEvent('pubfilter', {{ detail: {{ narrowed: narrowed, titles: keys }} }}));
   }}
   buttons.forEach(function (b) {{
     b.addEventListener('click', function () {{

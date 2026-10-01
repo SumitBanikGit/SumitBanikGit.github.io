@@ -2364,7 +2364,20 @@
      ===================================================================== */
   SCENES.constellation = {
     touchHint: 'Tap a star to see the paper',
-    init: function (e) { e.pubs = e.data.pubs || []; e.hover = -1; e.clock = 0; e.sx = -1e9; e.fade = 0; },
+    init: function (e) {
+      e.pubs = e.data.pubs || []; e.hover = -1; e.clock = 0; e.sx = -1e9; e.fade = 0;
+      e.match = null; e.dim = e.pubs.map(function () { return 1; });
+      var base = e.defaultCaption;
+      document.addEventListener('pubfilter', function (ev) {   // the list's filter and search light up their stars
+        var d = ev.detail || {}, set = {}, n = 0;
+        (d.titles || []).forEach(function (s) { set[s] = 1; });
+        e.match = d.narrowed ? e.pubs.map(function (p) { var m = !!set[p.p]; if (m) n++; return m; }) : null;
+        if (e.match) e.clock = Math.floor(e.clock / 14) * 14 + 9.5;
+        e.defaultCaption = e.match ? n + (n === 1 ? ' publication' : ' publications') + ' of ' + e.pubs.length : base;
+        if (e.hover < 0) e.caption(null);
+        if (e.redraw) e.redraw();
+      });
+    },
     layout: function (e) {
       var d = e.pubs;
       if (!d.length) return;
@@ -2392,7 +2405,11 @@
     frame: function (e, t) {
       var d = e.pubs;
       if (!d.length || !e.pos) return;
-      if (e.hover < 0) e.clock += e.dt;                // the sky holds still while a star is inspected
+      if (e.hover < 0 && !e.match) e.clock += e.dt;    // the sky holds still while a star is inspected or a search is on
+      e.pubs.forEach(function (p, i) {                // stars that do not match the list fade back
+        var to = e.match && !e.match[i] ? 0.16 : 1;
+        e.dim[i] = e.reduce ? to : e.dim[i] + (to - e.dim[i]) * Math.min(1, e.dt * 7);
+      });
       var ctx = e.ctx, C = 14, c = e.reduce ? 11 : e.clock % C, span = e.R - e.L, v = (span + 24) / 8;
       var sx = e.reduce ? e.R + 1e4 : e.L - 12 + (span + 24) * clamp01((c - 0.3) / 8);
       var fade = e.reduce ? 1 : (c > C - 1 ? C - c : Math.min(1, c / 0.3));
@@ -2427,15 +2444,14 @@
 
       // constellation lines grow with the cursor
       e.chains.forEach(function (chain, ci) {
-        ctx.strokeStyle = ci ? ink('pine', 0.34) : ink('brass', 0.45); ctx.lineWidth = 0.8;
-        ctx.beginPath();
+        ctx.lineWidth = 0.8;
         for (var j = 1; j < chain.length; j++) {
-          var a = e.pos[chain[j - 1]], b = e.pos[chain[j]];
+          var a = e.pos[chain[j - 1]], b = e.pos[chain[j]], dm = Math.min(e.dim[chain[j - 1]], e.dim[chain[j]]);
           if (sx <= a[0]) break;
           var k = clamp01((sx - a[0]) / Math.max(1, b[0] - a[0]));
-          ctx.moveTo(a[0], a[1]); ctx.lineTo(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k);
+          ctx.strokeStyle = ci ? ink('pine', 0.34 * dm) : ink('brass', 0.45 * dm);
+          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k); ctx.stroke();
         }
-        ctx.stroke();
       });
 
       // the stars light up as the cursor passes
@@ -2444,6 +2460,7 @@
         if (age < 0) return;
         var k = e.reduce ? 1 : ease(age / 0.35), tw = 0.8 + 0.2 * Math.sin(t * 1.9 + i * 2.3);
         var col = p.t === 'pheno' ? 'pine' : 'brassD';
+        ctx.save(); ctx.globalAlpha *= e.dim[i];
         if (!e.reduce && age < 1) {
           ctx.strokeStyle = ink(col, 0.5 * (1 - age)); ctx.lineWidth = 1;
           ctx.beginPath(); ctx.arc(q[0], q[1], 5 + age * 12, 0, TAU); ctx.stroke();
@@ -2454,6 +2471,7 @@
           ctx.lineWidth = 1.2; ctx.strokeStyle = ink('brass', 1);
           ctx.beginPath(); ctx.arc(q[0], q[1], 8.5, 0, TAU); ctx.stroke();
         }
+        ctx.restore();
       });
 
       // the cursor
