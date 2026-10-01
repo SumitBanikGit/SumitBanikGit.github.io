@@ -911,12 +911,33 @@ def talk_row(year, event, city, title, note):
             f'<div class="detail">{event}</div>{note_html}</div></div>')
 
 
+TALK_ICONS = {
+    "seminar": _p("M7 3H41V20H7Z") + _p("M24 20V27M16 27H32M11 15Q17 6 23 11T37 7", "thin"),
+    "meeting": _p("M10 12A3 3 0 1 1 9.9 12ZM24 8.5A3.5 3.5 0 1 1 23.9 8.5ZM38 12A3 3 0 1 1 37.9 12Z")
+               + _p("M4 27C4 20 16 20 16 27M17 27C17 18 31 18 31 27M32 27C32 20 44 20 44 27", "thin"),
+    "school": _p("M24 7C18 3 9 3 4 6V26C9 23 18 23 24 27C30 23 39 23 44 26V6C39 3 30 3 24 7Z") + _p("M24 7V27", "thin"),
+    "online": _p("M17 10A10 10 0 0 0 17 24M31 10A10 10 0 0 1 31 24M11 5A17 17 0 0 0 11 29M37 5A17 17 0 0 1 37 29", "thin") + _dots([(24, 17)], 2.4),
+}
+
+
+def _talk_kind(event):
+    low = event.lower()
+    if "online" in low:
+        return "online"
+    if "school" in low:
+        return "school"
+    if any(w in low for w in ("seminar", "journal club", "lunch")):
+        return "seminar"
+    return "meeting"
+
+
 def render_talks():
     cards = []
     for year, event, city, title, note, invited in TALKS[:TALK_CARDS]:
         note_html = f'<div class="tc-note">{note}</div>' if note else ""
+        kind = _talk_kind(event)
         cards.append(
-            f'<article class="talk-card"><div class="tc-top"><span>{year}</span><span>{city}</span></div>'
+            f'<article class="talk-card"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
     rest = [talk_row(y, ev, c, ti, no) for y, ev, c, ti, no, _ in TALKS[TALK_CARDS:]]
     out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
