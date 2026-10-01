@@ -2380,12 +2380,94 @@
     }
   };
 
+  /* The review in Eur. Phys. J. Spec. Top. 234 (2025) 8005, in its own five parts (a) to (e), as its
+     abstract lists them: regions of Feynman integrals from Landau equations and power geometry, a two-loop
+     non-planar integral through Hopf algebras, convergence and analytic continuation of multivariable
+     hypergeometric functions, Feynman integrals as hypergeometric functions (MB series, GKZ systems, the
+     epsilon expansion), and the summation of large logarithms. Each part gets a small drawing. */
+  var RV_PARTS = [
+    { l: 'Regions of Feynman integrals, from Landau equations and power geometry', s: 'Regions, from Landau equations', g: 'poly' },
+    { l: 'A two-loop non-planar integral, through Hopf algebras', s: 'Non-planar two-loop, Hopf algebras', g: 'np' },
+    { l: 'Hypergeometric series, where they converge and how to continue them', s: 'Convergence and continuation', g: 'conv' },
+    { l: 'Feynman integrals as hypergeometric functions, MB series and GKZ systems', s: 'MB series and GKZ systems', g: 'mb' },
+    { l: 'Large logarithms summed, in renormalizable and non-renormalizable theories', s: 'Large logarithms summed', g: 'log' }
+  ];
+  function rvGlyph(ctx, g, x, y, w, h, k, col) {    // the drawing of one part, grown by k from 0 to 1
+    ctx.save(); ctx.lineWidth = 1.3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    function path(pts, f) {                          // a polyline in the box, drawn up to the fraction f
+      var L = 0, seg = [];
+      for (var i = 1; i < pts.length; i++) { var d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(d); L += d; }
+      var left = L * f; ctx.beginPath(); ctx.moveTo(x + pts[0][0] * w, y + pts[0][1] * h);
+      for (var j = 1; j < pts.length && left > 0; j++) {
+        var u = Math.min(1, left / seg[j - 1]), a = pts[j - 1], b = pts[j];
+        ctx.lineTo(x + (a[0] + (b[0] - a[0]) * u) * w, y + (a[1] + (b[1] - a[1]) * u) * h); left -= seg[j - 1];
+      }
+      ctx.stroke();
+    }
+    ctx.strokeStyle = ink(col, 0.95);
+    if (g === 'poly') {                              // a Newton polygon, its lower faces picked out
+      var P = [[0.05, 0.35], [0.3, 0.9], [0.75, 0.95], [0.97, 0.55], [0.6, 0.08], [0.05, 0.35]];
+      ctx.strokeStyle = ink(col, 0.5); path(P, k);
+      ctx.strokeStyle = ink(col, 1); ctx.lineWidth = 2.2; path([[0.05, 0.35], [0.3, 0.9], [0.75, 0.95], [0.97, 0.55]], clamp01(k * 1.6 - 0.6));
+      [[0.45, 0.5], [0.62, 0.62], [0.3, 0.5]].forEach(function (q) { if (k > 0.5) dot(ctx, x + q[0] * w, y + q[1] * h, 1.3, ink(col, 0.7)); });
+    } else if (g === 'np') {                         // the two-loop non-planar vertex, its inner lines crossing
+      path([[0, 0.5], [0.22, 0.5]], k); path([[0.22, 0.5], [0.55, 0.12], [0.9, 0.12]], k); path([[0.22, 0.5], [0.55, 0.88], [0.9, 0.88]], k);
+      path([[0.55, 0.12], [0.9, 0.88]], clamp01(k * 1.5 - 0.5)); path([[0.55, 0.88], [0.9, 0.12]], clamp01(k * 1.5 - 0.5));
+      path([[0.9, 0.12], [1, 0.02]], k); path([[0.9, 0.88], [1, 0.98]], k);
+    } else if (g === 'conv') {                       // a region of convergence, and the way out of it
+      ctx.strokeStyle = ink(col, 0.6); path([[0.08, 0.95], [0.08, 0.02]], k); path([[0.05, 0.92], [0.98, 0.92]], k);
+      ctx.fillStyle = ink(col, 0.16 * k); ctx.fillRect(x + 0.08 * w, y + 0.38 * h, 0.42 * w, 0.54 * h);
+      ctx.strokeStyle = ink(col, 0.95); path([[0.08, 0.38], [0.5, 0.38], [0.5, 0.92]], k);
+      ctx.setLineDash([2, 2]); path([[0.32, 0.62], [0.88, 0.18]], clamp01(k * 1.5 - 0.5)); ctx.setLineDash([]);
+    } else if (g === 'mb') {                         // a straight contour between two rows of poles
+      ctx.setLineDash([2.5, 2]); path([[0.5, 0.02], [0.5, 0.98]], k); ctx.setLineDash([]);
+      for (var i = 0; i < 4; i++) {
+        if (k > 0.2 + i * 0.15) { dot(ctx, x + (0.36 - i * 0.1) * w, y + 0.5 * h, 1.6, ink('crimson', 0.85)); dot(ctx, x + (0.64 + i * 0.1) * w, y + 0.5 * h, 1.6, ink('pine', 0.85)); }
+      }
+    } else if (g === 'log') {                        // a coupling that runs with the logarithm of the scale
+      var pts = [];
+      for (var u = 0; u <= 1.0001; u += 0.05) pts.push([0.04 + 0.92 * u, 0.12 + 0.72 * (1 - 1 / (1 + 3 * u)) ]);
+      ctx.strokeStyle = ink(col, 0.5); path([[0.04, 0.95], [0.97, 0.95]], k);
+      ctx.strokeStyle = ink(col, 0.95); path(pts, k);
+    }
+    ctx.restore();
+  }
+  var REVIEW = {
+    key: 'review', paper: '10.1140/epjs/s11734-025-02019-7', dur: 12.5, cap: 'Feynman integrals and the renormalization group',
+    layout: function (v) {
+      var ctx = v.ctx; v.S = Math.max(10.5, Math.min(13.5, v.w / 36));
+      ctx.font = font(v.S, SERIF, 400, false);
+      var room = v.w - 64, long = RV_PARTS.every(function (p) { return ctx.measureText(p.l).width <= room; });
+      v.lines = RV_PARTS.map(function (p) { return long ? p.l : p.s; });
+      v.rh = Math.min(46, (v.h - 30) / 5);
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, rh = v.rh, gw = Math.min(36, rh * 1.0), gh = Math.min(24, rh * 0.6);
+      var hk = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= hk;
+      caps(ctx, 'A REVIEW IN FIVE PARTS', v.x + 4, v.y + 11, ink('slate', 0.85), 8);
+      ctx.restore();
+      RV_PARTS.forEach(function (p, i) {
+        var t0 = 0.6 + i * 1.5, k = R ? 1 : clamp01((t - t0) / 0.9), tk = R ? 1 : ease((t - t0 - 0.35) / 0.6);
+        if (k <= 0) return;
+        var y = v.y + 24 + i * rh, col = i === 1 ? 'pine' : i === 4 ? 'crimson' : 'brassD';
+        rvGlyph(ctx, p.g, v.x + 4, y + (rh - gh) / 2 - 3, gw, gh, ease(k), col);
+        ctx.save(); ctx.globalAlpha *= tk;
+        ctx.font = font(S * 1.05, DISPLAY, 600, true); ctx.fillStyle = ink('brassD', 1); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText('(' + 'abcde'[i] + ')', v.x + gw + 14, y + rh / 2 - 3);
+        ctx.font = font(S, SERIF, 400, false); ctx.fillStyle = ink('green', 0.92);
+        ctx.fillText(v.lines[i], v.x + gw + 40, y + rh / 2 - 3);
+        ctx.restore();
+      });
+    }
+  };
+
   var SPECV = { key: 'excesses', paper: '2306.15722', dur: 11.5, cap: 'The di-photon excesses at 95 and 152 GeV',
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
   var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, PTSPEC];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, PTSPEC, REVIEW];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);

@@ -495,11 +495,11 @@ _TOUR = None
 
 
 def tour_papers():
-    """arXiv ids of the papers that have an animation in the paper tour on the Research page."""
+    """arXiv ids (or a DOI) of the papers that have an animation in the paper tour on the Research page."""
     import re
     global _TOUR
     if _TOUR is None:
-        _TOUR = set(re.findall(r"paper: '(\d{4}\.\d{4,5})'", Path("assets/scenes.js").read_text(encoding="utf-8")))
+        _TOUR = set(re.findall(r"paper: '([^']+)'", Path("assets/scenes.js").read_text(encoding="utf-8")))   # arXiv ids, or a DOI
     return _TOUR
 
 
@@ -513,7 +513,8 @@ def pub_entry(n, p):
         links.append(f'<a href="https://inspirehep.net/literature/{p["inspire"]}">INSPIRE</a>')
     if p.get("code"):
         links.append(f'<a href="{p["code"]}">Code</a>')
-    tour = p["arxiv"] if p.get("arxiv") in tour_papers() else p.get("tour")   # proceedings point to their paper's animation
+    key = p.get("arxiv") or p.get("doi")
+    tour = key if key in tour_papers() else p.get("tour")   # proceedings point to their paper's animation
     if tour:
         links.append(f'<a href="research.html#tour-{tour}" title="See this work in the animated tour">Animation</a>')
     venue = f' <span class="sep">·</span> {p["venue"]}' if p.get("venue") else ""
