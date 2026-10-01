@@ -1777,3 +1777,21 @@ footer .wrap.foot { row-gap: 1.6rem; }
 @media (prefers-reduced-motion: no-preference) and (max-width: 40rem) {
   .js .releases:not(.drawn) .rel-line li::after { transform: scaleY(0); }
 }
+
+/* Background, as asked: a soft white page with warm neutral headers and bands, no green tint.
+   Oxford green stays for the menu bar and the dark contact band and footer. */
+:root { --paper: #fcfbf8; --panel: #f3f0e8; }
+.masthead { background:
+    radial-gradient(55rem 22rem at 90% -30%, rgba(168, 137, 79, .15), transparent 70%),
+    linear-gradient(180deg, #f4f0e7 0%, var(--paper) 100%); }
+.ticker { background: #f6f3ec; }
+#research, #software { --tint: #f6f3ed; }
+main > .chapter:nth-of-type(even)::before {
+  background: var(--tint, #f6f3ed);
+  border-top-color: rgba(168, 137, 79, .2); border-bottom-color: rgba(168, 137, 79, .2);
+}
+.hero .aurora { background:
+    radial-gradient(32% 36% at 18% 28%, rgba(46, 92, 78, .08), transparent 70%),
+    radial-gradient(30% 34% at 80% 58%, rgba(168, 137, 79, .26), transparent 70%),
+    radial-gradient(26% 28% at 58% 12%, rgba(110, 44, 52, .07), transparent 70%),
+    radial-gradient(28% 30% at 34% 86%, rgba(168, 137, 79, .14), transparent 72%); }

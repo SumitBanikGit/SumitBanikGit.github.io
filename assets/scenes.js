@@ -17,7 +17,7 @@
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var TAU = Math.PI * 2, D2R = Math.PI / 180;
   var RGB = { green: '28,53,47', pine: '46,92,78', brass: '168,137,79', brassD: '122,95,42', slate: '74,90,102',
-              crimson: '110,44,52', cream: '238,231,214', paper: '251,248,241', plum: '90,61,85' };
+              crimson: '110,44,52', cream: '238,231,214', paper: '252,251,248', plum: '90,61,85' };
   var SANS = 'Inter, system-ui, sans-serif', SERIF = '"Source Serif 4", Georgia, serif',
       DISPLAY = '"Cormorant Garamond", Georgia, serif';
 
