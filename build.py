@@ -551,6 +551,49 @@ DOMAIN_ICONS = [
 ]
 
 
+def _ix(body, cls="ix", box="0 0 48 30"):
+    return f'<svg class="{cls}" viewBox="{box}" aria-hidden="true">{body}</svg>'
+
+
+# small drawings for the cards inside the pages: selected papers, software, courses, students, contact
+CONE = _p("M6 26H44M6 26L30 3") + _dots([(14, 22), (22, 22), (30, 22), (38, 22), (20, 16), (28, 16), (36, 16), (26, 10)], 1.3)
+PAPER_ICONS = {
+    "2510.08682": _p("M4 5L18 15L4 25M44 5L30 15L44 25", "thin") + _p("M24 9A6 6 0 1 1 23.9 9Z") + _p("M20 11L28 19M20 19L28 11"),
+    "2012.15108": CONE,
+    "2306.15722": _p("M4 15H8M11 15H15M18 15H22", "thin") + _p("M22 15C24 12 25 12 27 10S30 8 32 6S36 4 44 3M22 15C24 18 25 18 27 20S30 22 32 24S36 26 44 27")
+                  + _dots([(22, 15)], 1.8),
+}
+SOFTWARE_ICONS = {
+    "MBConicHulls": CONE,
+    "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z") + _p("M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15", "thin") + _dots([(24, 15)], 1.8),
+    "HyperPrecision": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M24 8A7 7 0 1 1 23.9 8Z", "thin") + _p("M4 15H12M36 15H44", "thin") + _dots([(24, 15)], 2),
+}
+COURSE_ICONS = [
+    ("Proseminar", _p("M7 3H41V20H7Z") + _p("M24 20V27M16 27H32M11 15Q17 6 23 11T37 7", "thin")),
+    ("Flavour", _p("M5 25H43L17 5Z") + _p("M10 25A5 5 0 0 0 8.4 21.4M38 25A5 5 0 0 1 39.9 21.9", "thin") + _dots([(5, 25), (43, 25), (17, 5)], 1.6)),
+    ("Quantum Field", _p("M4 27L22 15L4 3") + _p("M22 15Q24 11 26 15T30 15T34 15T38 15T42 15", "thin") + _dots([(22, 15)], 1.8)),
+    ("Introductory Physics", _p("M12 15H36") + _p("M12 15C17 6 31 6 36 15M12 15C17 24 31 24 36 15M12 15C15 -2 33 -2 36 15M12 15C15 32 33 32 36 15", "thin")
+     + _dots([(12, 15), (36, 15)], 2.6)),
+]
+STUDENT_ICONS = [
+    ("Mellin-Barnes", _p("M24 2V28") + _dots([(16, 15), (10, 15), (4, 15)], 1.6) + _dots([(31, 15), (37, 15), (43, 15)], 1.6)),
+    ("two-body", _p("M4 15H22") + _p("M22 15L42 5M22 15L42 25", "thin") + _dots([(22, 15)], 1.8)),
+    ("perturbative", _p("M2 15H10M14 15H22M26 15H34", "thin") + _p("M18 15A4 4 0 1 1 18 14.9M38 15A5 5 0 1 1 38 14.9") + _p("M33 15H43", "thin")),
+]
+REACH_ICONS = {
+    "Email": _p("M6 6H42V25H6Z") + _p("M6 6L24 17L42 6", "thin"),
+    "Address": _p("M24 28C24 28 14 18 14 11A10 10 0 1 1 34 11C34 18 24 28 24 28Z") + _p("M24 7.5A3.5 3.5 0 1 1 23.9 7.5Z", "thin"),
+    "Profiles": _p("M10 22L24 8L38 22M10 22H38", "thin") + _dots([(10, 22), (24, 8), (38, 22)], 2.4),
+}
+
+
+def _pick_icon(items, text):
+    for key, body in items:
+        if key in text:
+            return _ix(body)
+    return ""
+
+
 def render_domains():
     return "\n".join(
         f'<div class="theme d{i}"><svg class="th-icon" viewBox="0 0 48 30" aria-hidden="true">{DOMAIN_ICONS[i - 1]}</svg>'
@@ -833,6 +876,7 @@ def render_news():
 def render_selected():
     return "\n".join(
         f'<a class="pick {topic}" href="https://arxiv.org/abs/{arx}">'
+        f'{_ix(PAPER_ICONS[arx]) if arx in PAPER_ICONS else ""}'
         f'<span class="kicker">{TOPIC_LABEL[topic]}</span>'
         f'<span class="pick-title">{title}</span>'
         f'<span class="pick-text">{pitch}</span>'
@@ -867,7 +911,14 @@ def fund_card(year, name, agency, country, amount, dur, status):
     main, _, approx = amount.partition(" (")
     approx = approx.rstrip(")")
     tags = '<span class="tag">awarded</span>' + (f' <span class="tag grey">{status.lower()}</span>' if status else "")
-    return (f'<article class="fund"><div class="fund-top"><span>{year}</span><span>{country}</span></div>'
+    import re
+    m = re.search(r"\(([A-Z]+)\)", agency)
+    acr = m.group(1) if m else {"Alexander von Humboldt Foundation": "AvH", "University of Zürich": "UZH",
+                                 "Ministry of Human Resource Development": "MHRD"}.get(agency, "")
+    medal = _ix(_p("M15 25L11 39L16 36.5L18 40M25 25L29 39L24 36.5L22 40", "thin") + _p("M20 3A13 13 0 1 1 19.9 3Z")
+                + _p("M20 6.5A9.5 9.5 0 1 1 19.9 6.5Z", "thin")
+                + f'<text x="20" y="19" text-anchor="middle" font-size="{7.4 if len(acr) < 4 else 6}">{acr}</text>', "ix fund-medal", "0 0 40 42") if acr else ""
+    return (f'<article class="fund">{medal}<div class="fund-top"><span>{year}</span><span>{country}</span></div>'
             f'<h4 class="fund-name">{name}</h4><div class="fund-agency">{agency}</div>'
             f'<div class="fund-amount">{main}</div>'
             f'<div class="fund-meta">{approx} <span class="sep">·</span> {dur}</div>'
@@ -885,7 +936,7 @@ def render_funding():
 
 def render_teaching():
     return '<div class="courses">' + "".join(
-        f'<article class="course"><div class="kicker">{y} <span class="sep">·</span> {inst}</div>'
+        f'<article class="course">{_pick_icon(COURSE_ICONS, course)}<div class="kicker">{y} <span class="sep">·</span> {inst}</div>'
         f'<h4 class="course-title">{course}</h4><div class="course-role">{role}</div>'
         f'<p>{desc}</p></article>'
         for y, course, role, inst, desc in TEACHING) + '</div>'
@@ -893,7 +944,7 @@ def render_teaching():
 
 def render_supervision():
     return '<div class="students">' + "".join(
-        f'<article class="student"><div class="kicker">{y} <span class="sep">·</span> {lvl}</div>'
+        f'<article class="student">{_pick_icon(STUDENT_ICONS, thesis)}<div class="kicker">{y} <span class="sep">·</span> {lvl}</div>'
         f'<h4 class="student-name">{name}</h4><div class="student-inst">{inst}</div>'
         f'<p class="student-thesis"><span>Thesis</span><i>{thesis}</i></p></article>'
         for y, name, lvl, inst, thesis in SUPERVISION) + '</div>'
@@ -932,7 +983,7 @@ def render_tongues():
 
 def render_software():
     return "\n".join(
-        f'<div class="card"><h4>{name}</h4><p>{desc}</p>'
+        f'<div class="card">{_ix(SOFTWARE_ICONS[name]) if name in SOFTWARE_ICONS else ""}<h4>{name}</h4><p>{desc}</p>'
         f'<div class="links"><a href="{url}">GitHub</a> '
         f'<a href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a></div></div>'
         for name, desc, url, arx in SOFTWARE)
@@ -1029,17 +1080,17 @@ def render_reach():
     links = "".join(f'<li><a href="{url}">{ICONS[icon]}{name}</a></li>' for name, url, icon in profiles)
     return f'''<section class="chapter" id="reach">
 <div class="reach">
-  <article class="reach-card">
+  <article class="reach-card">{_ix(REACH_ICONS["Email"])}
     <div class="kicker">Email</div>
     <a class="reach-big" href="mailto:{P["email"]}">{P["email"]}</a>
     <p>Email is the best way to reach me.</p>
     <p><a class="button" href="mailto:{P["email"]}">Send an email</a></p>
   </article>
-  <article class="reach-card">
+  <article class="reach-card">{_ix(REACH_ICONS["Address"])}
     <div class="kicker">Address</div>
     <p class="reach-addr">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory<br>2575 Sand Hill Road<br>Menlo Park, CA 94025<br>United States</p>
   </article>
-  <article class="reach-card">
+  <article class="reach-card">{_ix(REACH_ICONS["Profiles"])}
     <div class="kicker">Profiles</div>
     <ul class="reach-links">{links}</ul>
   </article>
