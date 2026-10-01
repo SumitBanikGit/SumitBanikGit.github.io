@@ -998,19 +998,10 @@ footer { border-top-color: rgba(168,137,79,.35); }
   .ticker:hover .ticker-track { animation-play-state: paused; }
 }
 
-/* statement with highlighter sweeps */
+/* statement */
 .about-text { align-self: center; }
 .statement { margin: 0; font-family: var(--display); font-weight: 500; line-height: 1.42;
              font-size: clamp(1.45rem, 1.05rem + 1.05vw, 1.95rem); color: var(--navy); }
-.hl { color: inherit; padding: 0 .06em;
-      background: linear-gradient(transparent 58%, rgba(168,137,79,.33) 58%) no-repeat 0 0 / 100% 100%; }
-.js .statement.reveal .hl { background-size: 0% 100%; transition: background-size .95s cubic-bezier(.2, .7, .2, 1); }
-.js .statement.reveal.in .hl { background-size: 100% 100%; }
-.js .statement.reveal .hl:nth-of-type(1) { transition-delay: .45s; }
-.js .statement.reveal .hl:nth-of-type(2) { transition-delay: .7s; }
-.js .statement.reveal .hl:nth-of-type(3) { transition-delay: .95s; }
-.js .statement.reveal .hl:nth-of-type(4) { transition-delay: 1.2s; }
-.js .statement.reveal .hl:nth-of-type(5) { transition-delay: 1.45s; }
 .about-links { margin: 1.5rem 0 0; display: flex; flex-wrap: wrap; gap: .6rem 1.8rem;
                font-family: var(--sans); font-size: .72rem; font-weight: 500; letter-spacing: .15em; text-transform: uppercase; }
 .about-links a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--rule); padding-bottom: .2rem; }
@@ -1697,11 +1688,6 @@ main > #contact.chapter::before {
   }
 }
 @keyframes shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
-
-/* About: the highlighter sweeps take the colours of the research areas */
-.hl.pine { background-image: linear-gradient(transparent 58%, rgba(46, 92, 78, .24) 58%); }
-.hl.claret { background-image: linear-gradient(transparent 58%, rgba(110, 44, 52, .17) 58%); }
-.js .statement.reveal .hl:nth-of-type(6) { transition-delay: 1.7s; }
 
 /* Home: once the page has settled, a brass sheen passes over the first button */
 @media (prefers-reduced-motion: no-preference) {
