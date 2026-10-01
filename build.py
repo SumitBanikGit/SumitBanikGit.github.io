@@ -1042,7 +1042,8 @@ def render_talks():
         cards.append(
             f'<article class="talk-card"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
-    rest = [talk_row(y, ev, c, ti, no) for y, ev, c, ti, no, _ in TALKS[TALK_CARDS:]]
+    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" style="--i:{i}">', 1)
+            for i, (y, ev, c, ti, no, _) in enumerate(TALKS[TALK_CARDS:])]
     out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
         out += (f'\n<details class="more"><summary>Show {len(rest)} earlier talks</summary>\n'
@@ -1253,6 +1254,32 @@ LOCAL_TIME = """    <div class="local-time" data-tz="America/Los_Angeles">
     </script>"""
 
 
+COPY_MAIL_JS = """<script>
+(function () {                              // copy the email address with one click, and say so
+  var b = document.querySelector('.copy-mail');
+  if (!b) return;
+  if (!(navigator.clipboard && window.isSecureContext)) { b.remove(); return; }
+  var said = b.nextElementSibling, timer;
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+      b.classList.add('done'); said.textContent = 'Email address copied';
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('done'); said.textContent = ''; }, 2200);
+    }).catch(function () {});
+  });
+})();
+</script>"""
+
+
+def copy_mail(email):
+    """A round button that copies the address: the two sheets give way to a check mark."""
+    return (f'<button class="copy-mail" type="button" data-copy="{email}" aria-label="Copy the email address" title="Copy the email address">'
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="cm-b" d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/>'
+            '<rect class="cm-a" x="8.5" y="8.5" width="11" height="11" rx="2"/><path class="cm-ok" pathLength="1" d="M5.5 12.5l4 4L18.5 7.5"/></svg>'
+            '<span class="cm-tip" aria-hidden="true">Copied</span></button>'
+            '<span class="sr-only" role="status" aria-live="polite"></span>' + COPY_MAIL_JS)
+
+
 def render_reach():
     P = PROFILE
     profiles = [("ORCID", f"https://orcid.org/{P['orcid']}", "i_orcid"), ("INSPIRE", P["inspire"], "i_inspire"),
@@ -1263,7 +1290,7 @@ def render_reach():
 <div class="reach">
   <article class="reach-card">{_ix(REACH_ICONS["Email"])}
     <div class="kicker">Email</div>
-    <a class="reach-big" href="mailto:{P["email"]}">{P["email"]}</a>
+    <div class="reach-mail"><a class="reach-big" href="mailto:{P["email"]}">{P["email"]}</a>{copy_mail(P["email"])}</div>
     <p>Email is the best way to reach me.</p>
     <p><a class="button" href="mailto:{P["email"]}">Send an email</a></p>
   </article>
@@ -1577,7 +1604,7 @@ at CERN.</p>
 <section class="chapter" id="publications">
 <h2 class="chapter-title">Publications</h2>
 <p class="muted" style="margin-bottom:0">Complete and up-to-date records:
-<a href="{inspire}">INSPIRE-HEP</a> · <a href="{arxiv}">arXiv</a> · <a href="https://orcid.org/{orcid}">ORCID</a>.</p>
+<a href="{inspire}" style="white-space: nowrap">INSPIRE-HEP</a> · <a href="{arxiv}">arXiv</a> · <a href="https://orcid.org/{orcid}">ORCID</a>.</p>
 <div class="filters" role="group" aria-label="Filter publications by topic">
   <button type="button" data-filter="all" aria-pressed="true">All ({n_total})</button>
   <button type="button" data-filter="fi" aria-pressed="false">Feynman integrals</button>
