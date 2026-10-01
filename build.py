@@ -557,14 +557,26 @@ def _dots(pts, r=1.6):
 
 
 # a small line drawing for each research domain, in the order of DOMAINS
+def _cone_dots(pts, r):                     # the lattice points of the cone, numbered outwards from its apex
+    order = sorted(pts, key=lambda q: (q[0] - 6) ** 2 + (q[1] - 26) ** 2)
+    return "".join(f'<circle cx="{x}" cy="{y}" r="{r}" style="--k:{order.index((x, y))}"/>' for x, y in pts)
+
+
+# On hover each drawing does what it stands for (see style.css): the terms of a series fill its cone,
+# a loop momentum runs around the box, an excess shows in a mass window, the cursor blinks after the code,
+# the couplings run with the scale, and a new particle is exchanged between two vertices.
 DOMAIN_ICONS = [
-    _p("M6 26H44M6 26L30 3") + _dots([(14, 22), (22, 22), (30, 22), (38, 22), (20, 16), (28, 16), (36, 16), (26, 10), (34, 10)], 1.3),
-    _p("M16 8H32V22H16Z") + _p("M16 8L9 2M32 8L39 2M16 22L9 28M32 22L39 28", "thin") + _dots([(16, 8), (32, 8), (16, 22), (32, 22)], 1.7),
-    _p("M4 27H44", "thin") + _p("M5 5C12 13 16 18 20 18C23 18 23 11 26 11C29 11 29 20 33 21C37 22 40 22 44 23")
+    _p("M6 26H44M6 26L30 3") + _cone_dots([(14, 22), (22, 22), (30, 22), (38, 22), (20, 16), (28, 16), (36, 16), (26, 10), (34, 10)], 1.3),
+    _p("M16 8H32V22H16Z") + _p("M16 8L9 2M32 8L39 2M16 22L9 28M32 22L39 28", "thin") + _dots([(16, 8), (32, 8), (16, 22), (32, 22)], 1.7)
+    + '<circle class="run" cx="16" cy="8" r="1.5"/>',
+    '<rect class="win" x="22.5" y="4" width="7" height="23" rx="1"/>'
+    + _p("M4 27H44", "thin") + _p("M5 5C12 13 16 18 20 18C23 18 23 11 26 11C29 11 29 20 33 21C37 22 40 22 44 23")
     + _dots([(9, 10), (15, 16), (26, 11), (35, 21)], 1.3),
-    _p("M40 3H44V27H40") + _p("M5 8H29M5 14H23M5 20H33", "thin") + _dots([(36, 20)], 1.6),
-    _p("M4 28H44", "thin") + _p("M4 5L44 16M4 18L44 14M4 25L44 17"),
-    _p("M4 4L16 15L4 26M44 4L32 15L44 26") + _p("M16 15H19M22.5 15H25.5M29 15H32", "thin") + _dots([(16, 15), (32, 15)], 1.8),
+    _p("M40 3H44V27H40") + _p("M5 8H29M5 14H23M5 20H33", "thin") + '<circle class="cur" cx="36" cy="20" r="1.6"/>',
+    _p("M4 28H44", "thin") + _p("M4 5L44 16M4 18L44 14M4 25L44 17")
+    + "".join(f'<circle class="run" cx="4" cy="{y}" r="1.3" style="--dx:40px;--dy:{dy}px"/>' for y, dy in ((5, 11), (18, -4), (25, -8))),
+    _p("M4 4L16 15L4 26M44 4L32 15L44 26") + _p("M16 15H19M22.5 15H25.5M29 15H32", "thin") + _dots([(16, 15), (32, 15)], 1.8)
+    + '<circle class="run" cx="16" cy="15" r="1.5"/>',
 ]
 
 

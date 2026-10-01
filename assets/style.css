@@ -1962,3 +1962,28 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
             mask-image: radial-gradient(circle at 50% calc(100% - 11.2rem), #000 0%, #000 26%, transparent 58%);
   }
 }
+
+/* Research domains: on hover each little drawing does what it stands for. The terms of a series fill
+   its cone from the apex outwards, a loop momentum runs around the box, an excess lights up its mass
+   window, the cursor blinks after the code, the couplings run with the scale, and a new particle is
+   exchanged between two vertices. */
+.th-icon circle.run { opacity: 0; }
+.th-icon .win { fill: currentColor; stroke: none; opacity: 0; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .theme.d1:hover .th-icon circle { transform-box: fill-box; transform-origin: center;
+                                    animation: th-lit .8s ease both; animation-delay: calc(var(--k, 0) * 90ms + .35s); }
+  .theme.d2:hover .th-icon .run { animation: th-loop 2.4s linear .5s infinite; }
+  .theme.d3:hover .th-icon .win { animation: th-win 2.2s ease-in-out .3s infinite; }
+  .theme.d4:hover .th-icon .cur { animation: th-blink 1.05s steps(1) .3s infinite; }
+  .theme.d5:hover .th-icon .run { animation: th-flow 2.1s linear .3s infinite; }
+  .theme.d5:hover .th-icon .run:nth-of-type(2) { animation-delay: .6s; }
+  .theme.d5:hover .th-icon .run:nth-of-type(3) { animation-delay: .9s; }
+  .theme.d6:hover .th-icon .run { animation: th-hop 1.5s ease-in-out .4s infinite; }
+}
+@keyframes th-lit { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.9); } }
+@keyframes th-loop { 0% { opacity: 1; transform: translate(0, 0); } 25% { transform: translate(16px, 0); }
+                     50% { transform: translate(16px, 14px); } 75% { transform: translate(0, 14px); } 100% { opacity: 1; transform: translate(0, 0); } }
+@keyframes th-win { 0%, 100% { opacity: 0; } 50% { opacity: .2; } }
+@keyframes th-blink { 0% { opacity: 1; } 50% { opacity: 0; } }
+@keyframes th-flow { 0% { opacity: 0; transform: translate(0, 0); } 12%, 88% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)); } }
+@keyframes th-hop { 0% { opacity: 0; transform: translate(0, 0); } 15%, 85% { opacity: 1; } 100% { opacity: 0; transform: translate(16px, 0); } }
