@@ -177,7 +177,10 @@
         scene.drag(env, dx);
         if (reduce) draw();
       });
-      var release = function () { grab = null; env.dragging = false; };
+      var release = function () {
+        if (grab && scene.release) { scene.release(env); start(); }   // a scene may act when the drag ends (a swipe)
+        grab = null; env.dragging = false;
+      };
       window.addEventListener('pointerup', release);
       window.addEventListener('pointercancel', release);
     }
@@ -2390,12 +2393,20 @@
     return 0;
   }
   SCENES.tour = {
-    touchHint: 'Tap for the next paper',
+    touchHint: 'Swipe or tap for the next paper',
     init: function (e) {
       e.refs = (e.data && e.data.refs) || {};
       e.vs = TOUR.map(function (V) { var v = Object.create(e); v.V = V; return v; });
       e.i = 0; e.t0 = 0; e.begun = false;
       var self = this;
+      document.addEventListener('keydown', function (ev) {    // the arrow keys step through the papers
+        if ((ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') || ev.altKey || ev.ctrlKey || ev.metaKey || !e.begun) return;
+        var tg = ev.target, r = e.stage.getBoundingClientRect();
+        if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+        if (r.bottom < 60 || r.top > window.innerHeight - 60) return;
+        self.begin(e, e.i + (ev.key === 'ArrowRight' ? 1 : -1), e.t);
+        if (e.redraw) e.redraw();
+      });
       window.addEventListener('hashchange', function () {   // a tour link on this very page
         if (!/^#tour-/.test(window.location.hash) || !e.begun) return;
         self.begin(e, tourStart(e), e.t);
@@ -2442,7 +2453,8 @@
       c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, e.lay.c.width, e.lay.c.height); c.restore();
       c.save(); V.frame(v, lt); c.restore();
       var ctx = e.ctx;
-      ctx.save(); ctx.globalAlpha = a; ctx.drawImage(e.lay.c, e.box.x, e.box.y, e.box.w, e.box.h); ctx.restore();
+      var sw = e.dragging ? Math.max(-80, Math.min(80, e.swipe || 0)) * 0.5 : 0;   // the slide follows a dragging finger
+      ctx.save(); ctx.globalAlpha = a * (1 - Math.abs(sw) / 90); ctx.drawImage(e.lay.c, e.box.x + sw, e.box.y, e.box.w, e.box.h); ctx.restore();
       var n = e.vs.length, gap = Math.min(9, (e.w - 20) / n), y = e.y + e.h + 7;       // where we are in the tour
       for (var i = 0; i < n; i++) {
         var x = e.x + 3 + i * gap;
@@ -2452,7 +2464,12 @@
         } else { dot(ctx, x, y, e.hov === i ? 2.2 : 1.5, ink(e.hov === i ? 'brassD' : 'slate', e.hov === i ? 0.9 : 0.35)); if (e.hov === i) ring(ctx, x, y, 4.2, ink('brassD', 0.6), 1); }
       }
     },
-    click: function (e, x, y) { var k = this.dotAt(e, x, y); this.begin(e, k >= 0 ? k : e.i + 1, e.t); }
+    click: function (e, x, y) { var k = this.dotAt(e, x, y); this.begin(e, k >= 0 ? k : e.i + 1, e.t); },
+    drag: function (e, dx) { e.swipe = (e.swipe || 0) + dx; },
+    release: function (e) {                          // swipe left for the next paper, right for the one before
+      var d = e.swipe || 0; e.swipe = 0;
+      if (Math.abs(d) > 40) this.begin(e, e.i + (d < 0 ? 1 : -1), e.t);
+    }
   };
 
   /* =====================================================================

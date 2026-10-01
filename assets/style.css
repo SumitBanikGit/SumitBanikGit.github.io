@@ -1948,3 +1948,6 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 .theme-toggle.corner.away { opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden;
                             transition: opacity .3s ease, transform .3s ease, visibility 0s .3s; }   /* hidden from the keyboard too */
 @media print { .theme-toggle { display: none !important; } }
+
+/* Research tour: horizontal swipes go to the tour, vertical ones still scroll the page */
+[data-scene="tour"] .hero-stage { touch-action: pan-y; }

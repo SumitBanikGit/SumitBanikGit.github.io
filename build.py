@@ -898,7 +898,7 @@ def page_scenes():
     cities = {t[2] for t in TALKS}
     first_talk = min(int(t[0]) for t in TALKS)
     return {
-        "research.html": ("tour", "A tour of my papers", "Click for the next paper", tour_scene_data),
+        "research.html": ("tour", "A tour of my papers", "Click or use the arrow keys for the next paper", tour_scene_data),
         "publications.html": ("constellation", f"{len(PUBS)} publications from {min(years)} to {max(years)}",
                               "Hover over a star to see the paper", pub_scene_data),
         "talks.html": ("talkmap", f"{len(TALKS)} talks in {len(cities)} cities since {first_talk}",
