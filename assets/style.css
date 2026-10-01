@@ -1618,3 +1618,4 @@ main > #contact.chapter::before {
 }
 .tc-top .tc-ix { display: inline-block; vertical-align: -.32rem; width: 1.65rem; height: 1.05rem; margin-right: .55rem; color: var(--sec); }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) { .talk-card:hover .ix path { animation: redraw 1.1s cubic-bezier(.2, .7, .2, 1); } }
+@media (max-width: 30rem) { .scene-cap { font-size: 1.04rem; } }

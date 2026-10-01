@@ -1061,7 +1061,7 @@
   /* HyperPrecision: the partial sums of an Appell F1 series settle digit by digit on its
      exact value, 6 ln(4/3). The sums were computed exactly when the site was built. */
   var PRECISION = {
-    key: 'precision', paper: '2605.30216', dur: 11, cap: 'Multivariate hypergeometric functions to high precision',
+    key: 'precision', paper: '2605.30216', dur: 11, cap: 'Hypergeometric functions to high precision',
     layout: function (v) { v.S = Math.max(9, Math.min(13, v.w / 38)); v.D = Math.max(9, Math.min(15.5, v.w / 31)); },
     frame: function (v, t) {
       var ctx = v.ctx, hp = (v.data && v.data.hp) || null, R = v.reduce;
