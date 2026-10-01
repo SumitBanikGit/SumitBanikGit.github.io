@@ -433,7 +433,8 @@
     D.e.forEach(function (ed, i) {
       var g = v.geo[i], k = v.reduce ? 1 : ease((t - t0 - (ed.at !== undefined ? ed.at : i * st)) / du);
       var sty = EDGE_STYLE[ed.t], col = ink(ed.c || sty[0], 0.92), lw = ed.lw || sty[1];
-      if (k > 0) { started[ed.a] = 1; started[ed.b] = 1; }
+      if (k > 0) started[ed.a] = 1;
+      if (k > 0.95) started[ed.b] = 1;
       drawEdge(ctx, g, ed.t, k, col, lw, t);
       if (ed.t === 'f' && k > 0.6) arrowAt(ctx, g, ed.rev, col);
       if (ed.lab && k > 0.8) {
@@ -448,6 +449,7 @@
       if (!n[2] || !started[id]) return;
       var x = F.x + n[0] * F.s, y = F.y + n[1] * F.s;
       if (n[2] === 'op') opVertex(ctx, x, y, 6.5, 1, t);
+      else if (n[2] === 'blob') { dot(ctx, x, y, 6.5, ink('green', 0.9)); ring(ctx, x, y, 9, ink('green', 0.3), 1); }
       else dot(ctx, x, y, 2.3, ink('green', 0.95));
     });
   }
@@ -751,126 +753,184 @@
   var TRI = SCENES.triangulation, SPEC = SCENES.spectrum;
   delete SCENES.triangulation; delete SCENES.spectrum;
 
-  /* Conic hulls. The 2-fold Mellin-Barnes integral of 1/(1 + x + y)^a has three Gamma
-     functions, Gamma(-z1), Gamma(-z2) and Gamma(a + z1 + z2). Each pair of them fixes a
-     family of poles filling a cone; summing the residues in a cone gives one series. */
-  var CONES = [
-    { A: [0, 0], d1: [1, 0], d2: [0, 1], col: 'pine', lab: 'Γ(−z_1)\\,Γ(−z_2)' },
-    { A: [0, -1.5], d1: [1, -1], d2: [0, -1], col: 'brassD', lab: 'Γ(−z_1)\\,Γ(a+z_1+z_2)' },
-    { A: [-1.5, 0], d1: [-1, 1], d2: [-1, 0], col: 'crimson', lab: 'Γ(−z_2)\\,Γ(a+z_1+z_2)' }
+  /* Conic hulls, as in FIG. 1 of the paper. The two-fold Mellin-Barnes integral of the
+     Appell F1 function has five Gamma functions in the numerator. The coefficient vectors of
+     z in their arguments span cones at the origin; a set of cones with a common
+     intersection gives one series representation, and the intersection (the master conic
+     hull) gives its master series. The five representations converge in five regions that
+     tile the quadrant of |u1| and |u2|. */
+  var F1E = [[-1, 0], [0, -1], [1, 1], [1, 0], [0, 1]];
+  var F1CONES = [{ a: 45, b: 180, col: 'brass', lab: 'C_{13}' }, { a: 45, b: 90, col: 'brassD', lab: 'C_{35}' },
+                 { a: 0, b: 90, col: 'crimson', lab: 'C_{45}' }];
+  var F1REG = [
+    { p: [[0, 0], [1, 0], [1, 1], [0, 1]], col: 'pine', lab: 'R_1', c: [0.5, 0.5] },
+    { p: [[0, 1], [1, 1], [1, 5], [0, 5]], col: 'slate', lab: 'R_2', c: [0.5, 3] },
+    { p: [[1, 1], [5, 5], [1, 5]], col: 'crimson', lab: 'R_3', c: [2.3, 3.7] },
+    { p: [[1, 0], [5, 0], [5, 1], [1, 1]], col: 'brass', lab: 'R_4', c: [3, 0.5] },
+    { p: [[1, 1], [5, 1], [5, 5]], col: 'brassD', lab: 'R_5', c: [3.7, 2.3] }
   ];
+  function wedge(ctx, ox, oy, R, a0, a1) {           // a cone between two directions, in degrees, counterclockwise
+    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.arc(ox, oy, R, -a0 * D2R, -a1 * D2R, true); ctx.closePath();
+  }
+  function arrowHead(ctx, x, y, ang, s, color) {
+    ctx.fillStyle = color; ctx.beginPath();
+    ctx.moveTo(x, y); ctx.lineTo(x - s * Math.cos(ang - 0.42), y - s * Math.sin(ang - 0.42));
+    ctx.lineTo(x - s * Math.cos(ang + 0.42), y - s * Math.sin(ang + 0.42)); ctx.closePath(); ctx.fill();
+  }
   var CONIC = {
-    key: 'conic', paper: '2012.15108', dur: 12.5, cap: 'Conic hulls and series representations',
+    key: 'conic', paper: '2012.15108', dur: 13.5, cap: 'Conic hulls and series representations',
     layout: function (v) {
-      var u = Math.min((v.w * 0.6) / 7.4, (v.h - 10) / 6.7);
-      v.u = u; v.ox = v.x + 6 + 4.0 * u; v.oy = v.y + 6 + 2.6 * u; v.S = Math.max(9, Math.min(12.5, v.w / 42));
+      v.S = Math.max(9, Math.min(12, v.w / 44));
+      var side = Math.min(v.h - 16, v.w * 0.43);
+      v.A = { cx: v.x + side / 2 + 4, cy: v.y + v.h / 2, u: side / 3.3 };
+      var s2 = Math.min(v.h - 34, v.w * 0.36);
+      v.B = { x: v.x + v.w - s2 - 6, y: v.y + 8, s: s2 };
     },
     frame: function (v, t) {
-      var ctx = v.ctx, u = v.u, R = v.reduce, i, n;
-      function X(z1) { return v.ox + z1 * u; }
-      function Y(z2) { return v.oy - z2 * u; }
-      var x0 = X(-4), x1 = X(3.4), y0 = Y(2.6), y1 = Y(-4.1);
-      ctx.save(); ctx.beginPath(); ctx.rect(x0, y0, x1 - x0, y1 - y0); ctx.clip();
-      var ak = R ? 1 : ease(t / 0.8), lk = R ? 1 : ease((t - 0.8) / 1.2);
-      ctx.save(); ctx.setLineDash([3, 4]); ctx.lineWidth = 0.9;
-      for (n = 0; n <= 3; n++) line(ctx, X(n), y0, X(n), y1, ink('pine', 0.3 * lk));                 // poles of Gamma(-z1)
-      for (n = 0; n <= 2; n++) line(ctx, x0, Y(n), x1, Y(n), ink('brassD', 0.3 * lk));               // poles of Gamma(-z2)
-      for (n = 0; n <= 4; n++) line(ctx, X(-4), Y(-1.5 - n + 4), X(3.4), Y(-1.5 - n - 3.4), ink('crimson', 0.26 * lk));
+      var ctx = v.ctx, R = v.reduce, A = v.A, u = A.u, S = v.S;
+      function P(x, y) { return [A.cx + x * u, A.cy - y * u]; }
+      var ak = R ? 1 : ease(t / 0.8);
+      ctx.save(); ctx.globalAlpha *= ak;
+      line(ctx, A.cx - 1.55 * u, A.cy, A.cx + 1.55 * u, A.cy, ink('green', 0.3), 1);
+      line(ctx, A.cx, A.cy - 1.55 * u, A.cx, A.cy + 1.55 * u, ink('green', 0.3), 1);
       ctx.restore();
-      line(ctx, x0, Y(0), x1, Y(0), ink('green', 0.55 * ak), 1); line(ctx, X(0), y0, X(0), y1, ink('green', 0.55 * ak), 1);
-      CONES.forEach(function (C, ci) {
-        var start = 2.3 + ci * 2.6, ck = R ? 1 : ease((t - start) / 0.9);
-        if (ck <= 0) return;
-        var ax = X(C.A[0]), ay = Y(C.A[1]);
-        ctx.fillStyle = ink(C.col, 0.08 * ck);
-        ctx.beginPath(); ctx.moveTo(ax, ay);
-        ctx.lineTo(X(C.A[0] + 12 * C.d1[0]), Y(C.A[1] + 12 * C.d1[1]));
-        ctx.lineTo(X(C.A[0] + 12 * (C.d1[0] + C.d2[0])), Y(C.A[1] + 12 * (C.d1[1] + C.d2[1])));
-        ctx.lineTo(X(C.A[0] + 12 * C.d2[0]), Y(C.A[1] + 12 * C.d2[1])); ctx.closePath(); ctx.fill();
-        line(ctx, ax, ay, X(C.A[0] + 12 * C.d1[0] * ck), Y(C.A[1] + 12 * C.d1[1] * ck), ink(C.col, 0.75), 1.2);
-        line(ctx, ax, ay, X(C.A[0] + 12 * C.d2[0] * ck), Y(C.A[1] + 12 * C.d2[1] * ck), ink(C.col, 0.75), 1.2);
-        for (var p = 0; p <= 6; p++) for (var q = 0; q <= 6 - p; q++) {     // residues, summed order by order
-          var dk = R ? 1 : ease((t - start - 0.45 - (p + q) * 0.16) / 0.3);
-          if (dk <= 0) continue;
-          var zx = C.A[0] + p * C.d1[0] + q * C.d2[0], zy = C.A[1] + p * C.d1[1] + q * C.d2[1];
-          dot(ctx, X(zx), Y(zy), 2.4 * dk, ink(C.col, 0.95));
+      F1CONES.forEach(function (C, i) {                // the three cones of FIG. 1, one after another
+        var k = R ? 1 : ease((t - 2.2 - i * 1.3) / 0.8);
+        if (k <= 0) return;
+        ctx.fillStyle = ink(C.col, 0.13 * k); wedge(ctx, A.cx, A.cy, 1.45 * u, C.a, C.a + (C.b - C.a) * k); ctx.fill();
+      });
+      var mk = R ? 1 : ease((t - 6.2) / 0.8);          // their common intersection: the master conic hull C35
+      if (mk > 0) {
+        ctx.fillStyle = ink('brassD', 0.28 * mk); wedge(ctx, A.cx, A.cy, 1.45 * u, 45, 90); ctx.fill();
+        ctx.strokeStyle = ink('brassD', 0.9 * mk); ctx.lineWidth = 1.4; wedge(ctx, A.cx, A.cy, 1.45 * u, 45, 90); ctx.stroke();
+        ctx.save(); ctx.globalAlpha *= mk;
+        var mp = P(0.5, 1.5);
+        caps(ctx, 'MASTER CONE', mp[0] + 6, mp[1] - 2, ink('brassD', 1), 7.5, 'left');
+        ctx.restore();
+      }
+      F1E.forEach(function (e, i) {                    // the five vectors, labelled by their Gamma function
+        var k = R ? 1 : ease((t - 0.4 - i * 0.25) / 0.6);
+        if (k <= 0) return;
+        var n = Math.hypot(e[0], e[1]), L = 1.2 * k, tip = P(e[0] / n * L, e[1] / n * L);
+        line(ctx, A.cx, A.cy, tip[0], tip[1], ink('green', 0.9), 1.4);
+        arrowHead(ctx, tip[0], tip[1], Math.atan2(tip[1] - A.cy, tip[0] - A.cx), 6, ink('green', 0.9));
+        if (k > 0.9) {
+          var lp = P(e[0] / n * 1.42, e[1] / n * 1.42);
+          dot(ctx, lp[0], lp[1], 7, ink('paper', 0.95)); ring(ctx, lp[0], lp[1], 7, ink('green', 0.6), 0.8);
+          ctx.font = font(9, SANS, 600); ctx.fillStyle = ink('green', 1); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(i + 1), lp[0], lp[1] + 0.5); ctx.textBaseline = 'alphabetic';
         }
       });
-      var cx = X(-0.5), cy = Y(-0.5), ck2 = R ? 1 : ease((t - 1.4) / 0.6);           // the straight contour, Re z = c
-      if (ck2 > 0) {
-        line(ctx, cx - 4, cy - 4, cx + 4, cy + 4, ink('green', ck2), 1.5); line(ctx, cx - 4, cy + 4, cx + 4, cy - 4, ink('green', ck2), 1.5);
-      }
-      ctx.restore();
-      ctx.save(); ctx.globalAlpha *= ak;
-      drawMath(ctx, '\\rm{Re}\\,z_1', x1 - 2, Y(0) - 6, v.S * 0.85, ink('slate', 0.9), 'right');
-      drawMath(ctx, '\\rm{Re}\\,z_2', X(0) - 5, y0 + 11, v.S * 0.85, ink('slate', 0.9), 'right');
-      ctx.restore();
-      var px = x1 + 14, pw = v.x + v.w - px, S = v.S;                             // the integral and its three series
-      if (pw > 90) {
-        ctx.save(); ctx.globalAlpha *= ak;
-        drawMath(ctx, '\\frac{1}{(1+x+y)^a}', px, v.y + 34, S * 1.15, ink('green', 0.95), 'left');
-        caps(ctx, 'THREE SERIES', px, v.y + 62, ink('slate', 0.85), 8);
-        ctx.restore();
-        CONES.forEach(function (C, ci) {
-          var k = R ? 1 : ease((t - 2.3 - ci * 2.6) / 0.6);
+      var B = v.B, s = B.s / 5, rk = R ? 1 : ease((t - 7.4) / 0.6);   // the five regions in the quadrant
+      if (rk > 0) {
+        ctx.save(); ctx.globalAlpha *= rk;
+        function Q(x, y) { return [B.x + x * s, B.y + B.s - y * s]; }
+        F1REG.forEach(function (Rg, i) {
+          var k = R ? 1 : ease((t - 7.6 - i * 0.35) / 0.4);
           if (k <= 0) return;
-          ctx.save(); ctx.globalAlpha *= k;
-          var yy = v.y + 84 + ci * 24;
-          dot(ctx, px + 4, yy - 4, 3.2, ink(C.col, 0.95));
-          drawMath(ctx, C.lab, px + 14, yy, S * 0.9, ink('green', 0.9), 'left');
-          ctx.restore();
+          ctx.fillStyle = ink(Rg.col, (i === 2 ? 0.3 : 0.16) * k); ctx.beginPath();
+          Rg.p.forEach(function (q, j) { var c = Q(q[0], q[1]); if (j) ctx.lineTo(c[0], c[1]); else ctx.moveTo(c[0], c[1]); });
+          ctx.closePath(); ctx.fill();
+          var cc = Q(Rg.c[0], Rg.c[1]);
+          drawMath(ctx, Rg.lab, cc[0], cc[1] + 4, S * 0.95, ink(Rg.col, k), 'center');
         });
+        ctx.strokeStyle = ink('green', 0.55); ctx.lineWidth = 1;
+        var o = Q(0, 0), a1 = Q(1, 0), a2 = Q(1, 5), b1 = Q(0, 1), b2 = Q(5, 1), d1 = Q(1, 1), d2 = Q(5, 5);
+        ctx.strokeRect(o[0], d2[1], 5 * s, 5 * s);
+        line(ctx, a1[0], a1[1], a2[0], a2[1], ink('green', 0.45), 1); line(ctx, b1[0], b1[1], b2[0], b2[1], ink('green', 0.45), 1);
+        line(ctx, d1[0], d1[1], d2[0], d2[1], ink('green', 0.45), 1);
+        drawMath(ctx, '|u_1|', B.x + B.s, B.y + B.s + 13, S * 0.85, ink('slate', 0.95), 'right');
+        drawMath(ctx, '|u_2|', B.x - 4, B.y + 9, S * 0.85, ink('slate', 0.95), 'right');
+        var fk = R ? 1 : ease((t - 9.8) / 0.6);
+        if (fk > 0) { ctx.globalAlpha *= fk; drawMath(ctx, 'R_3:\\,B_{13}+B_{35}^{∗}+B_{45}', B.x + B.s, B.y + B.s + 27, S * 0.85, ink('crimson', 0.95), 'right'); }
+        ctx.restore();
+      }
+      if (v.w > 420) {                                 // the Gamma functions behind the vectors
+        ctx.save(); ctx.globalAlpha *= ak;
+        drawMath(ctx, '1\\,Γ(−z_1)\\quad 2\\,Γ(−z_2)\\quad 3\\,Γ(a+z_1+z_2)', v.x + 2, v.y + 9, S * 0.76, ink('slate', 0.85), 'left');
+        drawMath(ctx, '4\\,Γ(b_1+z_1)\\quad 5\\,Γ(b_2+z_2)', v.x + 2, v.y + 9 + S * 1.5, S * 0.76, ink('slate', 0.85), 'left');
+        ctx.restore();
       }
     }
   };
 
-  /* A one-fold Mellin-Barnes integral: the straight contour Re z = c separates the poles
-     of Gamma(a + z) from those of Gamma(-z); closing it to the right sums the residues. */
+  /* Straight contours, as in Fig. 1 of the paper: the poles of the five Gamma functions of a
+     two-fold integral form lines in the plane of Re z1 and Re z2. The contour at the first
+     point separates every pole set. At the second point the straight contours split the poles
+     of Gamma(-z1) and Gamma(3/5 + z2), which are rewritten with the reflection formula before
+     the conic hull method applies. */
+  var SPLIT_FAM = [
+    { col: 'pine', lab: 'Γ(−z_1)', lines: [0, 1, 2, 3], dir: 'v' },
+    { col: 'brassD', lab: 'Γ(\\frac{2}{3}+z_1)', lines: [-2 / 3, -5 / 3, -8 / 3], dir: 'v' },
+    { col: 'crimson', lab: 'Γ(−z_2)', lines: [0, 1, 2, 3], dir: 'h' },
+    { col: 'brass', lab: 'Γ(\\frac{3}{5}+z_2)', lines: [-3 / 5, -8 / 5, -13 / 5], dir: 'h' },
+    { col: 'slate', lab: 'Γ(\\frac{3}{7}+z_1+z_2)', lines: [0, 1, 2, 3, 4], dir: 'd' }
+  ];
   var CONTOUR = {
-    key: 'contour', paper: '2212.11839', dur: 11.5, cap: 'Mellin-Barnes integrals with straight contours',
+    key: 'contour', paper: '2212.11839', dur: 13, cap: 'Mellin-Barnes integrals with straight contours',
     layout: function (v) {
-      v.S = Math.max(9.5, Math.min(13, v.w / 38)); v.ux = v.w / 11.2;
-      v.cx0 = v.x + v.w * 0.44; v.ay = v.y + v.h * 0.62; v.ry = Math.min(v.h * 0.33, 80);
+      v.S = Math.max(9, Math.min(12, v.w / 44));
+      var side = Math.min(v.h - 10, v.w * 0.5);
+      v.u = side / 7.2; v.ox = v.x + 4 + 3.6 * v.u; v.oy = v.y + v.h / 2; v.side = side;
     },
     frame: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, ux = v.ux, c = -0.3, a = 0.6, n;
-      function X(re) { return v.cx0 + re * ux; }
-      var ak = R ? 1 : ease(t / 0.7), top = v.ay - v.ry - 10, bot = v.ay + v.ry + 10;
-      line(ctx, v.x + 6, v.ay, v.x + v.w - 6, v.ay, ink('green', 0.45 * ak), 1);                   // real axis
-      ctx.save(); ctx.globalAlpha *= ak; drawMath(ctx, '\\rm{Re}\\,z', v.x + v.w - 6, v.ay - 7, v.S * 0.85, ink('slate', 0.9), 'right'); ctx.restore();
-      var lk = R ? 1 : ease((t - 0.4) / 1.1), yTop = bot + (top - bot) * lk;                         // the contour
-      line(ctx, X(c), bot, X(c), yTop, ink('green', 0.95), 1.6);
-      if (lk > 0.95) {
-        ctx.fillStyle = ink('green', 0.95); ctx.beginPath();
-        ctx.moveTo(X(c), v.ay - v.ry * 0.5 - 6); ctx.lineTo(X(c) - 4, v.ay - v.ry * 0.5 + 2); ctx.lineTo(X(c) + 4, v.ay - v.ry * 0.5 + 2); ctx.fill();
+      var ctx = v.ctx, R = v.reduce, u = v.u, S = v.S, lim = 3.5;
+      function X(z) { return v.ox + z * u; }
+      function Y(z) { return v.oy - z * u; }
+      ctx.save(); ctx.beginPath(); ctx.rect(X(-lim), Y(lim), 2 * lim * u, 2 * lim * u); ctx.clip();
+      var ak = R ? 1 : ease(t / 0.6);
+      line(ctx, X(-lim), Y(0), X(lim), Y(0), ink('green', 0.35 * ak), 1); line(ctx, X(0), Y(-lim), X(0), Y(lim), ink('green', 0.35 * ak), 1);
+      var bk = R ? 1 : ease((t - 4.2) / 0.6), pulse = R ? 1 : 0.5 + 0.5 * Math.sin(t * 5);
+      SPLIT_FAM.forEach(function (F, fi) {             // pole lines, one family after another
+        var k = R ? 1 : ease((t - 0.6 - fi * 0.45) / 0.5);
+        if (k <= 0) return;
+        F.lines.forEach(function (c) {
+          var split = bk > 0 && ((fi === 0 && c < 7 / 3) || (fi === 3 && c > -3 / 2));
+          var al = (split ? 0.45 + 0.45 * pulse * bk : 0.42) * k, lw = split ? 1.6 : 1;
+          ctx.save(); if (!split) ctx.setLineDash([3, 3]);
+          if (F.dir === 'v') line(ctx, X(c), Y(lim), X(c), Y(-lim), ink(F.col, al), lw);
+          else if (F.dir === 'h') line(ctx, X(-lim), Y(c), X(lim), Y(c), ink(F.col, al), lw);
+          else { var s0 = -3 / 7 - c; line(ctx, X(-lim), Y(s0 + lim), X(lim), Y(s0 - lim), ink(F.col, al), lw); }
+          ctx.restore();
+        });
+      });
+      var pk = R ? 1 : ease((t - 3) / 0.5);             // the first choice of contour: nothing is split
+      if (pk > 0) {
+        var ax = X(-1 / 7), ay = Y(-1 / 9);
+        dot(ctx, ax, ay, 3.6 * pk, ink('green', 1)); ring(ctx, ax, ay, 6.5, ink('green', 0.6 * pk), 1);
       }
-      for (n = 0; n <= 4; n++) {                                                                    // the poles
-        var pk = R ? 1 : ease((t - 1.3 - n * 0.14) / 0.35);
-        if (pk > 0) dot(ctx, X(n), v.ay, 3 * pk, ink('pine', 0.95));
-        var lk2 = R ? 1 : ease((t - 1.5 - n * 0.14) / 0.35);
-        if (lk2 > 0 && X(-a - n) > v.x + 8) dot(ctx, X(-a - n), v.ay, 3 * lk2, ink('brassD', 0.95));
+      if (bk > 0) {                                    // the second: straight lines through (7/3, -3/2)
+        var bx = X(7 / 3), by = Y(-3 / 2);
+        ctx.save(); ctx.setLineDash([5, 4]);
+        line(ctx, bx, Y(lim), bx, Y(-lim), ink('crimson', 0.7 * bk), 1.1); line(ctx, X(-lim), by, X(lim), by, ink('crimson', 0.7 * bk), 1.1);
+        ctx.restore();
+        dot(ctx, bx, by, 3.8 * bk, ink('crimson', 1)); ring(ctx, bx, by, 7, ink('crimson', 0.6 * bk), 1);
       }
-      var gk = R ? 1 : ease((t - 2.3) / 0.6);
-      ctx.save(); ctx.globalAlpha *= gk;
-      drawMath(ctx, 'Γ(−z)', X(2), v.ay + 22, v.S, ink('pine', 0.95), 'center');
-      drawMath(ctx, 'Γ(a+z)', X(-2.1), v.ay + 22, v.S, ink('brassD', 0.95), 'center');
-      drawMath(ctx, '\\rm{Re}\\,z=c', X(c) - 8, top + 4, v.S * 0.9, ink('green', 0.9), 'right');
       ctx.restore();
-      var ck = R ? 1 : easeInOut((t - 3.2) / 1.6), rx = X(4.7) - X(c);                               // close to the right
-      if (ck > 0) {
-        ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = ink('green', 0.7); ctx.lineWidth = 1.3;
-        ctx.beginPath(); ctx.ellipse(X(c), v.ay, rx, v.ry, 0, -Math.PI / 2, -Math.PI / 2 + Math.PI * ck); ctx.stroke(); ctx.restore();
-      }
-      for (n = 0; n <= 4; n++) {                                                                    // residues, one by one
-        var rk = R ? 1 : clamp01((t - 5 - n * 0.42) / 0.5);
-        if (rk <= 0) continue;
-        ring(ctx, X(n), v.ay, 5 + 4 * (1 - rk), ink('pine', 0.9 * rk + 0.1), 1.2);
-      }
-      var S = v.S, fk = R ? 1 : ease((t - 0.2) / 0.8), sk = R ? 1 : ease((t - 7.3) / 0.8);
-      ctx.save(); ctx.globalAlpha *= fk;
-      var b = drawMath(ctx, '\\frac{1}{2πi}\\int\\rm{d}z\\,Γ(−z)\\,Γ(a+z)\\,x^z', v.x + 6, v.y + 22, S, ink('green', 0.95), 'left');
+      ctx.save(); ctx.globalAlpha *= ak;
+      ctx.strokeStyle = ink('green', 0.4); ctx.lineWidth = 1; ctx.strokeRect(X(-lim), Y(lim), 2 * lim * u, 2 * lim * u);
+      drawMath(ctx, '\\rm{Re}\\,z_1', X(lim) - 3, Y(0) - 5, S * 0.8, ink('slate', 0.95), 'right');
+      drawMath(ctx, '\\rm{Re}\\,z_2', X(0) + 5, Y(lim) + 12, S * 0.8, ink('slate', 0.95), 'left');
       ctx.restore();
-      if (sk > 0) { ctx.save(); ctx.globalAlpha *= sk; drawMath(ctx, '=Γ(a)\\,(1+x)^{−a}', v.x + 6 + b.w, v.y + 22, S, ink('crimson', 0.95), 'left'); ctx.restore(); }
+      var lx = X(lim) + 16, ly = v.y + 18, room = v.x + v.w - lx;   // legend of the five families
+      if (room > 100) {
+        SPLIT_FAM.forEach(function (F, fi) {
+          var k = R ? 1 : ease((t - 0.6 - fi * 0.45) / 0.5);
+          if (k <= 0) return;
+          ctx.save(); ctx.globalAlpha *= k;
+          var yy = ly + fi * (S * 2.05);
+          line(ctx, lx, yy - 4, lx + 16, yy - 4, ink(F.col, 0.9), 1.6);
+          drawMath(ctx, F.lab, lx + 22, yy, S * 0.88, ink('green', 0.95), 'left');
+          ctx.restore();
+        });
+        var fk = R ? 1 : ease((t - 6.6) / 0.8);
+        if (fk > 0) {
+          ctx.save(); ctx.globalAlpha *= fk;
+          caps(ctx, 'SPLIT POLES ARE REWRITTEN', lx, ly + 5 * S * 2.05 + 6, ink('crimson', 0.9), 7.5);
+          drawMath(ctx, 'Γ(−z_1)=−\\frac{Γ(3−z_1)\\,Γ(−2+z_1)}{Γ(1+z_1)}', lx, ly + 5 * S * 2.05 + S * 2.9, S * 0.9, ink('green', 0.95), 'left');
+          ctx.restore();
+        }
+      }
     }
   };
 
@@ -928,90 +988,154 @@
              { a: 'v2', b: 'o', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] }], stagger: 0.5, edgeDur: 0.7 }
   });
 
-  /* Proton decay through a baryon-number-violating operator of the SMEFT:
-     u u turn into e+ and an anti-d quark, which binds with the spectator d into a pion. */
-  function brace(ctx, x, y1, y2, dir, color) {      // a curly bracket, opening to dir = +1 (right) or -1 (left)
-    var m = (y1 + y2) / 2, w = 6 * dir;
-    ctx.strokeStyle = color; ctx.lineWidth = 1.1; ctx.beginPath();
-    ctx.moveTo(x + w, y1); ctx.quadraticCurveTo(x, y1, x, y1 + 6); ctx.lineTo(x, m - 5); ctx.quadraticCurveTo(x, m, x - w, m);
-    ctx.quadraticCurveTo(x, m, x, m + 5); ctx.lineTo(x, y2 - 6); ctx.quadraticCurveTo(x, y2, x + w, y2); ctx.stroke();
-  }
-  var BNV = diagramVignette({
-    key: 'bnv', paper: '2510.08682', dur: 10.5, cap: 'Baryon number violation and proton decay',
-    D: { n: { u1: [0.2, 0.26], u2: [0.2, 0.46], d1: [0.2, 0.8], O: [0.9, 0.36, 'op'], ep: [1.62, 0.1], db: [1.52, 0.58], d2: [1.52, 0.8] },
-         e: [{ a: 'u1', b: 'O', t: 'f', lab: 'u', lt: 0.25, lo: [0, -9] }, { a: 'u2', b: 'O', t: 'f', lab: 'u', lt: 0.25, lo: [0, 16] },
-             { a: 'd1', b: 'd2', t: 'f', lab: 'd', lt: 0.12, lo: [0, -8] },
-             { a: 'O', b: 'ep', t: 'f', rev: 1, lab: 'e^+', lt: 0.8, lo: [0, -9] }, { a: 'O', b: 'db', t: 'f', rev: 1, lab: '\\bar{d}', lt: 0.8, lo: [0, -9] }],
-         stagger: 0.45, edgeDur: 0.6 },
+  /* Baryon number violation in the SMEFT. A heavy S1 leptoquark generates the four
+     baryon-number-violating operators at tree level: as its mass is sent to the matching
+     scale, the exchange shrinks into a point interaction. The two-loop running from
+     M = 6.5 x 10^15 GeV down to 100 GeV then enhances the coefficients; the values are read
+     from Fig. 2 of the paper. */
+  var BNV_BARS = [['C_{duqℓ}', 2.3], ['C_{qque}', 2.45], ['C_{duue}^{+}', 2.1], ['C_{duue}^{−}', 1.4], ['S_{qqqℓ}', 4.5], ['M_{qqqℓ}', 2.0]];
+  var BNV = {
+    key: 'bnv', paper: '2510.08682', dur: 12.5, cap: 'Baryon number violation in the SMEFT',
+    layout: function (v) { v.F = dFrame(v, 1.9, 14); v.S = Math.max(9, Math.min(12, v.w / 44)); },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, F = v.F, S = v.S, split = 5.6;
+      function P(x, y) { return [F.x + x * F.s, F.y + y * F.s]; }
+      var a1 = R ? 0 : clamp01((split - t) / 0.5), a2 = R ? 1 : clamp01((t - split) / 0.5);
+      if (a1 > 0) {                                    // the S1 exchange shrinks into the operator
+        ctx.save(); ctx.globalAlpha *= a1;
+        var sk = R ? 1 : easeInOut((t - 2.4) / 1.8), gap = 0.42 * (1 - sk), c = 0.95;
+        var L = P(c - gap, 0.5), Rr = P(c + gap, 0.5), k = R ? 1 : ease((t - 0.3) / 0.9);
+        var legs = [[0.2, 0.12, L, 'q', [-10, -2]], [0.2, 0.88, L, 'q', [-10, 12]], [1.7, 0.12, Rr, 'q', [10, -2]], [1.7, 0.88, Rr, 'ℓ', [10, 12]]];
+        legs.forEach(function (g) {
+          var a = P(g[0], g[1]), geo = pathGeo([a, [(a[0] + g[2][0]) / 2, (a[1] + g[2][1]) / 2], g[2]]);
+          drawEdge(ctx, geo, 'f', k, ink('green', 0.92), 1.4, t);
+          if (k > 0.6) arrowAt(ctx, geo, false, ink('green', 0.92));
+          if (k > 0.8) drawMath(ctx, g[3], a[0] + g[4][0], a[1] + g[4][1], 13, ink('green', 0.95), 'center');
+        });
+        if (gap > 0.01) {
+          var sg = pathGeo([L, Rr]); drawEdge(ctx, sg, 's', R ? 1 : ease((t - 1) / 0.6), ink('crimson', 0.9), 1.4, t);
+          if (t > 1.4) drawMath(ctx, 'S_1', (L[0] + Rr[0]) / 2, L[1] - 9, 13, ink('crimson', 0.95), 'center');
+          dot(ctx, L[0], L[1], 2.3, ink('green', 0.95)); dot(ctx, Rr[0], Rr[1], 2.3, ink('green', 0.95));
+        } else opVertex(ctx, L[0], L[1], 7, 1, t);
+        var mk = R ? 1 : ease((t - 4.2) / 0.5);
+        if (mk > 0) { ctx.globalAlpha *= mk; drawMath(ctx, '\\rm{matching\\,at}\\,M,\\quad ΔB=ΔL=1', v.x + v.w - 4, v.y + v.h - 9, S * 0.9, ink('slate', 0.95), 'right'); }
+        ctx.restore();
+      }
+      if (a2 > 0) {                                    // the enhancement at 100 GeV, coefficient by coefficient
+        ctx.save(); ctx.globalAlpha *= a2;
+        var L0 = v.x + 30, R0 = v.x + v.w - 6, T0 = v.y + 30, B0 = v.y + v.h - 26, n = BNV_BARS.length, bw = (R0 - L0) / n;
+        function Y(val) { return B0 - val / 5 * (B0 - T0); }
+        line(ctx, L0, T0, L0, B0, ink('green', 0.55), 1); line(ctx, L0, B0, R0, B0, ink('green', 0.55), 1);
+        ctx.font = font(9, SANS, 500); ctx.fillStyle = ink('slate', 0.9); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        [1, 2, 3, 4, 5].forEach(function (g) { line(ctx, L0 - 3, Y(g), L0, Y(g), ink('green', 0.55), 1); ctx.fillText(String(g), L0 - 6, Y(g)); });
+        ctx.textBaseline = 'alphabetic';
+        ctx.save(); ctx.setLineDash([3, 3]); line(ctx, L0, Y(1), R0, Y(1), ink('brass', 0.7), 1); ctx.restore();
+        BNV_BARS.forEach(function (b, i) {
+          var k = R ? 1 : ease((t - split - 0.3 - i * 0.22) / 1.1), val = 1 + (b[1] - 1) * k, x = L0 + bw * (i + 0.2), w = bw * 0.6;
+          ctx.fillStyle = ink(i === 4 ? 'crimson' : 'pine', 0.22); ctx.fillRect(x, Y(val), w, B0 - Y(val));
+          ctx.fillStyle = ink(i === 4 ? 'crimson' : 'pine', 0.9); ctx.fillRect(x, Y(val) - 1, w, 2);
+          drawMath(ctx, b[0], x + w / 2, B0 + 15, S * 0.82, ink('green', 0.95), 'center');
+          if (k > 0.95) { ctx.font = font(9, SANS, 600); ctx.fillStyle = ink('slate', 1); ctx.textAlign = 'center'; ctx.fillText('≈' + b[1], x + w / 2, Y(val) - 5); }
+        });
+        drawMath(ctx, '\\frac{C(100\\,\\rm{GeV})}{C(M)},\\quad M=6.5×10^{15}\\,\\rm{GeV}', v.x + v.w - 4, v.y + 14, S * 0.85, ink('slate', 0.95), 'right');
+        ctx.restore();
+      }
+    }
+  };
+
+  /* Drell-Yan production of a real Higgs triplet: the neutral member decays to two photons
+     and the charged one, near 152 GeV, mostly to W and Z. */
+  var TRIPLET = diagramVignette({
+    key: 'triplet', paper: '2402.00101', dur: 10.5, cap: 'Drell-Yan production of a Higgs triplet',
+    D: { n: { q: [0.12, 0.1], qb: [0.12, 0.9], v1: [0.5, 0.5, 1], v2: [0.95, 0.5, 1], vc: [1.32, 0.24, 1], vn: [1.32, 0.76, 1],
+              w: [1.8, 0.06], z: [1.82, 0.4], g1: [1.82, 0.62], g2: [1.8, 0.96] },
+         e: [{ a: 'q', b: 'v1', t: 'f', lab: 'q', lo: [-10, -4] }, { a: 'qb', b: 'v1', t: 'f', rev: 1, lab: "\\bar{q}'", lo: [-12, 8] },
+             { a: 'v1', b: 'v2', t: 'w', lab: 'W^{±∗}', lo: [0, -12] },
+             { a: 'v2', b: 'vc', t: 's', lab: 'Δ^±', lo: [-10, -8] }, { a: 'v2', b: 'vn', t: 's', lab: 'Δ^0', lo: [-12, 16] },
+             { a: 'vc', b: 'w', t: 'w', lab: 'W^±', lt: 0.85, lo: [0, -9] }, { a: 'vc', b: 'z', t: 'w', lab: 'Z', lt: 0.85, lo: [4, 13] },
+             { a: 'vn', b: 'g1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'vn', b: 'g2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
+         stagger: 0.36, edgeDur: 0.55 },
     extra: function (v, t) {
-      var ctx = v.ctx, F = v.F, k = v.reduce ? 1 : ease((t - 2.8) / 0.6);
-      if (k <= 0) return;
-      ctx.save(); ctx.globalAlpha *= k;
-      brace(ctx, F.x + 0.12 * F.s, F.y + 0.2 * F.s, F.y + 0.86 * F.s, 1, ink('slate', 0.8));
-      drawMath(ctx, 'p', F.x + 0.03 * F.s, F.y + 0.56 * F.s, 14, ink('green', 0.95), 'center');
-      brace(ctx, F.x + 1.6 * F.s, F.y + 0.52 * F.s, F.y + 0.86 * F.s, -1, ink('slate', 0.8));
-      drawMath(ctx, 'π^0', F.x + 1.72 * F.s, F.y + 0.73 * F.s, 14, ink('green', 0.95), 'center');
-      drawMath(ctx, 'p\\to e^+π^0', v.x + v.w - 4, v.y + 16, 13, ink('crimson', 0.95), 'right');
-      ctx.restore();
+      var k = v.reduce ? 1 : ease((t - 4) / 0.6);
+      if (k > 0) drawMath(v.ctx, 'm_Δ≈152\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11.5, ink('slate', 0.9 * k), 'left');
     }
   });
 
-  /* Drell-Yan production of the charged and neutral members of a Higgs triplet,
-     with the neutral one decaying to two photons. */
-  var TRIPLET = diagramVignette({
-    key: 'triplet', paper: '2402.00101', dur: 10, cap: 'Drell-Yan production of a Higgs triplet',
-    D: { n: { q: [0.12, 0.1], qb: [0.12, 0.9], v1: [0.52, 0.5, 1], v2: [1.0, 0.5, 1], hc: [1.72, 0.14], v3: [1.36, 0.74, 1], g1: [1.8, 0.6], g2: [1.78, 0.96] },
-         e: [{ a: 'q', b: 'v1', t: 'f', lab: 'q', lo: [-10, -4] }, { a: 'qb', b: 'v1', t: 'f', rev: 1, lab: "\\bar{q}'", lo: [-12, 8] },
-             { a: 'v1', b: 'v2', t: 'w', lab: 'W^{±∗}', lo: [0, -12] },
-             { a: 'v2', b: 'hc', t: 's', lab: 'H^±', lo: [-4, -10] }, { a: 'v2', b: 'v3', t: 's', lab: 'H^0', lo: [-16, 14] },
-             { a: 'v3', b: 'g1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'v3', b: 'g2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
-         stagger: 0.42, edgeDur: 0.6 }
-  });
-
-  /* Two-loop Barr-Zee diagram: the electron electric dipole moment from a new scalar and
-     a photon attached to a top-quark loop. */
+  /* Two-loop Barr-Zee diagram for an electric dipole moment: a neutral scalar and a photon
+     connect the fermion line to a loop of top quarks, W bosons or charged Higgs bosons. */
   var BARRZEE = diagramVignette({
     key: 'barrzee', paper: '2412.00523', dur: 10, cap: 'Electric dipole moments from Barr-Zee diagrams',
     D: { n: { e1: [0.1, 0.9], a1: [0.62, 0.9, 1], a2: [1.28, 0.9, 1], e2: [1.8, 0.9],
               l1: [0.95 - 0.17, 0.42 + 0.1, 1], l2: [0.95 + 0.17, 0.42 + 0.1, 1], l3: [0.95, 0.22, 1], out: [0.95, 0.0] },
          e: [{ a: 'e1', b: 'a1', t: 'f', lab: 'e', lo: [0, 16] }, { a: 'a1', b: 'a2', t: 'f' }, { a: 'a2', b: 'e2', t: 'f', lab: 'e', lo: [0, 16] },
-             { a: 'a1', b: 'l1', t: 's', lab: 'A', lo: [-12, 0] }, { a: 'a2', b: 'l2', t: 'ph', lab: 'γ', lo: [12, 2] },
+             { a: 'a1', b: 'l1', t: 's', lab: 'h_k', lo: [-14, 0] }, { a: 'a2', b: 'l2', t: 'ph', lab: 'γ', lo: [12, 2] },
              { a: 'l1', b: 'l3', t: 'f', arc: [0.95, 0.42, 0.2, 150 * D2R, 270 * D2R] },
-             { a: 'l3', b: 'l2', t: 'f', arc: [0.95, 0.42, 0.2, 270 * D2R, 390 * D2R], lab: 't', lt: 0.5, lo: [12, 0] },
+             { a: 'l3', b: 'l2', t: 'f', arc: [0.95, 0.42, 0.2, 270 * D2R, 390 * D2R] },
              { a: 'l2', b: 'l1', t: 'f', arc: [0.95, 0.42, 0.2, 30 * D2R, 150 * D2R] },
-             { a: 'l3', b: 'out', t: 'ph', lab: 'γ', lt: 0.7, lo: [12, 0] }], stagger: 0.36, edgeDur: 0.55 }
-  });
-
-  /* Asymmetric di-Higgs: gluon fusion through a top loop into a heavy scalar that decays
-     into two different lighter ones. */
-  var DIHIGGS = diagramVignette({
-    key: 'dihiggs', paper: '2303.11351', dur: 10, cap: 'Asymmetric di-Higgs signals',
-    D: { n: { g1: [0.08, 0.12], g2: [0.08, 0.88], t1: [0.5, 0.26, 1], t2: [0.5, 0.74, 1], t3: [0.82, 0.5, 1], v: [1.22, 0.5, 1], h1: [1.8, 0.14], h2: [1.8, 0.86] },
-         e: [{ a: 'g1', b: 't1', t: 'g', lab: 'g', lt: 0.35, lo: [6, -10] }, { a: 'g2', b: 't2', t: 'g', lab: 'g', lt: 0.35, lo: [6, 18] },
-             { a: 't1', b: 't2', t: 'f' }, { a: 't2', b: 't3', t: 'f', lab: 't', lo: [8, 12] }, { a: 't3', b: 't1', t: 'f' },
-             { a: 't3', b: 'v', t: 's', lab: 'H', lo: [0, -9] },
-             { a: 'v', b: 'h1', t: 's', lab: 'h_1', lo: [-6, -10] }, { a: 'v', b: 'h2', t: 's', lab: 'h_2', lo: [-6, 16] }], stagger: 0.38, edgeDur: 0.55 },
+             { a: 'l3', b: 'out', t: 'ph', lab: 'γ', lt: 0.7, lo: [12, 0] }], stagger: 0.36, edgeDur: 0.55 },
     extra: function (v, t) {
-      var k = v.reduce ? 1 : ease((t - 3.6) / 0.6);
-      if (k > 0) drawMath(v.ctx, 'm_{h_1}≠m_{h_2}', v.x + v.w - 4, v.y + v.h - 4, 12, ink('slate', 0.9 * k), 'right');
+      var k = v.reduce ? 1 : ease((t - 3.4) / 0.6), F = v.F;
+      if (k > 0) drawMath(v.ctx, 't,\\,W^±,\\,H^±', F.x + 1.2 * F.s, F.y + 0.36 * F.s, 12, ink('green', 0.9 * k), 'left');
     }
   });
 
-  /* Top-quark pairs in the e mu b b channel, whose differential distributions the paper
-     analyses for traces of new Higgs bosons. */
-  var TTBAR = diagramVignette({
-    key: 'ttbar', paper: '2308.07953', dur: 10.5, cap: 'Top-quark pairs and new Higgs bosons',
-    D: { n: { g1: [0.06, 0.16], g2: [0.06, 0.84], v1: [0.36, 0.5, 1], v2: [0.66, 0.5, 1], T: [1.0, 0.22, 1], Tb: [1.0, 0.78, 1],
-              b: [1.38, 0.04], Wp: [1.3, 0.34, 1], ep: [1.8, 0.2], nu: [1.8, 0.44], bb: [1.38, 0.96], Wm: [1.3, 0.66, 1], mu: [1.8, 0.56], nb: [1.8, 0.8] },
-         e: [{ a: 'g1', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, -6] }, { a: 'g2', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, 14] },
-             { a: 'v1', b: 'v2', t: 'g' },
-             { a: 'v2', b: 'T', t: 'f', lab: 't', lo: [-6, -8] }, { a: 'v2', b: 'Tb', t: 'f', rev: 1, lab: '\\bar{t}', lo: [-6, 16] },
-             { a: 'T', b: 'b', t: 'f', lab: 'b', lt: 0.8, lo: [-8, -2] }, { a: 'T', b: 'Wp', t: 'w', lab: 'W^+', lt: 0.6, lo: [-12, 10] },
-             { a: 'Wp', b: 'ep', t: 'f', rev: 1, lab: 'e^+', lt: 0.9, lo: [10, -4] }, { a: 'Wp', b: 'nu', t: 'f', lab: 'ν', lt: 0.9, lo: [10, 6] },
-             { a: 'Tb', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.8, lo: [-10, 10] }, { a: 'Tb', b: 'Wm', t: 'w', lab: 'W^−', lt: 0.6, lo: [-12, -4] },
-             { a: 'Wm', b: 'mu', t: 'f', lab: 'μ^−', lt: 0.9, lo: [10, -4] }, { a: 'Wm', b: 'nb', t: 'f', rev: 1, lab: '\\bar{ν}', lt: 0.9, lo: [10, 8] }],
-         stagger: 0.26, edgeDur: 0.5, labSize: 12 }
+  /* Asymmetric di-Higgs: a heavy scalar H, produced in gluon fusion through a loop (the
+     blob), decays into the singlet-like S and the Higgs boson h, seen as b b-bar plus two
+     photons. */
+  var DIHIGGS = diagramVignette({
+    key: 'dihiggs', paper: '2303.11351', dur: 10.5, cap: 'Asymmetric di-Higgs signals',
+    D: { n: { g1: [0.08, 0.12], g2: [0.08, 0.88], B: [0.42, 0.5, 'blob'], V: [0.82, 0.5, 1], S: [1.2, 0.26, 1], h: [1.2, 0.74, 1],
+              b1: [1.8, 0.06], b2: [1.82, 0.42], a1: [1.82, 0.6], a2: [1.8, 0.96] },
+         e: [{ a: 'g1', b: 'B', t: 'g', lab: 'g', lt: 0.35, lo: [6, -10] }, { a: 'g2', b: 'B', t: 'g', lab: 'g', lt: 0.35, lo: [6, 18] },
+             { a: 'B', b: 'V', t: 's', lab: 'H', lo: [0, -9] },
+             { a: 'V', b: 'S', t: 's', lab: 'S', lo: [-8, -8] }, { a: 'V', b: 'h', t: 's', lab: 'h', lo: [-8, 16] },
+             { a: 'S', b: 'b1', t: 'f', lab: 'b', lt: 0.85, lo: [0, -8] }, { a: 'S', b: 'b2', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.85, lo: [4, 14] },
+             { a: 'h', b: 'a1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'h', b: 'a2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
+         stagger: 0.36, edgeDur: 0.55 },
+    extra: function (v, t) {
+      var k = v.reduce ? 1 : ease((t - 4) / 0.6);
+      if (k > 0) drawMath(v.ctx, 'm_H≈650\\,\\rm{GeV},\\quad m_{b\\bar{b}}≈90\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11.5, ink('slate', 0.9 * k), 'left');
+    }
   });
+
+  /* Top-quark pairs in the e mu b b channel, and the new Higgs bosons that give the same
+     final state: g g to H (270 GeV) to S (152 GeV) and S' (95 GeV), with S to W W and S' to b b-bar. */
+  var TT_SM = { n: { g1: [0.06, 0.16], g2: [0.06, 0.84], v1: [0.36, 0.5, 1], v2: [0.66, 0.5, 1], T: [1.0, 0.22, 1], Tb: [1.0, 0.78, 1],
+                     b: [1.38, 0.04], Wp: [1.3, 0.34, 1], ep: [1.8, 0.2], nu: [1.8, 0.44], bb: [1.38, 0.96], Wm: [1.3, 0.66, 1], mu: [1.8, 0.56], nb: [1.8, 0.8] },
+                e: [{ a: 'g1', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, -6] }, { a: 'g2', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, 14] },
+                    { a: 'v1', b: 'v2', t: 'g' },
+                    { a: 'v2', b: 'T', t: 'f', lab: 't', lo: [-6, -8] }, { a: 'v2', b: 'Tb', t: 'f', rev: 1, lab: '\\bar{t}', lo: [-6, 16] },
+                    { a: 'T', b: 'b', t: 'f', lab: 'b', lt: 0.8, lo: [-8, -2] }, { a: 'T', b: 'Wp', t: 'w', lab: 'W^+', lt: 0.6, lo: [-12, 10] },
+                    { a: 'Wp', b: 'ep', t: 'f', rev: 1, lab: 'e^+', lt: 0.9, lo: [10, -4] }, { a: 'Wp', b: 'nu', t: 'f', lab: 'ν', lt: 0.9, lo: [10, 6] },
+                    { a: 'Tb', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.8, lo: [-10, 10] }, { a: 'Tb', b: 'Wm', t: 'w', lab: 'W^−', lt: 0.6, lo: [-12, -4] },
+                    { a: 'Wm', b: 'mu', t: 'f', lab: 'μ^−', lt: 0.9, lo: [10, -4] }, { a: 'Wm', b: 'nb', t: 'f', rev: 1, lab: '\\bar{ν}', lt: 0.9, lo: [10, 8] }],
+                stagger: 0.2, edgeDur: 0.45, labSize: 12 };
+  var TT_NP = { n: { g1: [0.06, 0.16], g2: [0.06, 0.84], B: [0.34, 0.5, 'blob'], V: [0.66, 0.5, 1], S: [1.0, 0.28, 1], Sp: [1.0, 0.76, 1],
+                     Wp: [1.36, 0.1, 1], Wm: [1.36, 0.44, 1], ep: [1.82, 0.02], nu: [1.82, 0.18], mu: [1.82, 0.36], nb: [1.82, 0.52],
+                     b: [1.62, 0.66], bb: [1.62, 0.96] },
+                e: [{ a: 'g1', b: 'B', t: 'g', lab: 'g', lt: 0.35, lo: [12, -6] }, { a: 'g2', b: 'B', t: 'g', lab: 'g', lt: 0.35, lo: [12, 14] },
+                    { a: 'B', b: 'V', t: 's', lab: 'H', lo: [0, -9] },
+                    { a: 'V', b: 'S', t: 's', lab: 'S', lo: [-8, -8] }, { a: 'V', b: 'Sp', t: 's', lab: "S'", lo: [-8, 16] },
+                    { a: 'S', b: 'Wp', t: 'w', lab: 'W^+', lt: 0.55, lo: [-12, -4] }, { a: 'S', b: 'Wm', t: 'w', lab: 'W^−', lt: 0.55, lo: [-6, 14] },
+                    { a: 'Wp', b: 'ep', t: 'f', rev: 1, lab: 'e^+', lt: 0.9, lo: [10, -3] }, { a: 'Wp', b: 'nu', t: 'f', lab: 'ν', lt: 0.9, lo: [10, 5] },
+                    { a: 'Wm', b: 'mu', t: 'f', lab: 'μ^−', lt: 0.9, lo: [10, -3] }, { a: 'Wm', b: 'nb', t: 'f', rev: 1, lab: '\\bar{ν}', lt: 0.9, lo: [10, 7] },
+                    { a: 'Sp', b: 'b', t: 'f', lab: 'b', lt: 0.85, lo: [0, -8] }, { a: 'Sp', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.85, lo: [4, 14] }],
+                stagger: 0.2, edgeDur: 0.45, labSize: 12 };
+  var TTBAR = {
+    key: 'ttbar', paper: '2308.07953', dur: 12, cap: 'Top-quark pairs and new Higgs bosons',
+    layout: function (v) { v.sm = Object.create(v); diagramLayout(v.sm, TT_SM); v.np = Object.create(v); diagramLayout(v.np, TT_NP); },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, split = 5.6;
+      var a1 = R ? 0 : clamp01((split - t) / 0.5), a2 = R ? 1 : clamp01((t - split) / 0.5);
+      if (a1 > 0) { ctx.save(); ctx.globalAlpha *= a1; drawDiagram(ctx, v.sm, TT_SM, t); caps(ctx, 'STANDARD MODEL', v.x + 4, v.y + 12, ink('slate', 0.85), 8); ctx.restore(); }
+      if (a2 > 0) {
+        ctx.save(); ctx.globalAlpha *= a2; drawDiagram(ctx, v.np, TT_NP, t - split);
+        caps(ctx, 'NEW HIGGS BOSONS, SAME FINAL STATE', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
+        drawMath(ctx, 'm_H≈270,\\quad m_S≈152,\\quad m_{S\'}≈95\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        ctx.restore();
+      }
+    }
+  };
 
   /* The Newton polytope of the two-loop sunset: the exponents of the monomials of its
      Lee-Pomeransky polynomial G = U + F, the point configuration behind its GKZ system. */
@@ -1085,7 +1209,7 @@
         ctx.fillStyle = ok ? ink('brassD', 1) : ink('slate', ch === '·' ? 0.18 : 0.3);
         ctx.fillText(ch, x0 + pre + col * cw + Math.floor(col / 5) * cw * 0.5, y + ln * Dz * 1.55);
       }
-      caps(ctx, 'ORDER ' + order + ' · ' + correct + ' CORRECT DIGITS', v.x + 4, v.y + v.h - 6, ink('slate', 0.9), 8);
+      caps(ctx, 'ORDER ' + order + ' · ' + correct + (correct === 1 ? ' CORRECT DIGIT' : ' CORRECT DIGITS'), v.x + 4, v.y + v.h - 6, ink('slate', 0.9), 8);
       var ek = R ? 1 : ease((t - 7.6) / 0.8);
       if (ek > 0) { ctx.save(); ctx.globalAlpha *= ek; drawMath(ctx, '=6\\,\\rm{ln}(4/3)', v.x + v.w - 4, v.y + v.h - 6, S, ink('crimson', 0.95), 'right'); ctx.restore(); }
     }
@@ -1111,54 +1235,123 @@
     }
   };
 
-  /* The running of the Standard Model gauge couplings at one loop, from the Z mass
-     to the scales where baryon number can be violated. */
+  /* Triangulations of point configurations, as in Figs. 1 and 2 of the paper. For the
+     Appell F1 integral the point configuration lies in the plane x + y + z = 1: a triangle
+     P3 P4 P5 with P1 and P2 at the midpoints of two edges. Its five regular triangulations
+     give the five series representations; each triangle corresponds, through the labels it
+     leaves out, to one cone of the conic hull method. */
+  var TRI_P = { 1: [0.5, 0.866], 2: [0.25, 0.433], 3: [0, 0.866], 4: [1, 0.866], 5: [0.5, 0] };
+  var TRI_SETS = [
+    { s: [[3, 4, 5]], b: 'B_{12}' },
+    { s: [[1, 4, 5], [1, 3, 5]], b: 'B_{23}+B_{24}' },
+    { s: [[2, 3, 4], [2, 4, 5]], b: 'B_{13}+B_{15}' },
+    { s: [[1, 2, 3], [1, 2, 5], [1, 4, 5]], b: 'B_{23}+B_{34}+B_{45}' },
+    { s: [[1, 2, 3], [1, 2, 4], [2, 4, 5]], b: 'B_{13}+B_{35}+B_{45}' }
+  ];
+  var TRIF = {
+    key: 'triangulation', paper: '2309.00409', dur: 13, cap: 'Triangulations of point configurations',
+    layout: function (v) {
+      v.S = Math.max(9, Math.min(12, v.w / 44));
+      var side = Math.min((v.h - 26) / 0.866, v.w * 0.5);
+      v.T = { x: v.x + 10, y: v.y + (v.h - 0.866 * side) / 2 - 4, s: side };
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, T = v.T, S = v.S, cols = ['brass', 'pine', 'crimson'];
+      function P(i) { return [T.x + TRI_P[i][0] * T.s, T.y + TRI_P[i][1] * T.s]; }
+      var step = 2.1, t0 = 1.6, idx = R ? 4 : Math.max(0, Math.min(4, Math.floor((t - t0) / step)));
+      var into = R ? 1 : clamp01((t - t0 - idx * step) / 0.45), k0 = R ? 1 : ease((t - 0.3) / 0.9);
+      function cells(set, a) {
+        set.s.forEach(function (tri, j) {
+          var p = tri.map(P);
+          ctx.fillStyle = ink(cols[j % 3], 0.16 * a); ctx.beginPath();
+          ctx.moveTo(p[0][0], p[0][1]); ctx.lineTo(p[1][0], p[1][1]); ctx.lineTo(p[2][0], p[2][1]); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = ink('green', 0.75 * a); ctx.lineWidth = 1.1; ctx.stroke();
+        });
+      }
+      if (t > t0 || R) {                               // the current triangulation, faded in over the last
+        if (idx > 0 && into < 1) { ctx.save(); ctx.globalAlpha *= 1 - into; cells(TRI_SETS[idx - 1], 1); ctx.restore(); }
+        cells(TRI_SETS[idx], into);
+      }
+      ctx.save(); ctx.globalAlpha *= k0;               // the triangle and its five points
+      var A = P(3), B = P(4), C = P(5);
+      ctx.strokeStyle = ink('brass', 0.9); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(B[0], B[1]); ctx.lineTo(C[0], C[1]); ctx.closePath(); ctx.stroke();
+      [1, 2, 3, 4, 5].forEach(function (i) {
+        var p = P(i), off = { 1: [0, 14], 2: [-11, -4], 3: [-10, 10], 4: [10, 10], 5: [0, -9] }[i];
+        dot(ctx, p[0], p[1], 3.4, ink('paper', 1)); ring(ctx, p[0], p[1], 3.4, ink('green', 0.95), 1.3);
+        ctx.font = font(9.5, SANS, 600); ctx.fillStyle = ink('green', 1); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('P' + i, p[0] + off[0], p[1] + off[1]); ctx.textBaseline = 'alphabetic';
+      });
+      ctx.restore();
+      var px = T.x + T.s + 20, room = v.x + v.w - px;  // which triangulation, and the series it gives
+      if (room > 110) {
+        ctx.save(); ctx.globalAlpha *= k0;
+        caps(ctx, 'FIVE REGULAR TRIANGULATIONS', px, v.y + 16, ink('slate', 0.85), 7.5);
+        ctx.restore();
+        TRI_SETS.forEach(function (set, j) {
+          var shown = R || t > t0 + j * step;
+          if (!shown) return;
+          var on = j === idx, yy = v.y + 38 + j * (S * 2.2);
+          ctx.save(); ctx.globalAlpha *= on ? 1 : 0.45;
+          ctx.font = font(S * 0.95, DISPLAY, 600, true); ctx.fillStyle = ink(on ? 'brassD' : 'slate', 1); ctx.textAlign = 'left';
+          ctx.fillText('(' + 'abcde'[j] + ')', px, yy);
+          drawMath(ctx, set.b, px + S * 2.1, yy, S * 0.95, ink('green', 0.95), 'left');
+          ctx.restore();
+        });
+      }
+    }
+  };
+
+  /* Renormalization group evolution with scalar leptoquarks: the one-loop running of the
+     three gauge couplings in the Standard Model, and with the triplet leptoquark Phi3 added
+     at 10^6 TeV, which brings them together near 10^14 GeV. The beta-function coefficients
+     are those of the paper; its figures are at two loops. */
   var RUNNING = {
-    key: 'running', paper: '2307.06800', dur: 10, cap: 'Renormalization group evolution',
+    key: 'running', paper: '2307.06800', dur: 12, cap: 'Running couplings with scalar leptoquarks',
     layout: function (v) { v.L = v.x + 34; v.R = v.x + v.w - 40; v.T = v.y + 10; v.B = v.y + v.h - 26; },
     frame: function (v, t) {
       var ctx = v.ctx, R = v.reduce, L = v.L, Rr = v.R, T = v.T, B = v.B;
       function X(l) { return L + (l - 2) / 15 * (Rr - L); }
       function Y(a) { return B - a / 65 * (B - T); }
-      var ak = R ? 1 : ease(t / 0.6), MZ = Math.log10(91.19);
+      var ak = R ? 1 : ease(t / 0.6), MZ = Math.log10(91.19), lq = 9;
       line(ctx, L, T, L, B, ink('green', 0.6 * ak), 1); line(ctx, L, B, Rr, B, ink('green', 0.6 * ak), 1);
-      ctx.font = font(9, SANS, 500); ctx.fillStyle = ink('slate', 0.9 * ak); ctx.textAlign = 'center';
-      [2, 5, 8, 11, 14, 17].forEach(function (l) { line(ctx, X(l), B, X(l), B + 4, ink('green', 0.6 * ak), 1); ctx.save(); ctx.globalAlpha *= ak; drawMath(ctx, '10^{' + l + '}', X(l), B + 16, 10, ink('slate', 0.9), 'center'); ctx.restore(); });
-      [10, 20, 30, 40, 50, 60].forEach(function (a) { line(ctx, L, Y(a), L - 3, Y(a), ink('green', 0.6 * ak), 1); });
       ctx.save(); ctx.globalAlpha *= ak;
+      [2, 5, 8, 11, 14, 17].forEach(function (l) { line(ctx, X(l), B, X(l), B + 4, ink('green', 0.6), 1); drawMath(ctx, '10^{' + l + '}', X(l), B + 16, 10, ink('slate', 0.9), 'center'); });
+      [10, 20, 30, 40, 50, 60].forEach(function (a) { line(ctx, L, Y(a), L - 3, Y(a), ink('green', 0.6), 1); });
       drawMath(ctx, 'μ\\,[\\rm{GeV}]', Rr - 4, B - 7, 10.5, ink('slate', 0.9), 'right');
       drawMath(ctx, 'α^{−1}', L - 8, T + 8, 11, ink('slate', 0.9), 'right');
       ctx.restore();
-      var inv = [59.0, 29.6, 8.47], b = [41 / 10, -19 / 6, -7], cols = ['brassD', 'pine', 'crimson'], ends = [];
-      var reach = R ? 17 : 2 + 15 * easeInOut((t - 0.8) / 5.5);
-      inv.forEach(function (a0, i) {                  // 1/alpha_i(mu) = 1/alpha_i(MZ) - b_i ln(mu/MZ) / (2 pi)
-        ctx.strokeStyle = ink(cols[i], 0.92); ctx.lineWidth = 1.6; ctx.beginPath();
-        for (var l = MZ; l <= reach; l += 0.1) {
-          var y = Y(a0 - b[i] / TAU * (l - MZ) * Math.LN10);
-          if (l === MZ) ctx.moveTo(X(l), y); else ctx.lineTo(X(l), y);
-        }
-        ctx.stroke();
-        var le = Math.min(reach, 17), ye = Y(a0 - b[i] / TAU * (le - MZ) * Math.LN10);
-        ends.push([ye, i, X(le)]);
+      var inv = [59.0, 29.6, 8.47], b = [41 / 10, -19 / 6, -7], db = [1 / 5, 2, 1 / 2], cols = ['brassD', 'pine', 'crimson'];
+      function sm(i, l) { return inv[i] - b[i] / TAU * (l - MZ) * Math.LN10; }
+      function lqv(i, l) { return l <= lq ? sm(i, l) : sm(i, lq) - (b[i] + db[i]) / TAU * (l - lq) * Math.LN10; }
+      var reach = R ? 17 : 2 + 15 * easeInOut((t - 0.8) / 4.2), lk = R ? 1 : ease((t - 5.6) / 0.6), reach2 = R ? 17 : lq + 8 * easeInOut((t - 6.2) / 3);
+      inv.forEach(function (a0, i) {                  // the Standard Model, dashed once the leptoquark enters
+        ctx.save(); if (lk > 0) ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = ink(cols[i], lk > 0 ? 0.45 : 0.92); ctx.lineWidth = 1.5; ctx.beginPath();
+        for (var l = MZ; l <= reach; l += 0.1) { var y = Y(sm(i, l)); if (l === MZ) ctx.moveTo(X(l), y); else ctx.lineTo(X(l), y); }
+        ctx.stroke(); ctx.restore();
       });
-      ends.sort(function (p, q) { return p[0] - q[0]; });
-      for (var j = 1; j < ends.length; j++) if (ends[j][0] - ends[j - 1][0] < 13) ends[j][0] = ends[j - 1][0] + 13;
-      if (reach > MZ + 0.5) ends.forEach(function (en) { drawMath(ctx, 'α_' + (en[1] + 1) + '^{−1}', en[2] + 6, en[0] + 4, 11, ink(cols[en[1]], 0.95), 'left'); });
-      var gk = R ? 1 : ease((t - 6.3) / 0.8);
-      if (gk > 0) {
-        ctx.fillStyle = ink('brass', 0.1 * gk); ctx.fillRect(X(13), T, X(17) - X(13), B - T);
-        caps(ctx, 'NEAR UNIFICATION', X(15), T + 10, ink('brassD', 0.9 * gk), 7.5, 'center');
+      if (lk > 0) {                                   // with Phi3 from 10^9 GeV on
+        ctx.save(); ctx.globalAlpha *= lk;
+        ctx.save(); ctx.setLineDash([2, 3]); line(ctx, X(lq), T, X(lq), B, ink('brass', 0.8), 1); ctx.restore();
+        drawMath(ctx, 'Φ_3\\,\\rm{at}\\,10^6\\,\\rm{TeV}', X(lq) + 5, T + 10, 11, ink('brassD', 0.95), 'left');
+        inv.forEach(function (a0, i) {
+          ctx.strokeStyle = ink(cols[i], 0.95); ctx.lineWidth = 1.7; ctx.beginPath();
+          for (var l = lq; l <= reach2; l += 0.05) { var y = Y(lqv(i, l)); if (l === lq) ctx.moveTo(X(l), y); else ctx.lineTo(X(l), y); }
+          ctx.stroke();
+          if (reach2 > lq + 0.5) drawMath(ctx, 'α_' + (i + 1) + '^{−1}', X(Math.min(reach2, 17)) + 6, Y(lqv(i, Math.min(reach2, 17))) + 4 + (i - 1) * 9, 10.5, ink(cols[i], 0.95), 'left');
+        });
+        var uk = R ? 1 : ease((t - 9.4) / 0.6);
+        if (uk > 0) { ring(ctx, X(14.3), Y(40), 9, ink('brassD', 0.8 * uk), 1.2); drawMath(ctx, '\\rm{near}\\,10^{14}\\,\\rm{GeV}', X(14.3), Y(40) - 14, 10.5, ink('brassD', 0.95 * uk), 'center'); }
+        ctx.restore();
       }
     }
   };
 
-  var TRIV = { key: 'triangulation', paper: '2309.00409', dur: 11, cap: 'Triangulations of point configurations',
-               init: function (v) { TRI.init(v); }, frame: function (v, t) { TRI.frame(v, t); } };
   var SPECV = { key: 'excesses', paper: '2306.15722', dur: 11.5, cap: 'The di-photon excesses at 95 and 152 GeV',
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
-  var TOUR = [CONIC, SPECV, TRIV, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, SUNSET, DIHIGGS, POLYTOPE, TTBAR, PRECISION, RUNNING, BRACKETS];
+  var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, SUNSET, DIHIGGS, POLYTOPE, TTBAR, PRECISION, RUNNING, BRACKETS];
 
   SCENES.tour = {
     touchHint: 'Tap for the next paper',
