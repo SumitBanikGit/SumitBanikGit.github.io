@@ -3326,7 +3326,7 @@
         var s = e.st[i], cx = e.x + e.pw * (i + 0.5), cy = e.cy, u = e.su, on = i === e.sel;
         var a = R ? 1 : (on ? 1 : 0.38), lt = R ? 30 : (on ? t - e.selAt : 30);
         ctx.save(); ctx.globalAlpha *= a;
-        this.project[i % 3](ctx, cx, cy, u, lt, t, R);
+        this.project[i % 3](ctx, cx, cy, u, lt, t, R, e.x + e.w);
         ctx.restore();
         dot(ctx, cx, by, on ? 3.6 : 2.6, on ? ink('brass', 1) : ink('slate', 0.6));
         caps(ctx, s.y + ' · ' + s.l.replace(' student', '').toUpperCase(), cx, by + 15, on ? ink('brassD', 1) : ink('slate', 0.6), 7.5, 'center');
@@ -3360,19 +3360,26 @@
         drawMath(ctx, D.lab, cx, cy + 50 * u, 12, ink('green', 0.95 * (R ? 1 : clamp01(dk * 2))), 'center');
         return i;
       },
-      function (ctx, cx, cy, u, lt, t, R) {            // a propagator, order by order in perturbation theory
+      function (ctx, cx, cy, u, lt, t, R, edge) {      // a propagator, order by order in perturbation theory
         var w = 30 * u, xs = [cx - 52 * u, cx, cx + 52 * u], labels = ['+', '+'];
         for (var j = 0; j < 3; j++) {
-          var k = R ? 1 : ease((lt - j * 0.9) / 0.8), x = xs[j];
+          var k = R ? 1 : ease((lt - j * 0.9) / 0.8), x = xs[j], r = 8 * u, a = x - w / 2 - 4 * u, b = a + (w + 8 * u) * Math.min(1, k * 1.3);
           if (k <= 0) continue;
-          line(ctx, x - w / 2 - 4 * u, cy, x - w / 2 - 4 * u + (w + 8 * u) * Math.min(1, k * 1.3), cy, ink('green', 0.95), 1.3);
-          if (j >= 1) loopArc(ctx, x, cy, 8 * u, Math.PI, Math.PI * 3, k, ink('pine', 0.95), 1.3);
-          if (j === 2) { line(ctx, x - 8 * u, cy - 8 * u * 0, x + 8 * u, cy, ink('pine', 0.95), 1.3); loopArc(ctx, x, cy, 12 * u, Math.PI, Math.PI * 2, k, ink('brassD', 0.9), 1.1); }
+          if (j === 0) line(ctx, a, cy, b, cy, ink('green', 0.95), 1.3);      // tree level: the propagator alone
+          else {                                        // the line stops at the loop, whose arcs are the propagators inside it
+            line(ctx, a, cy, Math.min(b, x - r), cy, ink('green', 0.95), 1.3);
+            if (b > x + r) line(ctx, x + r, cy, b, cy, ink('green', 0.95), 1.3);
+            loopArc(ctx, x, cy, r, Math.PI, Math.PI * 3, k, ink('pine', 0.95), 1.3);
+            if (j === 2) line(ctx, x - r, cy, x - r + 2 * r * k, cy, ink('brassD', 0.95), 1.3);   // a third propagator across: the two-loop sunset
+            if (k > 0.6) { dot(ctx, x - r, cy, 1.7, ink('green', 0.95)); dot(ctx, x + r, cy, 1.7, ink('green', 0.95)); }
+          }
           if (j < 2 && k > 0.9) drawMath(ctx, labels[j], x + 26 * u, cy + 5, 13, ink('slate', 0.9), 'center');
         }
         var dk = R ? 1 : ease((lt - 2.9) / 0.6);
-        if (dk > 0) drawMath(ctx, '+\\,\\cdots', cx + 52 * u + 24 * u, cy + 5, 13, ink('slate', 0.9 * dk), 'left');
-        caps(ctx, 'TREE · ONE LOOP · TWO LOOPS', cx, cy + 40 * u, ink('slate', 0.75), 7, 'center');
+        if (dk > 0 && cx + 76 * u + 20 <= edge) drawMath(ctx, '+\\,\\cdots', cx + 52 * u + 24 * u, cy + 5, 13, ink('slate', 0.9 * dk), 'left');   // where there is room
+        ctx.font = font(7, SANS, 600); tracking(ctx, 1.1);
+        var half = ctx.measureText('TREE · ONE LOOP · TWO LOOPS').width / 2; tracking(ctx, 0);
+        caps(ctx, 'TREE · ONE LOOP · TWO LOOPS', Math.min(cx, edge - half), cy + 40 * u, ink('slate', 0.75), 7, 'center');   // kept inside the stage
       }
     ],
     announce: function (e) {
