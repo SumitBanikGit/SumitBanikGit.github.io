@@ -2727,10 +2727,75 @@
   /* =====================================================================
      Teaching: equations from the courses, written on a blackboard
      ===================================================================== */
+  /* Figures drawn in chalk, stroke by stroke, with their labels (f is the chalk of chalk() below). */
+  function chalkArc(cx, cy, r, a0, a1) {
+    var n = Math.max(6, Math.ceil(Math.abs(a1 - a0) * r / 4)), pts = [];
+    for (var i = 0; i <= n; i++) { var a = a0 + (a1 - a0) * i / n; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+    return pts;
+  }
+  function chevron(f, a, b, dir, s) {                 // a fermion arrow halfway along a to b, pointing along dir
+    var dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy), ux = dir * dx / l, uy = dir * dy / l;
+    var mx = (a[0] + b[0]) / 2 + ux * s * 0.5, my = (a[1] + b[1]) / 2 + uy * s * 0.5;
+    f.stroke([[mx - ux * s - uy * s * 0.75, my - uy * s + ux * s * 0.75], [mx, my], [mx - ux * s + uy * s * 0.75, my - uy * s - ux * s * 0.75]], 160);
+  }
+  /* The unitarity triangle of the B system: the relation above divided by V_cd V_cb*, so that the
+     base runs from (0,0) to (1,0) and the apex is rho-bar + i eta-bar. Apex at the PDG 2024 global fit,
+     rho-bar = 0.159 and eta-bar = 0.352, which puts the angles at gamma 65.7, beta 22.7 and alpha 91.6
+     degrees. The sides are drawn head to tail, as the three terms of the relation add up to zero. */
+  function unitarityTriangle(f, bw, bh) {
+    var rho = 0.159, eta = 0.352, S = Math.min(21, bh * 0.08, bw / 22), top = 44, bot = bh - 12;
+    var formula = '\\bar{ρ}+i\\bar{η}=−\\frac{V_{ud}V^∗_{ub}}{V_{cd}V^∗_{cb}}', fb = f.box(formula, S * 0.92), fh = fb.ext[1] - fb.ext[0];
+    var Ls = Math.min(bw - 5.6 * S, (bot - top - 3.3 * S - fh) / eta, 520);          // the formula below the triangle
+    var Lr = Math.min(bw - 16 - 3.6 * S - fb.w, (bot - top - 3.3 * S) / eta, 520);   // or beside it, on a low board
+    var side = Lr > Ls * 1.1, Lb = side ? Lr : Ls, H = eta * Lb;
+    var y0 = top + (bot - top - 3.3 * S - H - (side ? 0 : fh)) / 2;
+    var ox = side ? (bw - Lb - 3.6 * S - fb.w) / 2 + 1.3 * S : (bw - Lb) / 2;
+    var O = [ox, y0 + 1.4 * S + H], P = [ox + Lb, O[1]], A = [ox + rho * Lb, y0 + 1.4 * S];
+    var gam = Math.atan2(eta, rho), bet = Math.atan2(eta, 1 - rho), r = Math.max(13, Lb * 0.075);
+    f.stroke([O, A, P, O], 300);
+    f.label('(0,0)', O[0], O[1] + 0.9 * S, S * 0.78);
+    f.label('(1,0)', P[0], P[1] + 0.9 * S, S * 0.78);
+    f.label('(\\bar{ρ},\\bar{η})', A[0], A[1] - 0.85 * S, S * 0.85);
+    f.stroke(chalkArc(O[0], O[1], r, 0, -gam), 120);
+    f.label('γ', O[0] + (r + 0.62 * S) * Math.cos(gam / 2), O[1] - (r + 0.62 * S) * Math.sin(gam / 2), S);
+    var rb = r * 1.5, db = rb + 1.9 * S;               // the narrow angle gets its label further out, where it fits
+    f.stroke(chalkArc(P[0], P[1], rb, Math.PI, Math.PI + bet), 120);
+    f.label('β', P[0] - db * Math.cos(bet / 2), P[1] - db * Math.sin(bet / 2), S);
+    var am = (bet + Math.PI - gam) / 2;
+    f.stroke(chalkArc(A[0], A[1], r, bet, Math.PI - gam), 120);
+    f.label('α', A[0] + (r + 0.62 * S) * Math.cos(am), A[1] + (r + 0.62 * S) * Math.sin(am), S);
+    if (side) f.glyphs(fb.prims, P[0] + 2.3 * S, (A[1] + O[1]) / 2 - (fb.ext[0] + fb.ext[1]) / 2);
+    else f.glyphs(fb.prims, (bw - fb.w) / 2, P[1] + 2.1 * S - fb.ext[0]);
+  }
+  /* Electron-positron annihilation into a muon pair through a photon, and its total cross-section
+     at lowest order in QED for energies far above the muon mass (Peskin and Schroeder, Eq. 5.13). */
+  function annihilation(f, bw, bh) {
+    var S = Math.min(21, bh * 0.08, bw / 22), top = 44, bot = bh - 12;
+    var formula = 'σ=\\frac{4πα^2}{3s}', fb = f.box(formula, S * 1.05), fh = fb.ext[1] - fb.ext[0];
+    var Hs = Math.min(bot - top - fh - 2.2 * S, 150), Ws = Math.min(bw - 5 * S, Hs * 2.4);              // formula below
+    var Hr = Math.min(bot - top - 1.2 * S, 150), Wr = Math.min(bw - 16 - 3.9 * S - fb.w, Hr * 2.4);  // or beside
+    var side = Wr > Ws * 1.15, Wd = side ? Wr : Ws, Hd = side ? Math.min(Hr, Wd / 1.6) : Hs, h2 = Hd / 2, cx, cy;
+    if (side) { cx = (bw - Wd - 3.9 * S - fb.w) / 2 + 1.4 * S + Wd / 2; cy = (top + bot) / 2; }
+    else { cx = bw / 2; cy = top + (bot - top - fh - 2.2 * S - Hd) / 2 + 0.4 * S + h2; }
+    var A = [cx - 0.2 * Wd, cy], B = [cx + 0.2 * Wd, cy], s = Math.max(3.2, S * 0.26);
+    var e1 = [cx - 0.5 * Wd, cy - h2], e2 = [cx - 0.5 * Wd, cy + h2], m1 = [cx + 0.5 * Wd, cy - h2], m2 = [cx + 0.5 * Wd, cy + h2];
+    f.stroke([e1, A], 240); chevron(f, e1, A, 1, s); f.label('e^−', e1[0] - 0.8 * S, e1[1], S);
+    f.stroke([e2, A], 240); chevron(f, e2, A, -1, s); f.label('e^+', e2[0] - 0.8 * S, e2[1], S);
+    var wave = [], n = Math.max(4, Math.round((B[0] - A[0]) / (0.85 * S))), m = n * 12;
+    for (var i = 0; i <= m; i++) wave.push([A[0] + (B[0] - A[0]) * i / m, cy - 0.2 * S * Math.sin(TAU * n * i / m)]);
+    f.stroke(wave, 260);
+    f.label('γ', cx, cy - 0.95 * S, S);
+    f.stroke([B, m1], 240); chevron(f, B, m1, 1, s); f.label('μ^−', m1[0] + 0.85 * S, m1[1], S);
+    f.stroke([B, m2], 240); chevron(f, B, m2, -1, s); f.label('μ^+', m2[0] + 0.85 * S, m2[1], S);
+    if (side) f.glyphs(fb.prims, cx + Wd / 2 + 2.5 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
+    else f.glyphs(fb.prims, (bw - fb.w) / 2, cy + h2 + 1.3 * S - fb.ext[0]);
+  }
   var EQUATIONS = [
     { name: 'The Dirac equation', course: 'Quantum Field Theory', lines: ['(iγ^μ\\,∂_μ−m)\\,ψ=0'] },
     { name: 'The Feynman propagator', course: 'Quantum Field Theory', lines: ['D_F(p)=\\frac{i}{p^2−m^2+iε}'] },
+    { name: 'Electron-positron annihilation into muons', course: 'Quantum Field Theory', fig: annihilation },
     { name: 'Unitarity of the CKM matrix', course: 'Flavour Physics', lines: ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0'] },
+    { name: 'The unitarity triangle', course: 'Flavour Physics', fig: unitarityTriangle },
     { name: 'Gauss’s law and Faraday’s law', course: 'Introductory Physics', lines: ['\\oint\\bf{E}\\cdot\\rm{d}\\bf{A}=\\frac{Q}{ε_0}', '\\oint\\bf{E}\\cdot\\rm{d}\\bf{l}=−\\frac{\\rm{d}Φ_B}{\\rm{d}t}'] }
   ];
   function courseOf(e, eq) {
@@ -2738,17 +2803,8 @@
     for (var i = 0; i < list.length; i++) if (list[i].c.indexOf(eq.course) === 0) return list[i];
     return null;
   }
-  function chalk(e, index) {                          // one equation in chalk, with its writing schedule
+  function chalk(e, index) {                          // one equation or figure in chalk, with its writing schedule
     var eq = EQUATIONS[index], bw = e.bw, bh = e.bh, L = layer(bw, bh, e.dpr), c = L.ctx;
-    var S = Math.min(34, bh * 0.18), lines, wmax, htot, gap;
-    for (var pass = 0; pass < 3; pass++) {             // shrink until it fits the board
-      lines = eq.lines.map(function (src) { var b = typeset(c, parseTeX(src), S, false, ''); b.ext = extent(b.prims); return b; });
-      gap = 0.55 * S; wmax = 0; htot = -gap;
-      lines.forEach(function (ln) { wmax = Math.max(wmax, ln.w); htot += ln.ext[1] - ln.ext[0] + gap; });
-      var fit = Math.min((bw - 64) / wmax, (bh - 104) / htot, 1);
-      if (fit > 0.995) break;
-      S *= fit;
-    }
     var rects = [], T = 0.2, course = courseOf(e, eq);
     if (course) {                                      // the course, written small in the corner
       var lab = course.c + ' · ' + course.i + ', ' + course.y, fs = Math.min(13, bw / 30);
@@ -2759,34 +2815,74 @@
       c.fillRect(18, 31, lw, 0.8);
       rects.push({ r: [16, 26 - fs, lw + 4, fs + 8], t0: T, dur: 0.5 }); T += 0.6;
     }
-    var y = 42 + (bh - 50 - htot) / 2;
-    lines.forEach(function (ln) {
-      var ox = (bw - wmax) / 2, oy = y - ln.ext[0];
-      ln.prims.forEach(function (p) {
-        var r, dur;
-        if (p.t === 'rule') {
-          c.fillStyle = 'rgba(238,231,214,.93)'; c.fillRect(ox + p.x, oy + p.y, p.w, p.h);
-          r = [ox + p.x - 1, oy + p.y - 2, p.w + 2, p.h + 4]; dur = 0.14 + p.w / 520;
-        } else {
-          c.font = p.f;
-          c.fillStyle = 'rgba(238,231,214,.93)'; c.fillText(p.s, ox + p.x, oy + p.y);
-          c.fillStyle = 'rgba(238,231,214,.28)'; c.fillText(p.s, ox + p.x + 0.45, oy + p.y - 0.35);
-          r = [ox + p.x - 1.5, oy + p.y - p.a - 2, p.w + 3, p.a + p.d + 4]; dur = 0.05 + p.w / 320;
+    var f = {
+      box: function (src, S) { var b = typeset(c, parseTeX(src), S, false, ''); b.ext = extent(b.prims); return b; },
+      glyphs: function (prims, ox, oy) {               // glyphs and rules, one after another
+        c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+        prims.forEach(function (p) {
+          var r, dur;
+          if (p.t === 'rule') {
+            c.fillStyle = 'rgba(238,231,214,.93)'; c.fillRect(ox + p.x, oy + p.y, p.w, p.h);
+            r = [ox + p.x - 1, oy + p.y - 2, p.w + 2, p.h + 4]; dur = 0.14 + p.w / 520;
+          } else {
+            c.font = p.f;
+            c.fillStyle = 'rgba(238,231,214,.93)'; c.fillText(p.s, ox + p.x, oy + p.y);
+            c.fillStyle = 'rgba(238,231,214,.28)'; c.fillText(p.s, ox + p.x + 0.45, oy + p.y - 0.35);
+            r = [ox + p.x - 1.5, oy + p.y - p.a - 2, p.w + 3, p.a + p.d + 4]; dur = 0.05 + p.w / 320;
+          }
+          rects.push({ r: r, t0: T, dur: dur }); T += dur + 0.012;
+        });
+      },
+      label: function (src, x, y, S) {                 // a short label centred on (x, y)
+        var b = f.box(src, S);
+        f.glyphs(b.prims, x - b.w / 2, y - (b.ext[0] + b.ext[1]) / 2);
+      },
+      stroke: function (pts, speed) {                  // a chalk line through pts, revealed from the first point on
+        c.lineCap = 'round'; c.lineJoin = 'round';
+        [[0, 0, 1.7, 0.9], [0.5, -0.4, 1.2, 0.25]].forEach(function (k) {
+          c.lineWidth = k[2]; c.strokeStyle = 'rgba(238,231,214,' + k[3] + ')'; c.beginPath();
+          pts.forEach(function (p, i) { if (i) c.lineTo(p[0] + k[0], p[1] + k[1]); else c.moveTo(p[0] + k[0], p[1] + k[1]); });
+          c.stroke();
+        });
+        for (var i = 1; i < pts.length; i++) {         // short pieces, revealed one after another
+          var a = pts[i - 1], b = pts[i], len = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.ceil(len / 5));
+          for (var j = 0; j < n; j++) {
+            var x0 = a[0] + (b[0] - a[0]) * j / n, y0 = a[1] + (b[1] - a[1]) * j / n;
+            var x1 = a[0] + (b[0] - a[0]) * (j + 1) / n, y1 = a[1] + (b[1] - a[1]) * (j + 1) / n;
+            var dur = len / n / (speed || 240);
+            rects.push({ r: [Math.min(x0, x1) - 2, Math.min(y0, y1) - 2, Math.abs(x1 - x0) + 4, Math.abs(y1 - y0) + 4],
+                         t0: T, dur: dur, p: [x0, y0, x1, y1] });
+            T += dur;
+          }
         }
-        rects.push({ r: r, t0: T, dur: dur }); T += dur + 0.012;
-      });
-      y += ln.ext[1] - ln.ext[0] + gap;
-    });
+        T += 0.1;
+      }
+    };
+    if (eq.fig) eq.fig(f, bw, bh);
+    else {
+      var S = Math.min(34, bh * 0.18), lines, wmax, htot, gap;
+      for (var pass = 0; pass < 3; pass++) {           // shrink until it fits the board
+        lines = eq.lines.map(function (src) { return f.box(src, S); });
+        gap = 0.55 * S; wmax = 0; htot = -gap;
+        lines.forEach(function (ln) { wmax = Math.max(wmax, ln.w); htot += ln.ext[1] - ln.ext[0] + gap; });
+        var fit = Math.min((bw - 64) / wmax, (bh - 104) / htot, 1);
+        if (fit > 0.995) break;
+        S *= fit;
+      }
+      var y = 42 + (bh - 50 - htot) / 2;
+      lines.forEach(function (ln) { f.glyphs(ln.prims, (bw - wmax) / 2, y - ln.ext[0]); y += ln.ext[1] - ln.ext[0] + gap; });
+    }
     var rnd = seeded(31 * index + 7);                  // chalk grain: tiny gaps in every stroke
     c.globalCompositeOperation = 'destination-out'; c.fillStyle = 'rgba(0,0,0,.6)'; c.beginPath();
     rects.forEach(function (q) {
-      var r = q.r, n = Math.round(r[2] * r[3] / 5);
+      var r = q.r, n = Math.round(r[2] * r[3] / (q.p ? 14 : 5));
       for (var i = 0; i < n; i++) {
         var gx = r[0] + rnd() * r[2], gy = r[1] + rnd() * r[3], gs = 0.3 + rnd() * 0.55;
         c.moveTo(gx + gs, gy); c.arc(gx, gy, gs, 0, TAU);
       }
     });
     c.fill(); c.globalCompositeOperation = 'source-over';
+    if (eq.fig) return { c: L.c, rects: rects, Tw: T, box: null };
     var x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;      // a hand-drawn box around the equation
     rects.slice(course ? 1 : 0).forEach(function (q) { x0 = Math.min(x0, q.r[0]); y0 = Math.min(y0, q.r[1]); x1 = Math.max(x1, q.r[0] + q.r[2]); y1 = Math.max(y1, q.r[1] + q.r[3]); });
     x0 -= 13; y0 -= 9; x1 += 13; y1 += 9;
@@ -2802,13 +2898,22 @@
     q.rects.forEach(function (g) {
       var k = clamp01((tau - g.t0) / g.dur);
       if (k <= 0) return;
+      if (g.p) {                                       // a piece of a chalk line: a thin band along it, so that
+        var p = g.p, dx = p[2] - p[0], dy = p[3] - p[1], l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l;
+        var hw = 2 + grow, ex = 1.2 + grow;             // lines that cross it are not shown before their turn
+        var ax = ox + p[0] - ux * ex, ay = oy + p[1] - uy * ex, bx = ox + p[0] + dx * k + ux * ex, by = oy + p[1] + dy * k + uy * ex;
+        ctx.moveTo(ax + uy * hw, ay - ux * hw); ctx.lineTo(bx + uy * hw, by - ux * hw);
+        ctx.lineTo(bx - uy * hw, by + ux * hw); ctx.lineTo(ax - uy * hw, ay + ux * hw); ctx.closePath();
+        if (k < 1) tip = [ox + p[0] + dx * k, oy + p[1] + dy * k];
+        return;
+      }
       ctx.rect(ox + g.r[0] - grow, oy + g.r[1] - grow, g.r[2] * k + 2 * grow, g.r[3] + 2 * grow);
       if (k < 1) tip = [ox + g.r[0] + g.r[2] * k, oy + g.r[1] + g.r[3] * (0.45 + 0.2 * Math.sin(tau * 37))];
     });
     return tip;
   }
   function boxStroke(ctx, q, k, ox, oy, alpha) {
-    if (k <= 0) return;
+    if (k <= 0 || !q.box) return;
     ctx.save(); ctx.translate(ox, oy);
     ctx.setLineDash([q.box.per * k, q.box.per + 20]);
     ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -2856,7 +2961,7 @@
       ctx.drawImage(e.board, e.x - 30, e.y - 30, e.w + 60, e.h + 60);
       ctx.drawImage(e.residue.c, e.bx, e.by, e.bw, e.bh);
       if (!e.cur) e.cur = chalk(e, e.idx);
-      var q = e.cur, tau = e.reduce ? 1e3 : t - e.t0, tBox = q.Tw + 0.2, tErase = q.Tw + 4.6, tEnd = tErase + 0.9;
+      var q = e.cur, tau = e.reduce ? q.Tw + 2 : t - e.t0, tBox = q.Tw + 0.2, tErase = q.Tw + 4.6, tEnd = tErase + 0.9;   // reduced motion: written in full
       e.caption(EQUATIONS[e.idx].name);
       var written = e.cut !== null ? e.cut : tau, boxK = ease((written - tBox) / 0.7);
       if (tau < tErase) {                              // writing, glyph by glyph
@@ -2895,7 +3000,8 @@
     },
     click: function (e) {                              // wipe the board and write the next one
       var q = e.cur;
-      if (!q || e.reduce) return;
+      if (e.reduce) { e.idx = (e.idx + 1) % EQUATIONS.length; e.cur = null; return; }   // straight to the next one
+      if (!q) return;
       var tau = e.t - e.t0, tErase = q.Tw + 4.6;
       if (tau < 0 || tau >= tErase) return;
       e.cut = tau; e.t0 = e.t - tErase;
