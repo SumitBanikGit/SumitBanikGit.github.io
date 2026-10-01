@@ -2099,7 +2099,16 @@ at CERN.</p>
           return l.concat(soft(5)); }} }},
       {{ label: 'H → ZZ* → 4ℓ', make: function () {{
           var a = rnd(0, TAU);
-          return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); }} }}
+          return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); }} }},
+      {{ label: 'HH → b<span class="ov">b</span>γγ', make: function () {{
+          // two Higgs bosons back to back: one gives two photons, the other two b jets from displaced vertices
+          var a = rnd(0, TAU), d1 = rnd(0.45, 0.85), d2 = rnd(0.45, 0.85), l = [photon(a - d1), photon(a + d1)];
+          [a + Math.PI - d2, a + Math.PI + d2].forEach(function (p) {{
+            var ox = Math.cos(p) * RO * 0.04, oy = Math.sin(p) * RO * 0.04;
+            l.push({{ kind: 'sv', ox: ox, oy: oy, delay: 0 }});
+            l = l.concat(jet(p, 5, {{ gluon: false, ox: ox, oy: oy }}));
+          }});
+          return l.concat(soft(6)); }} }}
     ];
     if (document.body.classList.contains('page-404')) EVENTS = [   // a missing page: events where something leaves unseen
       {{ label: 'Z → ν<span class="ov">ν</span> + jet', make: function () {{

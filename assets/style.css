@@ -1951,3 +1951,14 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 
 /* Research tour: horizontal swipes go to the tour, vertical ones still scroll the page */
 [data-scene="tour"] .hero-stage { touch-action: pan-y; }
+
+/* The page not found keeps its detector on tablets and phones, below the title,
+   so that the missing neutrino can be seen there too */
+@media (max-width: 52rem) {
+  .page-404 .page-hero .hero-stage { display: block; order: 1; min-height: 16rem; margin: .9rem 0 .8rem; }
+  .page-404 .page-hero .field {
+    display: block;
+    -webkit-mask-image: radial-gradient(circle at 50% calc(100% - 11.2rem), #000 0%, #000 26%, transparent 58%);
+            mask-image: radial-gradient(circle at 50% calc(100% - 11.2rem), #000 0%, #000 26%, transparent 58%);
+  }
+}
