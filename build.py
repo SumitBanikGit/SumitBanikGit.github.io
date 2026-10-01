@@ -27,7 +27,7 @@ PROFILE = {
     "github": "https://github.com/SumitBanikGit",
     "linkedin": "https://www.linkedin.com/in/waytosumitbanik",
     "portrait": "assets/portrait.jpg",          # set to None to show a monogram
-    "goatcounter": "",                           # GoatCounter site code for private visitor statistics, e.g. "sumitbanik"
+    "goatcounter": "sumitbanik",                 # GoatCounter site code for private visitor statistics ("" to switch off)
 }
 
 # --------------------------------------------------------------------------
@@ -1209,10 +1209,18 @@ def render_reach():
 
 
 def stats_tag():
-    """GoatCounter's counting script (no cookies, no personal data), once a site code is set in PROFILE."""
+    """GoatCounter's counting script (no cookies, no personal data), loaded on the live site only."""
     code = PROFILE.get("goatcounter")
-    return (f'<script data-goatcounter="https://{code}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>\n'
-            if code else "")
+    if not code:
+        return ""
+    host = PROFILE["url"].split("//")[1].strip("/")
+    return ("<script>(function () {                      // visit statistics, on the live site only\n"
+            f"  if (location.hostname !== '{host}') return;\n"
+            "  var s = document.createElement('script');\n"
+            "  s.async = true; s.src = 'https://gc.zgo.at/count.js';\n"
+            f"  s.setAttribute('data-goatcounter', 'https://{code}.goatcounter.com/count');\n"
+            "  document.body.appendChild(s);\n"
+            "})();</script>\n")
 
 
 def write_pages(html, n_articles, n_proc):
@@ -1312,6 +1320,7 @@ def write_pages(html, n_articles, n_proc):
           + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
           '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
           + sections["contact"] + "\n\n" + tail)
+    nf = re.sub(r'<link rel="canonical" href="[^"]*">\n?', "", nf)   # count a missing page under its own address
     nf = nf.replace("</body>", stats_tag() + "</body>", 1)
     Path("404.html").write_text(relink(nf, "404.html"), encoding="utf-8")
 

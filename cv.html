@@ -594,5 +594,12 @@
 })();
 </script>
 <script src="assets/scenes.js?v=6abe467b" defer></script>
+<script>(function () {                      // visit statistics, on the live site only
+  if (location.hostname !== 'sumitbanikgit.github.io') return;
+  var s = document.createElement('script');
+  s.async = true; s.src = 'https://gc.zgo.at/count.js';
+  s.setAttribute('data-goatcounter', 'https://sumitbanik.goatcounter.com/count');
+  document.body.appendChild(s);
+})();</script>
 </body>
 </html>
