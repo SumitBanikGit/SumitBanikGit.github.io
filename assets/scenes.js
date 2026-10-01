@@ -2140,6 +2140,35 @@
     }
   };
 
+  /* Indications for new Higgs bosons (Corfu proceedings, Sec. 3.1 and Fig. 3, right): since the
+     charged and neutral triplet Higgs bosons are nearly degenerate, a 152 GeV triplet lets the top
+     quark decay as t -> Delta+ b, and Delta+ -> W+ Z then fakes a t t-bar Z signal. A recast of the
+     t t-bar Z and t W Z measurements shows a preference of about 2 sigma around 150 GeV. */
+  var TD_D = { n: { g1: [0.06, 0.16], g2: [0.06, 0.84], v1: [0.36, 0.5, 1], v2: [0.66, 0.5, 1], T: [1.0, 0.24, 1], Tb: [1.0, 0.76, 1],
+                    b: [1.4, 0.04], D: [1.3, 0.4, 1], Wp: [1.82, 0.26], Z: [1.82, 0.54], bb: [1.4, 0.96], Wm: [1.82, 0.8] },
+               e: [{ a: 'g1', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, -6] }, { a: 'g2', b: 'v1', t: 'g', lab: 'g', lt: 0.35, lo: [12, 14] },
+                   { a: 'v1', b: 'v2', t: 'g' },
+                   { a: 'v2', b: 'T', t: 'f', lab: 't', lo: [-6, -8] }, { a: 'v2', b: 'Tb', t: 'f', rev: 1, lab: '\\bar{t}', lo: [-6, 16] },
+                   { a: 'T', b: 'b', t: 'f', lab: 'b', lt: 0.8, lo: [-8, -2] }, { a: 'T', b: 'D', t: 's', lab: 'Δ^+', lt: 0.5, lo: [-4, 14] },
+                   { a: 'D', b: 'Wp', t: 'w', lab: 'W^+', lt: 0.85, lo: [0, -9] }, { a: 'D', b: 'Z', t: 'w', lab: 'Z', lt: 0.85, lo: [4, 13] },
+                   { a: 'Tb', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.8, lo: [-10, 10] }, { a: 'Tb', b: 'Wm', t: 'w', lab: 'W^−', lt: 0.8, lo: [0, -9] }],
+               stagger: 0.24, edgeDur: 0.45, labSize: 12, pad: 22 };
+  var TOPDELTA = diagramVignette({
+    key: 'topdelta', paper: '2605.04233', dur: 10.5, cap: 'Indications for new Higgs bosons', D: TD_D,
+    extra: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, k0 = R ? 1 : ease(t / 0.6), k = R ? 1 : ease((t - 3.4) / 0.6), F = v.F, Dn = TD_D.n.D;
+      ctx.save(); ctx.globalAlpha *= k0;
+      caps(ctx, 'TOP DECAY TO A CHARGED TRIPLET HIGGS', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
+      ctx.restore();
+      if (k <= 0) return;
+      ctx.save(); ctx.globalAlpha *= k;
+      var x = F.x + Dn[0] * F.s, y = F.y + Dn[1] * F.s;     // the W+ Z pair looks like the Z of t t-bar Z
+      ring(ctx, x + 0.32 * F.s, y - 0.0 * F.s, 0.2 * F.s, ink('brass', 0.35 + 0.15 * Math.sin(t * 3)), 1);
+      drawMath(ctx, 'm_{Δ^±}≈m_{Δ^0}≈152\\,\\rm{GeV}<m_t,\\quad\\rm{like}\\,t\\bar{t}Z', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+      ctx.restore();
+    }
+  });
+
   /* Triangulations of point configurations, as in Figs. 1 and 2 of the paper. For the
      Appell F1 integral the point configuration lies in the plane x + y + z = 1: a triangle
      P3 P4 P5 with P1 and P2 at the midpoints of two edges. Its five regular triangulations
@@ -2257,7 +2286,7 @@
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
   var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, ANATOMY, QUADRATIC];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);

@@ -156,7 +156,7 @@ PUBS = [
          title="Automated computation of multiple Mellin-Barnes integrals having polygamma functions in their integrand",
          authors="S. Banik, S. Friot",
          ref="Acta Phys. Pol. B Proc. Suppl. <b>19</b>, 2-A8 (2026)", venue="MTTD 2025",
-         doi="10.5506/APhysPolBSupp.19.2-A8", inspire="3153391"),
+         doi="10.5506/APhysPolBSupp.19.2-A8", inspire="3153391", tour="2512.19803"),
     dict(kind="proceedings", year=2026, topic="pheno",
          title="Indications for new Higgs bosons",
          authors="A. Crivellin, S. Ashanujjaman, S. Banik, S. P. Maharathy, G. Coloretti",
@@ -166,7 +166,7 @@ PUBS = [
          title='New Higgses at the electroweak scale and differential <i>t</i><span class="ov"><i>t</i></span> distributions',
          authors="S. Banik, G. Coloretti, A. Crivellin, S. Bhattacharya, B. Mellado",
          ref="PoS DIS2024, 125", venue="DIS 2024",
-         doi="10.22323/1.469.0125", inspire="2865718"),
+         doi="10.22323/1.469.0125", inspire="2865718", tour="2308.07953"),
     dict(kind="proceedings", year=2024, topic="fi",
          title="Analytic evaluation of multiple Mellin-Barnes integrals",
          authors="S. Banik, S. Friot",
@@ -176,7 +176,7 @@ PUBS = [
          title="Automated evaluation of Feynman integrals using GKZ hypergeometric systems",
          authors="B. Ananthanarayan, S. Banik, S. Bera, S. Datta",
          ref="Springer Proc. Phys. <b>304</b>, 124 (2024)", venue="DAE-BRNS HEP Symposium",
-         doi="10.1007/978-981-97-0289-3_26", inspire="2809580"),
+         doi="10.1007/978-981-97-0289-3_26", inspire="2809580", tour="2211.01285"),
     dict(kind="proceedings", year=2024, topic="fi",
          title="Geometrical methods for the analytic evaluation of multiple Mellin-Barnes integrals",
          authors="S. Banik, S. Friot",
@@ -186,14 +186,14 @@ PUBS = [
          title="Differential <i>eμbb</i> cross-sections and new Higgses at the electroweak scale",
          authors="S. Banik, G. Coloretti, A. Crivellin, B. Mellado",
          ref="TOP 2023 proceedings", venue="16th Int. Workshop on Top Quark Physics",
-         arxiv="2312.01458", inspire="2729959"),
+         arxiv="2312.01458", inspire="2729959", tour="2308.07953"),
 
     # ---- thesis
     dict(kind="thesis", year=2022, topic="fi",
          title="On hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals with applications",
          authors="S. Banik",
          ref="PhD thesis, Indian Institute of Science, Bengaluru (2022)",
-         inspire="2614373"),
+         inspire="2614373", tour="2012.15108"),
 ]
 
 # Recent news shown on the front page (newest first; keep ~5).
@@ -512,8 +512,9 @@ def pub_entry(n, p):
         links.append(f'<a href="https://inspirehep.net/literature/{p["inspire"]}">INSPIRE</a>')
     if p.get("code"):
         links.append(f'<a href="{p["code"]}">Code</a>')
-    if p.get("arxiv") in tour_papers():
-        links.append(f'<a href="research.html#tour-{p["arxiv"]}" title="See this paper in the animated tour">Animation</a>')
+    tour = p["arxiv"] if p.get("arxiv") in tour_papers() else p.get("tour")   # proceedings point to their paper's animation
+    if tour:
+        links.append(f'<a href="research.html#tour-{tour}" title="See this work in the animated tour">Animation</a>')
     venue = f' <span class="sep">·</span> {p["venue"]}' if p.get("venue") else ""
     tags = "".join(f'<span class="tag {t}">{TOPIC_LABEL[t]}</span>' for t in p["topic"].split())
     links.append(f'<span class="tags">{tags}</span>')
