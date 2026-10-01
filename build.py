@@ -869,8 +869,27 @@ def render_ticker():
     return "".join(f'<span>{w}</span><i>✦</i>' for w in TICKER)
 
 
+NEWS_ICONS = {
+    "paper": _p("M13 2H29L35 8V28H13Z") + _p("M29 2V8H35M17 13H31M17 17H31M17 21H27", "thin"),
+    "proc": _p("M11 6H29V28H11Z") + _p("M16 2H34V24M15 12H25M15 16H25M15 20H22", "thin"),
+    "talk": _p("M7 3H41V20H7Z") + _p("M24 20V27M16 27H32M11 15Q17 6 23 11T37 7", "thin"),
+    "join": _p("M24 28C24 28 14 18 14 11A10 10 0 1 1 34 11C34 18 24 28 24 28Z") + _p("M24 7.5A3.5 3.5 0 1 1 23.9 7.5Z", "thin"),
+    "award": _p("M19 19L16 29L20 27L21 30M29 19L32 29L28 27L27 30", "thin") + _p("M24 2A9 9 0 1 1 23.9 2Z") + _p("M24 5.5A5.5 5.5 0 1 1 23.9 5.5Z", "thin"),
+}
+
+
+def _news_kind(text):
+    low = text.lower()
+    for kind, words in (("talk", ("talk", "seminar")), ("award", ("awarded", "fellowship")),
+                        ("join", ("joined", "moved")), ("paper", ("published", "appeared", "arxiv"))):
+        if any(w in low for w in words):
+            return kind
+    return "paper"
+
+
 def render_news():
-    return "\n".join(f'<li><span class="when">{y}</span><span>{txt}</span></li>' for y, txt in NEWS)
+    return "\n".join(f'<li><span class="when">{y}</span>{_ix(NEWS_ICONS[_news_kind(txt)])}<span>{txt}</span></li>'
+                     for y, txt in NEWS)
 
 
 def render_selected():
@@ -1248,6 +1267,7 @@ def main():
         software=render_software(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
+        ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
         n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
         updated=date.today().strftime("%B %Y"), year=date.today().year,
     )
@@ -1354,10 +1374,10 @@ Collider at CERN.</p>
 </ol>
 
 <div class="stats" role="list">
-  <div class="stat" role="listitem"><span class="n">{n_articles}</span><span class="l">journal articles</span></div>
-  <div class="stat" role="listitem"><span class="n">{n_proc}</span><span class="l">conference proceedings</span></div>
-  <div class="stat" role="listitem"><span class="n">{n_talks}</span><span class="l">talks &amp; seminars</span></div>
-  <div class="stat" role="listitem"><span class="n">3</span><span class="l">software packages</span></div>
+  <div class="stat" role="listitem">{ix_article}<span class="n">{n_articles}</span><span class="l">journal articles</span></div>
+  <div class="stat" role="listitem">{ix_proc}<span class="n">{n_proc}</span><span class="l">conference proceedings</span></div>
+  <div class="stat" role="listitem">{ix_talk}<span class="n">{n_talks}</span><span class="l">talks &amp; seminars</span></div>
+  <div class="stat" role="listitem">{ix_code}<span class="n">3</span><span class="l">software packages</span></div>
 </div>
 
 <h3 class="sect">Recent news</h3>
