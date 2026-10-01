@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abe4569">
+<link rel="stylesheet" href="assets/style.css?v=6abe5050">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}</script>
 </head>
 <body id="top" class="page-talks">
@@ -103,6 +103,52 @@
     <div class="foot-aff">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory · Stanford&nbsp;University</div>
     <a class="foot-mail" href="mailto:banik@stanford.edu">banik@stanford.edu</a>
   </div>
+  <div class="visitors" hidden>
+    <div class="vis-map" aria-hidden="true"><img src="/assets/map/world-dots.svg?v=6abe4fee" alt="" width="1200" height="482" loading="lazy"><svg class="vis-dots" viewBox="0 0 1200 482"><defs><radialGradient id="vis-glow"><stop offset="0" stop-color="#e6c983" stop-opacity=".55"/><stop offset="1" stop-color="#e6c983" stop-opacity="0"/></radialGradient></defs></svg></div>
+    <div class="vis-count" aria-hidden="true"></div>
+    <div class="vis-label" aria-hidden="true"></div>
+    <p class="sr-only"></p>
+  </div>
+<script>
+(function () {                              // the footer map of visitors, filled in from assets/visitors.json
+  var box = document.querySelector('.visitors');
+  if (!box || !window.fetch) return;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  fetch('/assets/visitors.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (!d || !(d.total > 0)) return;
+    var list = d.countries || [], n = list.length, top = n ? list[0].v : 1, NS = 'http://www.w3.org/2000/svg';
+    var svg = box.querySelector('.vis-dots');
+    list.slice().reverse().forEach(function (c, i) {   // the busiest countries are drawn last, on top
+      if (typeof c.x !== 'number') return;
+      var r = 4.5 + 8.5 * Math.sqrt(c.v / top), g = document.createElementNS(NS, 'g'), rank = n - 1 - i;
+      g.setAttribute('class', 'vis-pt' + (rank < 3 ? ' hot' : ''));
+      g.setAttribute('transform', 'translate(' + c.x + ' ' + Math.min(476, Math.max(6, c.y)) + ')');
+      g.style.setProperty('--k', i);
+      g.innerHTML = '<circle class="halo" r="' + (2.7 * r).toFixed(1) + '"/><circle class="ring" r="' + r.toFixed(1) +
+                    '"/><circle class="core" r="' + r.toFixed(1) + '"/>';
+      var t = document.createElementNS(NS, 'title'); t.textContent = c.n; g.appendChild(t);
+      svg.appendChild(g);
+    });
+    var s = d.total.toLocaleString('en-US'), cells = '';
+    for (var k = 0; k <= 9; k++) cells += '<i>' + k + '</i>';
+    box.querySelector('.vis-count').innerHTML = s.split('').map(function (ch, i) {
+      return ch === ',' ? '<span class="od-sep">,</span>'
+        : '<span class="od"><span class="od-strip" style="--n:' + ch + ';--i:' + i + '">' + cells + '</span></span>';
+    }).join('');
+    var since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    var line = (d.total === 1 ? 'visit' : 'visits') + (n ? ' from ' + n + (n === 1 ? ' country' : ' countries') : '') + ' since ' + since;
+    box.querySelector('.vis-label').textContent = line;
+    box.querySelector('.sr-only').textContent = s + ' ' + line + '.';
+    box.hidden = false;
+    function roll() { box.classList.add('rolled'); }
+    if (reduce || !('IntersectionObserver' in window)) { roll(); return; }
+    var io = new IntersectionObserver(function (en) {
+      if (en[0].isIntersecting) { io.disconnect(); setTimeout(roll, 200); }
+    }, { threshold: 0.5 });
+    io.observe(box);
+  }).catch(function () {});
+})();
+</script>
   <div class="foot-meta">
     <a href="#top">Back to top ↑</a>
     <span>© 2026 Sumit Banik · Last updated October 2026</span>
@@ -274,11 +320,12 @@
   if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {
     nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
   }
-  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top');
+  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer');
   function update() {
     var max = document.documentElement.scrollHeight - window.innerHeight;
     if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
-    if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9);
+    var atFoot = foot && foot.getBoundingClientRect().top < window.innerHeight;   // the footer has its own link up
+    if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9 && !atFoot);
   }
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);

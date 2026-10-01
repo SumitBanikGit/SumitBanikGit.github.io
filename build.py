@@ -658,6 +658,78 @@ def _map_projector():
     return m, project
 
 
+def visitor_assets():
+    """The dotted world for the footer map, and where each country sits on it with its name (read by tools/visitors.py)."""
+    import csv
+    import json
+    m, project = _map_projector()
+    svg = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {m["width"]} {m["height"]}"><path d="{m["path"]}" '
+           'fill="none" stroke="#c9a96a" stroke-width="3.4" stroke-linecap="round"/></svg>\n')
+    lines = [l for l in Path("tools/country-centroids.csv").read_text(encoding="utf-8").splitlines() if not l.startswith("#")]
+    where = {code: [*project(float(lat), float(lon)), name] for code, lat, lon, name in list(csv.reader(lines))[1:]}
+    for path, text in (("assets/map/world-dots.svg", svg),
+                       ("assets/map/countries.json", json.dumps(where, separators=(",", ":")) + "\n")):
+        f = Path(path)
+        if not f.exists() or f.read_text(encoding="utf-8") != text:   # unchanged files keep their dates
+            f.write_text(text, encoding="utf-8")
+
+
+VISITORS_JS = """<script>
+(function () {                              // the footer map of visitors, filled in from assets/visitors.json
+  var box = document.querySelector('.visitors');
+  if (!box || !window.fetch) return;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  fetch('/assets/visitors.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
+    if (!d || !(d.total > 0)) return;
+    var list = d.countries || [], n = list.length, top = n ? list[0].v : 1, NS = 'http://www.w3.org/2000/svg';
+    var svg = box.querySelector('.vis-dots');
+    list.slice().reverse().forEach(function (c, i) {   // the busiest countries are drawn last, on top
+      if (typeof c.x !== 'number') return;
+      var r = 4.5 + 8.5 * Math.sqrt(c.v / top), g = document.createElementNS(NS, 'g'), rank = n - 1 - i;
+      g.setAttribute('class', 'vis-pt' + (rank < 3 ? ' hot' : ''));
+      g.setAttribute('transform', 'translate(' + c.x + ' ' + Math.min(476, Math.max(6, c.y)) + ')');
+      g.style.setProperty('--k', i);
+      g.innerHTML = '<circle class="halo" r="' + (2.7 * r).toFixed(1) + '"/><circle class="ring" r="' + r.toFixed(1) +
+                    '"/><circle class="core" r="' + r.toFixed(1) + '"/>';
+      var t = document.createElementNS(NS, 'title'); t.textContent = c.n; g.appendChild(t);
+      svg.appendChild(g);
+    });
+    var s = d.total.toLocaleString('en-US'), cells = '';
+    for (var k = 0; k <= 9; k++) cells += '<i>' + k + '</i>';
+    box.querySelector('.vis-count').innerHTML = s.split('').map(function (ch, i) {
+      return ch === ',' ? '<span class="od-sep">,</span>'
+        : '<span class="od"><span class="od-strip" style="--n:' + ch + ';--i:' + i + '">' + cells + '</span></span>';
+    }).join('');
+    var since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+    var line = (d.total === 1 ? 'visit' : 'visits') + (n ? ' from ' + n + (n === 1 ? ' country' : ' countries') : '') + ' since ' + since;
+    box.querySelector('.vis-label').textContent = line;
+    box.querySelector('.sr-only').textContent = s + ' ' + line + '.';
+    box.hidden = false;
+    function roll() { box.classList.add('rolled'); }
+    if (reduce || !('IntersectionObserver' in window)) { roll(); return; }
+    var io = new IntersectionObserver(function (en) {
+      if (en[0].isIntersecting) { io.disconnect(); setTimeout(roll, 200); }
+    }, { threshold: 0.5 });
+    io.observe(box);
+  }).catch(function () {});
+})();
+</script>"""
+
+
+def render_visitors():
+    """The footer block for the visitor map and count; it stays hidden until there are visits to show."""
+    return ('<div class="visitors" hidden>\n'
+            '    <div class="vis-map" aria-hidden="true">'
+            f'<img src="/assets/map/world-dots.svg?v={_ver("assets/map/world-dots.svg")}" alt="" width="1200" height="482" loading="lazy">'
+            '<svg class="vis-dots" viewBox="0 0 1200 482"><defs><radialGradient id="vis-glow">'
+            '<stop offset="0" stop-color="#e6c983" stop-opacity=".55"/><stop offset="1" stop-color="#e6c983" stop-opacity="0"/>'
+            '</radialGradient></defs></svg></div>\n'
+            '    <div class="vis-count" aria-hidden="true"></div>\n'
+            '    <div class="vis-label" aria-hidden="true"></div>\n'
+            '    <p class="sr-only"></p>\n'
+            '  </div>\n' + VISITORS_JS)
+
+
 def talk_scene_data():
     """Talks in time order on the world map, with a view that frames them."""
     import re
@@ -1339,6 +1411,7 @@ def _ver(path):
 
 def main():
     P = PROFILE
+    visitor_assets()
     n_articles = sum(p["kind"] == "article" for p in PUBS)
     n_proc = sum(p["kind"] == "proceedings" for p in PUBS)
     n_invited = sum(t[5] for t in TALKS)
@@ -1368,7 +1441,7 @@ def main():
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
         n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
-        updated=date.today().strftime("%B %Y"), year=date.today().year,
+        updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(),
     )
     write_pages(html, n_articles, n_proc)
 
@@ -1619,6 +1692,7 @@ at CERN.</p>
     <div class="foot-aff">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory · Stanford&nbsp;University</div>
     <a class="foot-mail" href="mailto:{email}">{email}</a>
   </div>
+  {visitors}
   <div class="foot-meta">
     <a href="#top">Back to top ↑</a>
     <span>© {year} Sumit Banik · Last updated {updated}</span>
@@ -1790,11 +1864,12 @@ at CERN.</p>
   if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
     nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
   }}
-  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top');
+  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer');
   function update() {{
     var max = document.documentElement.scrollHeight - window.innerHeight;
     if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
-    if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9);
+    var atFoot = foot && foot.getBoundingClientRect().top < window.innerHeight;   // the footer has its own link up
+    if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9 && !atFoot);
   }}
   window.addEventListener('scroll', update, {{ passive: true }});
   window.addEventListener('resize', update);

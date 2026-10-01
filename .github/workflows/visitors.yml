@@ -1,0 +1,45 @@
+# Visitor statistics for the footer map: every six hours, fetch the visit count and the
+# visitors' countries from GoatCounter and commit them to assets/visitors.json.
+# Needs the repository secret GOATCOUNTER_TOKEN (a GoatCounter API key that can read statistics).
+name: Visitor statistics
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: visitors
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch the counts from GoatCounter
+        env:
+          GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
+        run: python3 tools/visitors.py
+
+      - name: Commit and publish the new counts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- assets/visitors.json; then
+            echo "Nothing new to publish."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/visitors.json
+          git commit -m "Update visitor statistics"
+          git pull --rebase origin main
+          git push origin HEAD:main
+          curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" > /dev/null || true
