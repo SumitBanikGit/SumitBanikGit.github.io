@@ -1996,3 +1996,14 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
     stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
 }
 @keyframes ix-flow { from { --run: 0; } to { --run: 1; } }
+
+/* Research page cards: the conic hull's lattice points light up from the apex, the two photons of the
+   95 GeV scalar fly apart, and HyperPrecision's sight narrows onto its target */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .pick:hover .ix circle[style*="--k"], .card:hover .ix circle[style*="--k"] {
+    transform-box: fill-box; transform-origin: center; animation: th-lit .8s ease both; animation-delay: calc(var(--k) * 90ms + .35s); }
+  .pick:hover .ix path.flow, .card:hover .ix path.flow {
+    stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
+  .card:hover .ix path.focus { transform-box: view-box; transform-origin: 24px 15px; animation: ix-focus 1.6s ease-in-out .3s infinite; }
+}
+@keyframes ix-focus { 0%, 100% { transform: scale(1); } 50% { transform: scale(.5); } }

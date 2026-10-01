@@ -593,17 +593,17 @@ def _ix(body, cls="ix", box="0 0 48 30"):
 
 
 # small drawings for the cards inside the pages: selected papers, software, courses, students, contact
-CONE = _p("M6 26H44M6 26L30 3") + _dots([(14, 22), (22, 22), (30, 22), (38, 22), (20, 16), (28, 16), (36, 16), (26, 10)], 1.3)
+CONE = _p("M6 26H44M6 26L30 3") + _cone_dots([(14, 22), (22, 22), (30, 22), (38, 22), (20, 16), (28, 16), (36, 16), (26, 10)], 1.3)   # its points light up on hover
 PAPER_ICONS = {
     "2510.08682": _p("M4 5L18 15L4 25M44 5L30 15L44 25", "thin") + _p("M24 9A6 6 0 1 1 23.9 9Z") + _p("M20 11L28 19M20 19L28 11"),
     "2012.15108": CONE,
-    "2306.15722": _p("M4 15H8M11 15H15M18 15H22", "thin") + _p("M22 15C24 12 25 12 27 10S30 8 32 6S36 4 44 3M22 15C24 18 25 18 27 20S30 22 32 24S36 26 44 27")
+    "2306.15722": _p("M4 15H8M11 15H15M18 15H22", "thin") + _pf("M22 15C24 12 25 12 27 10S30 8 32 6S36 4 44 3M22 15C24 18 25 18 27 20S30 22 32 24S36 26 44 27", 52.23)
                   + _dots([(22, 15)], 1.8),
 }
 SOFTWARE_ICONS = {
     "MBConicHulls": CONE,
     "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z") + _p("M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15", "thin") + _dots([(24, 15)], 1.8),
-    "HyperPrecision": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M24 8A7 7 0 1 1 23.9 8Z", "thin") + _p("M4 15H12M36 15H44", "thin") + _dots([(24, 15)], 2),
+    "HyperPrecision": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M24 8A7 7 0 1 1 23.9 8Z", "thin focus") + _p("M4 15H12M36 15H44", "thin") + _dots([(24, 15)], 2),
 }
 COURSE_ICONS = [
     ("Proseminar", _p("M7 3H41V20H7Z") + _p("M24 20V27M16 27H32M11 15Q17 6 23 11T37 7", "thin")),
