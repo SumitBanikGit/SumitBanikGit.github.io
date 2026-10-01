@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abe539a">
+<link rel="stylesheet" href="assets/style.css?v=6abe575e">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}</script>
 </head>
 <body id="top" class="page-research">
@@ -78,6 +78,17 @@
 <div class="card"><svg class="ix" viewBox="0 0 48 30" aria-hidden="true"><path pathLength="1" d="M14 4H34L44 15L34 26H14L4 15Z"/><path class="thin" pathLength="1" d="M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15"/><circle cx="24" cy="15" r="1.8"/></svg><h4>FeynGKZ</h4><p>Solving Feynman integrals via Gel’fand-Kapranov-Zelevinsky hypergeometric systems, producing series solutions valid in different kinematic regions.</p><div class="links"><a href="https://github.com/anant-group/FeynGKZ">GitHub</a> <a href="https://arxiv.org/abs/2211.01285">arXiv:2211.01285</a></div></div>
 <div class="card"><svg class="ix" viewBox="0 0 48 30" aria-hidden="true"><path pathLength="1" d="M24 3A12 12 0 1 1 23.9 3Z"/><path class="thin" pathLength="1" d="M24 8A7 7 0 1 1 23.9 8Z"/><path class="thin" pathLength="1" d="M4 15H12M36 15H44"/><circle cx="24" cy="15" r="2"/></svg><h4>HyperPrecision</h4><p>High-precision numerical evaluation of multivariate hypergeometric functions, including outside their region of convergence.</p><div class="links"><a href="https://github.com/HyperPrecision/HyperPrecision">GitHub</a> <a href="https://arxiv.org/abs/2605.30216">arXiv:2605.30216</a></div></div>
 </div>
+<div class="releases"><div class="rel-kicker">MBConicHulls, release by release</div><ol class="rel-line"><li style="--i:0"><span class="rel-dot" aria-hidden="true"></span><span class="rel-v">v1.0</span><span class="rel-what">Two-fold and higher Mellin-Barnes integrals with non-straight contours</span><a class="rel-ref" href="https://arxiv.org/abs/2012.15108">arXiv:2012.15108</a></li><li style="--i:1"><span class="rel-dot" aria-hidden="true"></span><span class="rel-v">v1.1</span><span class="rel-what">Straight contours, and one-fold Mellin-Barnes integrals</span><a class="rel-ref" href="https://arxiv.org/abs/2212.11839">arXiv:2212.11839</a></li><li style="--i:2"><span class="rel-dot" aria-hidden="true"></span><span class="rel-v">v1.2</span><span class="rel-what">Triangulations, much faster than conic hulls for higher-fold integrals</span><a class="rel-ref" href="https://arxiv.org/abs/2309.00409">arXiv:2309.00409</a></li><li style="--i:3"><span class="rel-dot" aria-hidden="true"></span><span class="rel-v">v1.3</span><span class="rel-what">Polygamma functions, with both conic hulls and triangulations</span><a class="rel-ref" href="https://arxiv.org/abs/2512.19803">arXiv:2512.19803</a></li></ol></div><script>
+(function () {                              // the line of versions draws itself once it is on screen
+  var el = document.querySelector('.releases');
+  if (!el) return;
+  if (!('IntersectionObserver' in window)) { el.classList.add('drawn'); return; }
+  var io = new IntersectionObserver(function (en) {
+    if (en[0].isIntersecting) { el.classList.add('drawn'); io.disconnect(); }
+  }, { threshold: 0.45 });
+  io.observe(el);
+})();
+</script>
 </section>
 
 <section class="chapter" id="contact">

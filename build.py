@@ -1143,6 +1143,36 @@ def render_software():
         for name, desc, url, arx in SOFTWARE)
 
 
+# MBConicHulls, version by version, as its README on GitHub describes them.
+MB_RELEASES = [
+    ("v1.0", "Two-fold and higher Mellin-Barnes integrals with non-straight contours", "2012.15108"),
+    ("v1.1", "Straight contours, and one-fold Mellin-Barnes integrals", "2212.11839"),
+    ("v1.2", "Triangulations, much faster than conic hulls for higher-fold integrals", "2309.00409"),
+    ("v1.3", "Polygamma functions, with both conic hulls and triangulations", "2512.19803"),
+]
+
+RELEASES_JS = """<script>
+(function () {                              // the line of versions draws itself once it is on screen
+  var el = document.querySelector('.releases');
+  if (!el) return;
+  if (!('IntersectionObserver' in window)) { el.classList.add('drawn'); return; }
+  var io = new IntersectionObserver(function (en) {
+    if (en[0].isIntersecting) { el.classList.add('drawn'); io.disconnect(); }
+  }, { threshold: 0.45 });
+  io.observe(el);
+})();
+</script>"""
+
+
+def render_releases():
+    items = "".join(
+        f'<li style="--i:{i}"><span class="rel-dot" aria-hidden="true"></span><span class="rel-v">{v}</span>'
+        f'<span class="rel-what">{what}</span><a class="rel-ref" href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a></li>'
+        for i, (v, what, arx) in enumerate(MB_RELEASES))
+    return (f'<div class="releases"><div class="rel-kicker">MBConicHulls, release by release</div>'
+            f'<ol class="rel-line">{items}</ol></div>' + RELEASES_JS)
+
+
 def jsonld():
     import json
     P = PROFILE
@@ -1463,7 +1493,7 @@ def main():
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_invited=n_invited,
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
-        software=render_software(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
+        software=render_software(), releases=render_releases(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
@@ -1623,6 +1653,7 @@ at CERN.</p>
 <div class="cards">
 {software}
 </div>
+{releases}
 </section>
 
 <section class="chapter" id="talks">

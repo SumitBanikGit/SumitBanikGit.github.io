@@ -1743,3 +1743,37 @@ footer .wrap.foot { row-gap: 1.6rem; }
   details.more[open] > .entry { animation: unfold .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(min(var(--i, 0), 16) * 35ms); }
   @keyframes unfold { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 }
+
+/* Research, Software: MBConicHulls release by release, a line of versions that draws itself */
+.releases { margin-top: 2.4rem; }
+.rel-kicker { font-family: var(--sans); font-size: .64rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+              color: var(--grey); margin-bottom: 1.15rem; }
+.rel-line { list-style: none; margin: 0; padding: 0; position: relative; display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.4rem; }
+.rel-line li:not(:last-child)::after { content: ""; position: absolute; left: 1.05rem; right: -1.25rem; top: .44rem; height: 1px;
+                                       background: var(--gold); transform-origin: 0 50%; }   /* from each version to the next */
+.rel-line li { position: relative; padding-top: 1.55rem; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.rel-dot { position: absolute; left: 0; top: 0; width: .9rem; height: .9rem; border-radius: 50%;
+           border: 1.5px solid var(--gold); background: var(--paper); box-sizing: border-box; }
+.rel-line li:last-child .rel-dot { background: var(--gold); box-shadow: 0 0 0 4px rgba(168,137,79,.16); }
+.rel-v { display: block; font-family: var(--display); font-weight: 600; font-size: 1.35rem; line-height: 1.1; color: var(--navy);
+         font-variant-numeric: lining-nums; }   /* old-style figures would read v1.0 as vi.o */
+.rel-what { display: block; margin: .3rem 0 .5rem; font-size: .9rem; line-height: 1.45; color: var(--ink); }
+.rel-ref { margin-top: auto; font-family: var(--sans); font-size: .62rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
+@media (max-width: 40rem) {
+  .rel-line { grid-template-columns: 1fr; gap: 1.1rem; }
+  .rel-line li:not(:last-child)::after { left: .44rem; right: auto; top: 1.05rem; bottom: -.95rem; width: 1px; height: auto; transform-origin: 50% 0; }
+  .rel-line li { padding: 0 0 0 1.9rem; }
+  .rel-v { margin-top: -.12rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .js .releases .rel-line li::after { transition: transform .55s cubic-bezier(.4, 0, .2, 1) calc(.55s + var(--i) * .32s); }
+  .js .releases:not(.drawn) .rel-line li::after { transform: scaleX(0); }
+  .js .releases .rel-line li { transition: opacity .6s ease calc(.3s + var(--i) * .32s), transform .6s cubic-bezier(.2, .7, .2, 1) calc(.3s + var(--i) * .32s); }
+  .js .releases:not(.drawn) .rel-line li { opacity: 0; transform: translateY(8px); }
+  .js .releases .rel-dot { transition: transform .45s cubic-bezier(.3, 1.6, .5, 1) calc(.3s + var(--i) * .32s); }
+  .js .releases:not(.drawn) .rel-dot { transform: scale(0); }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 40rem) {
+  .js .releases:not(.drawn) .rel-line li::after { transform: scaleY(0); }
+}
