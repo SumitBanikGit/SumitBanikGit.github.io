@@ -3068,10 +3068,37 @@
     if (side) f.glyphs(fb.prims, cx + Wd / 2 + 2.4 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
     else f.glyphs(fb.prims, (bw - fb.w) / 2, cy + h2 + 2.3 * S - fb.ext[0]);
   }
+  /* The same annihilation, angle by angle. In the centre-of-mass frame and far above the muon mass,
+     dσ/dΩ = α²/4s (1 + cos²θ), with θ the angle between the outgoing μ- and the incoming e-
+     (Peskin and Schroeder, Eq. 5.10). Drawn as a polar plot about the beam axis: twice as many muons
+     go forwards and backwards as sideways. The pair leaves back to back, here at θ of about 49 degrees. */
+  function angular(f, bw, bh) {
+    var S = Math.min(21, bh * 0.08, bw / 22), top = 44, bot = bh - 12;
+    var formula = '\\frac{\\rm{d}σ}{\\rm{d}Ω}=\\frac{α^2}{4s}\\,(1+\\rm{cos}^2θ)', fb = f.box(formula, S), fh = fb.ext[1] - fb.ext[0];
+    var Rs = Math.min((bw - 5 * S) / 2.6, (bot - top - fh - 3.8 * S) / 1.34, 120);               // formula below
+    var Rr = Math.min((bw - 36 - 3.6 * S - fb.w) / 2.6, (bot - top - 2 * S) / 1.34, 120);       // or beside
+    var side = Rr > Rs * 1.15, R0 = side ? Rr : Rs, L = 1.3 * R0, cx, cy;
+    if (side) { cx = (bw - 2.6 * R0 - 3.6 * S - fb.w) / 2 + 1.4 * S + L; cy = (top + bot) / 2; }
+    else { cx = bw / 2; cy = top + (bot - top - 1.34 * R0 - 3.2 * S - fh) / 2 + 0.67 * R0 + S - 0.15 * S; }
+    var s = Math.max(3.2, S * 0.26), pts = [];
+    f.stroke([[cx - L, cy], [cx - 0.1 * R0, cy]], 260); chevron(f, [cx - L, cy], [cx - 0.45 * R0, cy], 1, s); f.label('e^−', cx - L - 0.8 * S, cy, S);
+    f.stroke([[cx + L, cy], [cx + 0.1 * R0, cy]], 260); chevron(f, [cx + L, cy], [cx + 0.45 * R0, cy], 1, s); f.label('e^+', cx + L + 0.8 * S, cy, S);
+    for (var i = 0; i <= 120; i++) { var a = TAU * i / 120, r = R0 * (1 + Math.cos(a) * Math.cos(a)) / 2; pts.push([cx + r * Math.cos(a), cy - r * Math.sin(a)]); }
+    f.stroke(pts, 320);                               // 1 + cos²θ about the beam axis
+    var th = 0.85, ux = Math.cos(th), uy = -Math.sin(th), rm = 1.25 * R0 * (1 + ux * ux) / 2;
+    var m1 = [cx + ux * rm, cy + uy * rm], m2 = [cx - ux * rm, cy - uy * rm];
+    f.stroke([[cx, cy], m1], 240); chevron(f, [cx, cy], m1, 1, s); f.label('μ^−', m1[0] + 0.75 * S * ux, m1[1] + 0.75 * S * uy, S);
+    f.stroke([[cx, cy], m2], 240); chevron(f, [cx, cy], m2, 1, s); f.label('μ^+', m2[0] - 0.75 * S * ux, m2[1] - 0.75 * S * uy, S);
+    f.stroke(chalkArc(cx, cy, 0.3 * R0, 0, -th), 120);
+    f.label('θ', cx + (0.3 * R0 + 0.6 * S) * Math.cos(th / 2), cy - (0.3 * R0 + 0.6 * S) * Math.sin(th / 2), S);
+    if (side) f.glyphs(fb.prims, cx + L + 2.2 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
+    else f.glyphs(fb.prims, (bw - fb.w) / 2, cy + 0.67 * R0 + 2.2 * S - fb.ext[0]);
+  }
   var EQUATIONS = [
     { name: 'The Dirac equation', course: 'Quantum Field Theory', lines: ['(iγ^μ\\,∂_μ−m)\\,ψ=0'] },
     { name: 'The Feynman propagator', course: 'Quantum Field Theory', lines: ['D_F(p)=\\frac{i}{p^2−m^2+iε}'] },
     { name: 'Electron-positron annihilation into muons', course: 'Quantum Field Theory', fig: annihilation },
+    { name: 'The angular distribution of the muons', course: 'Quantum Field Theory', fig: angular },
     { name: 'Unitarity of the CKM matrix', course: 'Flavour Physics', lines: ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0'] },
     { name: 'The unitarity triangle', course: 'Flavour Physics', fig: unitarityTriangle },
     { name: 'The box diagram of B meson mixing', course: 'Flavour Physics', fig: boxMixing },
