@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abe39bf">
+<link rel="stylesheet" href="assets/style.css?v=6abe3f5c">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sumit Banik", "givenName": "Sumit", "familyName": "Banik", "honorificSuffix": "PhD", "jobTitle": "Postdoctoral Researcher", "worksFor": [{"@type": "Organization", "name": "SLAC National Accelerator Laboratory"}, {"@type": "CollegeOrUniversity", "name": "Stanford University"}], "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"}, {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}], "email": "mailto:banik@stanford.edu", "url": "https://sumitbanikgit.github.io/", "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "Higgs physics", "beyond the Standard Model", "collider phenomenology", "effective field theory"], "sameAs": ["https://orcid.org/0000-0002-5869-5293", "https://inspirehep.net/authors/1810309", "https://github.com/SumitBanikGit", "https://www.linkedin.com/in/waytosumitbanik"]}</script>
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}</script>
 </head>
@@ -374,15 +374,16 @@
     function band(r1, r2, fill) {
       ctx.fillStyle = fill; ctx.beginPath(); ctx.arc(CX, CY, r2, 0, TAU); ctx.arc(CX, CY, r1, 0, TAU, true); ctx.fill();
     }
-    function tower(ang, r, depth, col, alpha) {       // a calorimeter deposit
-      ctx.lineWidth = 3.4; ctx.strokeStyle = col + alpha + ')';
-      ctx.beginPath();
-      ctx.moveTo(CX + Math.cos(ang) * r, CY + Math.sin(ang) * r);
-      ctx.lineTo(CX + Math.cos(ang) * (r + depth), CY + Math.sin(ang) * (r + depth));
-      ctx.stroke();
+    function tower(ang, r, depth, col, alpha) {       // a calorimeter deposit: a glowing wedge, deeper for more energy
+      var w = 0.034;
+      ctx.save(); ctx.shadowColor = col + Math.min(1, alpha * 0.9) + ')'; ctx.shadowBlur = 9;
+      ctx.fillStyle = col + (alpha * 0.85) + ')'; ctx.beginPath();
+      ctx.arc(CX, CY, r + depth, ang - w, ang + w); ctx.arc(CX, CY, r, ang + w, ang - w, true); ctx.closePath(); ctx.fill();
+      ctx.restore();
     }
     function drawTrack(p, s, reach, r0, col, alpha, width) {
       ctx.lineWidth = width; ctx.strokeStyle = col + alpha + ')'; ctx.setLineDash([]);
+      ctx.shadowColor = col + (p.kind === 'hadron' ? 0 : 0.55 * alpha) + ')'; ctx.shadowBlur = p.kind === 'hadron' ? 0 : 7;
       ctx.beginPath();
       var drawing = false, last = -1, hit = false, d, pt;
       for (d = 0; d <= s; d += 4) {
@@ -394,7 +395,7 @@
         if (rr < r0) continue;
         if (!drawing) { ctx.moveTo(CX + pt[0], CY + pt[1]); drawing = true; } else ctx.lineTo(CX + pt[0], CY + pt[1]);
       }
-      ctx.stroke();
+      ctx.stroke(); ctx.shadowBlur = 0;
       if (!hit) return null;
       var pe = helix(p, Math.max(0, d - 4));
       return Math.atan2(pe[1], pe[0]);
@@ -403,10 +404,16 @@
       ctx.clearRect(0, 0, W, H);
       var t = (now - t0) / 1000;
       // detector: beam pipe, tracker layers, ECAL and HCAL bands, muon chambers, rotating tick ring
+      var fl0 = (now - flashAt) / 1000, pulse = fl0 >= 0 && fl0 < 1.6 ? Math.pow(1 - fl0 / 1.6, 2) : 0;
+      var glow = ctx.createRadialGradient(CX, CY, RO * 0.02, CX, CY, RO * 1.08);
+      glow.addColorStop(0, 'rgba(220,197,143,' + (0.2 + 0.3 * pulse) + ')');
+      glow.addColorStop(0.55, 'rgba(168,137,79,' + (0.07 + 0.08 * pulse) + ')');
+      glow.addColorStop(1, 'rgba(46,92,78,0)');
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(CX, CY, RO * 1.08, 0, TAU); ctx.fill();
       ring(RO * 0.05, 0.45, 1);
       [0.13, 0.19, 0.25, 0.31, 0.37].forEach(function (k) { ring(RO * k, 0.16, 0.7); });
-      band(RO * 0.5, RO * 0.6, 'rgba(168,137,79,0.08)');
-      band(RO * 0.6, RO * 0.74, 'rgba(46,92,78,0.055)');
+      band(RO * 0.5, RO * 0.6, 'rgba(168,137,79,0.12)');
+      band(RO * 0.6, RO * 0.74, 'rgba(46,92,78,0.09)');
       ring(RO * 0.5, 0.32, 0.9); ring(RO * 0.6, 0.2, 0.7); ring(RO * 0.74, 0.32, 0.9);
       [0.85, 0.92].forEach(function (k) { ring(RO * k, 0.2, 0.8); });
       var spin = reduce ? 0 : t * 0.03;
@@ -424,6 +431,11 @@
         var g = ctx.createRadialGradient(CX, CY, 0, CX, CY, RO * 0.16);
         g.addColorStop(0, 'rgba(220,197,143,' + (0.9 * (1 - fl)) + ')'); g.addColorStop(1, 'rgba(220,197,143,0)');
         ctx.fillStyle = g; ctx.beginPath(); ctx.arc(CX, CY, RO * 0.16, 0, TAU); ctx.fill();
+      }
+      var sw = (now - flashAt) / 1300;                  // the shock of the collision runs out through the detector
+      if (!reduce && sw >= 0 && sw < 1) {
+        ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(201,167,101,' + (0.55 * (1 - sw)) + ')';
+        ctx.beginPath(); ctx.arc(CX, CY, RO * (0.05 + 0.95 * (1 - Math.pow(1 - sw, 3))), 0, TAU); ctx.stroke();
       }
       ctx.fillStyle = 'rgba(46,92,78,0.75)'; ctx.beginPath(); ctx.arc(CX, CY, 2.2, 0, TAU); ctx.fill();
 
@@ -449,13 +461,14 @@
           ctx.stroke();
         } else if (p.kind === 'photon') {               // wavy line, ending in the electromagnetic calorimeter
           s = Math.min(rE - r0, grow); dx = Math.cos(p.phi); dy = Math.sin(p.phi); nx = -dy; ny = dx;
-          ctx.lineWidth = 1.3; ctx.strokeStyle = COL.photon + (0.9 * fade) + ')'; ctx.setLineDash([]);
+          ctx.lineWidth = 1.4; ctx.strokeStyle = COL.photon + (0.95 * fade) + ')'; ctx.setLineDash([]);
+          ctx.shadowColor = 'rgba(201,167,101,' + (0.7 * fade) + ')'; ctx.shadowBlur = 8;
           ctx.beginPath();
           for (u = 0; u <= s; u += 1) {
             var w = 3 * Math.sin(u * 0.55), X2 = CX + dx * (r0 + u) + nx * w, Y2 = CY + dy * (r0 + u) + ny * w;
             if (u === 0) ctx.moveTo(X2, Y2); else ctx.lineTo(X2, Y2);
           }
-          ctx.stroke();
+          ctx.stroke(); ctx.shadowBlur = 0;
           if (s >= rE - r0 - 1) tower(p.phi, rE, RO * (0.05 + 0.05 * p.e), COL.photon, 0.75 * fade);
         } else if (p.kind === 'nu') {                   // missing transverse momentum: a dotted arrow
           s = Math.min(RO * 0.9, grow); dx = Math.cos(p.phi); dy = Math.sin(p.phi);
@@ -486,8 +499,8 @@
           ang = drawTrack(p, Math.min(rE * 1.5, grow), rE, r0, COL.electron, 0.9 * fade, 1.4);
           if (ang !== null) tower(ang, rE, RO * (0.06 + 0.04 * p.e), COL.electron, 0.7 * fade);
         } else {                                        // charged hadron: deposits in the hadronic calorimeter
-          ang = drawTrack(p, Math.min(Math.PI * p.rc, rE * 1.7, grow), rE, r0, COL.hadron, 0.72 * fade, 0.9);
-          if (ang !== null) tower(ang, rH, RO * (0.03 + 0.1 * p.e), COL.gluon, 0.45 * fade);
+          ang = drawTrack(p, Math.min(Math.PI * p.rc, rE * 1.7, grow), rE, r0, COL.hadron, 0.82 * fade, 1.05);
+          if (ang !== null) tower(ang, rH, RO * (0.03 + 0.1 * p.e), COL.gluon, 0.55 * fade);
         }
       });
       raf = (!reduce && visible && !document.hidden) ? requestAnimationFrame(frame) : null;

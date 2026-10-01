@@ -1663,3 +1663,37 @@ main > #contact.chapter::before {
   .js .talk-years .ty-stack { transform: none; transition: none; }
   .js .talk-years .ty-n { opacity: 1; transition: none; }
 }
+
+/* Explore cards: the numeral sits on the line of the label, fully in view */
+.ex-num { top: 3.62rem; bottom: auto; right: 1.15rem; font-size: 1.85rem; opacity: .5; letter-spacing: .02em; }
+@media (hover: hover) { .ex-card:hover .ex-num { transform: translateY(-2px); opacity: .9; } }
+
+/* Home: slow colour washes of Oxford green, brass and a touch of claret behind the hero */
+.hero .aurora { position: absolute; inset: -18%; z-index: 0; pointer-events: none; filter: blur(28px);
+  background:
+    radial-gradient(32% 36% at 18% 28%, rgba(46, 92, 78, .17), transparent 70%),
+    radial-gradient(30% 34% at 80% 58%, rgba(168, 137, 79, .26), transparent 70%),
+    radial-gradient(26% 28% at 58% 12%, rgba(110, 44, 52, .08), transparent 70%),
+    radial-gradient(28% 30% at 34% 86%, rgba(168, 137, 79, .14), transparent 72%); }
+@media (prefers-reduced-motion: no-preference) {
+  .hero .aurora { animation: aurora 28s ease-in-out infinite alternate; }
+  @keyframes aurora {
+    0%   { transform: translate3d(-3%, -2%, 0) rotate(0deg) scale(1); }
+    50%  { transform: translate3d(3%, 2.5%, 0) rotate(7deg) scale(1.07); }
+    100% { transform: translate3d(-1.5%, 3%, 0) rotate(-5deg) scale(1.02); }
+  }
+}
+
+/* Home: a brass light runs through the name once the letters have risen */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .hero .name .ch {
+      background: linear-gradient(100deg, var(--navy) 0 38%, #c9a765 48%, #f0dfb4 50%, #c9a765 52%, var(--navy) 62% 100%);
+      background-size: 320% 100%; background-position: 100% 0;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: letter .9s cubic-bezier(.2, .7, .2, 1) both, shine 1.5s ease-in-out both;
+      animation-delay: calc(.1s + var(--i) * .05s), calc(1.35s + var(--i) * .055s);
+    }
+  }
+}
+@keyframes shine { from { background-position: 100% 0; } to { background-position: 0 0; } }

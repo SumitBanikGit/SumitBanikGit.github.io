@@ -2653,16 +2653,28 @@
     layout: function (e) {
       var A = e.aw, n = A.length;
       if (!n) return;
-      e.L = e.x + 12; e.R = e.x + e.w - 12; e.base = e.y + e.h - 30;
+      e.L = e.x + 50; e.R = e.x + e.w - 12; e.base = e.y + e.h - 30;
       e.mr = Math.max(10, Math.min(16.5, e.w / 30, e.h / 12));
-      var low = e.base - 12 - 1.9 * e.mr, high = e.y + e.mr + 10;
-      e.pos = A.map(function (a, i) {                 // evenly along the path, rising with each award
-        return [e.L + (i + 0.5) / n * (e.R - e.L), low - (low - high) * (i / Math.max(1, n - 1))];
-      });
+      var low = e.base - 12 - 1.9 * e.mr, high = e.y + e.mr + 22, lo = Math.log(3000), hi = Math.log(330000);
+      e.Yv = function (usd) { return low - (low - high) * (Math.log(usd) - lo) / (hi - lo); };   // height: the amount, on a log scale
+      e.pos = A.map(function (a, i) { return [e.L + (i + 0.5) / n * (e.R - e.L), e.Yv(a.usd || 3000)]; });
     },
     frame: function (e, t) {
       var A = e.aw, n = A.length, ctx = e.ctx, R = e.reduce;
       if (!n || !e.pos) return;
+      var ax = e.L - 8, ak = R ? 1 : ease(t / 0.8);                                               // the amount axis, in US dollars
+      ctx.save(); ctx.globalAlpha *= ak;
+      line(ctx, ax, e.Yv(3000), ax, e.Yv(330000), ink('brass', 0.55), 1);
+      ctx.font = font(8.5, SANS, 500); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      [[10000, '$10k'], [30000, '$30k'], [100000, '$100k'], [300000, '$300k']].forEach(function (T) {
+        var yy = e.Yv(T[0]);
+        line(ctx, ax - 3, yy, ax + 3, yy, ink('brass', 0.6), 1);
+        ctx.save(); ctx.setLineDash([2, 5]); line(ctx, ax + 6, yy, e.R, yy, ink('brass', 0.16), 1); ctx.restore();
+        ctx.fillStyle = ink('slate', 0.85); ctx.fillText(T[1], ax - 6, yy);
+      });
+      ctx.textBaseline = 'alphabetic';
+      caps(ctx, 'AMOUNT IN US DOLLARS, LOG SCALE', e.x + 4, e.y + 9, ink('slate', 0.8), 7);
+      ctx.restore();
       line(ctx, e.L, e.base, e.R, e.base, ink('brass', 0.55), 1);                                   // the years
       ctx.font = font(9.5, SANS, 500); ctx.textAlign = 'center';
       A.forEach(function (a, i) {
@@ -2683,6 +2695,12 @@
       ctx.stroke(); ctx.restore();
       if (!R && t > 4.4 && t > e.nextSel) { e.sel = (e.sel + 1) % n; e.selAt = t; e.nextSel = t + 3.2; this.announce(e); }
       if (R && e.sel < 0) { e.sel = n - 1; this.announce(e); }
+      if (e.sel >= 0 && A[e.sel].usd) {             // a leader from the amount axis to the chosen medal, behind the medals
+        var ps = e.pos[e.sel], lk = R ? 1 : ease((t - e.selAt) / 0.5);
+        ctx.save(); ctx.setLineDash([2, 3]);
+        line(ctx, e.L - 8, ps[1], e.L - 8 + (ps[0] - e.mr - e.L + 8) * lk, ps[1], ink('brassD', 0.45), 1);
+        ctx.restore();
+      }
       A.forEach(function (a, i) {
         var p = e.pos[i], age = t - 0.3 - i * 0.55, k = R ? 1 : ease(age / 0.5);
         if (k <= 0) return;
@@ -2690,6 +2708,12 @@
         if (!R && age < 1.2) ring(ctx, p[0], p[1], e.mr * (1 + age * 1.4), ink('brass', 0.5 * (1 - age / 1.2)), 1);
         medal(ctx, p[0], p[1] - 3 * lift, e.mr * s, a.s, k * (e.sel < 0 || sel ? 1 : 0.62), lift);
         if (sel && !R) glint(ctx, p[0], p[1] - 3 * lift, e.mr * s, (t - e.selAt - 0.2) / 0.9);
+        if (sel && a.usd) {                         // its value in US dollars, just above it
+          var tk = R ? 1 : ease((t - e.selAt - 0.15) / 0.4);
+          ctx.save(); ctx.globalAlpha *= tk; ctx.font = font(9.5, SANS, 600); ctx.textAlign = 'center'; ctx.fillStyle = ink('brassD', 1);
+          ctx.fillText('≈ $' + a.usd.toLocaleString('en-US'), p[0], p[1] - 3 * lift - e.mr * 1.45);
+          ctx.restore();
+        }
       });
     },
     announce: function (e) {
