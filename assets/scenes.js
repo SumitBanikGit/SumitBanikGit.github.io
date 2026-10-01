@@ -1948,6 +1948,11 @@
   var TOUR = [CONIC, SPECV, TRIF, BNV, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
               HYPERPREC, HDM152, POLYGAMMA, RUNNING, SUNSET, BRACKETS, QUADRATIC];
 
+  function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
+    var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
+    for (var i = 0; id && i < e.vs.length; i++) if (e.vs[i].V.paper === id) return i;
+    return 0;
+  }
   SCENES.tour = {
     touchHint: 'Tap for the next paper',
     init: function (e) {
@@ -1962,17 +1967,31 @@
       e.lay.ctx.setTransform(e.dpr, 0, 0, e.dpr, -e.box.x * e.dpr, -e.box.y * e.dpr);
       e.vs.forEach(function (v) { v.ctx = e.lay.ctx; v.laid = false; });
     },
-    begin: function (e, i, t) {
-      e.i = (i + e.vs.length) % e.vs.length; e.t0 = t;
-      var v = e.vs[e.i], V = v.V, ref = e.refs[V.paper] || {};
-      if (V.init) V.init(v);
-      v.laid = false;
+    label: function (e, i) {                        // the caption names the paper and links to it
+      var V = e.vs[i].V, ref = e.refs[V.paper] || {};
       e.caption(ref.u ? '<a href="' + ref.u + '" tabindex="-1" rel="noopener" target="_blank">' + V.cap + '</a>' : V.cap);
       e.hint(V.ref || ref.r || '');
     },
+    begin: function (e, i, t) {
+      e.i = (i + e.vs.length) % e.vs.length; e.t0 = t;
+      var v = e.vs[e.i], V = v.V;
+      if (V.init) V.init(v);
+      v.laid = false; e.hov = -1;
+      this.label(e, e.i);
+    },
+    dotAt: function (e, x, y) {                     // which dot of the pager, if any, is under the pointer
+      var n = e.vs.length, gap = Math.min(9, (e.w - 20) / n), k = Math.round((x - e.x - 3) / gap);
+      return Math.abs(y - (e.y + e.h + 7)) < 9 && k >= 0 && k < n ? k : -1;
+    },
+    move: function (e, p) {                         // hovering a dot of the pager names its paper
+      var h = p ? this.dotAt(e, p.x, p.y) : -1;
+      if (h === e.hov) return;
+      e.hov = h;
+      this.label(e, h >= 0 ? h : e.i);
+    },
     frame: function (e, t) {
       if (!e.lay) return;
-      if (!e.begun) { this.begin(e, 0, t); e.begun = true; }
+      if (!e.begun) { this.begin(e, tourStart(e), t); e.begun = true; }
       var v = e.vs[e.i], V = v.V, lt = e.reduce ? 60 : t - e.t0;
       if (!e.reduce && lt > V.dur) { this.begin(e, e.i + 1, t); v = e.vs[e.i]; V = v.V; lt = 0; }
       if (!v.laid) { if (V.layout) V.layout(v); v.laid = true; }
@@ -1987,10 +2006,10 @@
         if (i === e.i) {
           dot(ctx, x, y, 2.6, ink('brass', 1));
           if (!e.reduce) { ctx.strokeStyle = ink('brassD', 0.8); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 4.6, -Math.PI / 2, -Math.PI / 2 + TAU * clamp01(lt / V.dur)); ctx.stroke(); }
-        } else dot(ctx, x, y, 1.5, ink('slate', 0.35));
+        } else { dot(ctx, x, y, e.hov === i ? 2.2 : 1.5, ink(e.hov === i ? 'brassD' : 'slate', e.hov === i ? 0.9 : 0.35)); if (e.hov === i) ring(ctx, x, y, 4.2, ink('brassD', 0.6), 1); }
       }
     },
-    click: function (e) { this.begin(e, e.i + 1, e.t); }
+    click: function (e, x, y) { var k = this.dotAt(e, x, y); this.begin(e, k >= 0 ? k : e.i + 1, e.t); }
   };
 
   /* =====================================================================

@@ -490,6 +490,18 @@ def authors_html(s):
 TOPIC_LABEL = {"fi": "Feynman integrals", "pheno": "Phenomenology", "soft": "Software"}
 
 
+_TOUR = None
+
+
+def tour_papers():
+    """arXiv ids of the papers that have an animation in the paper tour on the Research page."""
+    import re
+    global _TOUR
+    if _TOUR is None:
+        _TOUR = set(re.findall(r"paper: '(\d{4}\.\d{4,5})'", Path("assets/scenes.js").read_text(encoding="utf-8")))
+    return _TOUR
+
+
 def pub_entry(n, p):
     links = []
     if p.get("arxiv"):
@@ -500,6 +512,8 @@ def pub_entry(n, p):
         links.append(f'<a href="https://inspirehep.net/literature/{p["inspire"]}">INSPIRE</a>')
     if p.get("code"):
         links.append(f'<a href="{p["code"]}">Code</a>')
+    if p.get("arxiv") in tour_papers():
+        links.append(f'<a href="research.html#tour-{p["arxiv"]}" title="See this paper in the animated tour">Animation</a>')
     venue = f' <span class="sep">·</span> {p["venue"]}' if p.get("venue") else ""
     tags = "".join(f'<span class="tag {t}">{TOPIC_LABEL[t]}</span>' for t in p["topic"].split())
     links.append(f'<span class="tags">{tags}</span>')
