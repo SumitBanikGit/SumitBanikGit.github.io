@@ -1457,11 +1457,10 @@ TEMPLATE = """<!doctype html>
 {portrait}
 <div class="about-text">
 <p class="statement" data-hold="2600">My research spans a broad range of topics in theoretical particle
-physics, from the mathematics of special functions and the analytic
-and numerical computation of Feynman integrals, to
-effective field theories, renormalization group evolution,
-Higgs physics and the search for new phenomena at the Large Hadron
-Collider at CERN.</p>
+physics, from applied mathematics to the computation of multi-loop
+Feynman integrals, effective field theories, model building, Higgs
+physics and the search for New Physics at the Large Hadron Collider
+at CERN.</p>
 <p class="about-links"><a href="assets/cv/Sumit_Banik_CV.pdf">Read the full CV <span aria-hidden="true">→</span></a>
 <a href="contact.html">Get in touch <span aria-hidden="true">→</span></a></p>
 </div>
