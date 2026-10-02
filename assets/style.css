@@ -2401,3 +2401,16 @@ details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle
 @media (min-width: 51.01rem) and (hover: none) { .nav-item:hover > .nav-drop { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .nav-drop { transition: none !important; transform: none !important; } }
 @media print { .nav-drop { display: none !important; } }
+
+/* Publications: each paper's BibTeX, copied with one click (or read on INSPIRE) */
+.pub-cite { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; margin-top: .85rem; }
+.pub-cite .k { margin: 0 .2rem 0 0; }
+.cite-copy { display: inline-flex; align-items: center; gap: .45rem; padding: .34rem .75rem .32rem; border: 1px solid var(--gold);
+             border-radius: 2px; background: transparent; cursor: pointer; font-family: var(--sans); font-size: .6rem; font-weight: 600;
+             letter-spacing: .12em; text-transform: uppercase; color: var(--accent); transition: background .2s, color .2s, border-color .2s; }
+.cite-copy svg { width: .85rem; height: .85rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.cite-copy:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.cite-copy:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.cite-copy.done { border-color: #2e5c4e; color: #2e5c4e; background: rgba(46, 92, 78, .08); }
+html[data-theme="dark"] .cite-copy.done { border-color: #7fb8a3; color: #7fb8a3; }
+.cite-raw { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; color: var(--grey); }

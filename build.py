@@ -677,8 +677,38 @@ def _pub_more(p):
     if p.get("arxiv") and d.get("cat"):
         facts.append(("arXiv", f'{p["arxiv"]} [{d["cat"]}]'))
     facts_html = "".join(f'<div><span class="k">{k}</span>{v}</div>' for k, v in facts)
+    cite = ""
+    if d.get("bibtex", "").startswith("@"):        # the BibTeX entry, copied with one click (or read on INSPIRE)
+        import html as _html
+        key = re.match(r"@\w+\{([^,]+),", d["bibtex"])
+        cite = (f'<div class="pub-cite"><span class="k">Cite</span>'
+                f'<button class="cite-copy" type="button" data-copy="{_html.escape(d["bibtex"], quote=True)}">'
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/>'
+                '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button>'
+                f'<a class="cite-raw" href="https://inspirehep.net/api/literature/{p["inspire"]}?format=bibtex">'
+                f'{key.group(1) if key else "BibTeX"}</a><span class="sr-only" role="status" aria-live="polite"></span></div>')
     return (f'<div class="pub-abs"><p class="abstract"><span class="k">Abstract</span>{_tex_html(d["abstract"])}</p>'
-            f'<div class="pub-facts">{facts_html}</div></div>')
+            f'<div class="pub-facts">{facts_html}</div>{cite}</div>')
+
+
+CITE_JS = """<script>
+(function () {                              // copy a paper's BibTeX with one click, and say so
+  var bs = document.querySelectorAll('.cite-copy');
+  if (!bs.length) return;
+  var ok = navigator.clipboard && window.isSecureContext;
+  Array.prototype.forEach.call(bs, function (b) {
+    if (!ok) { b.remove(); return; }
+    var label = b.querySelector('.cc-l'), said = b.parentNode.querySelector('[role=status]'), timer;
+    b.addEventListener('click', function () {
+      navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+        b.classList.add('done'); label.textContent = 'BibTeX copied'; if (said) said.textContent = 'BibTeX copied';
+        clearTimeout(timer);
+        timer = setTimeout(function () { b.classList.remove('done'); label.textContent = 'Copy BibTeX'; if (said) said.textContent = ''; }, 2200);
+      }).catch(function () {});
+    });
+  });
+})();
+</script>"""
 
 
 def pub_entry(n, p):
@@ -731,7 +761,7 @@ def render_pubs():
         for p in items:
             out.append(pub_entry(n, p))
             n -= 1
-    return "\n".join(out)
+    return "\n".join(out) + "\n" + CITE_JS
 
 
 def _p(d, cls=""):

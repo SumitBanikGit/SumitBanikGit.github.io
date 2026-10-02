@@ -1,6 +1,6 @@
 """Collect the details shown when a publication is opened on the Publications page: the abstract (from
 INSPIRE, preferring the arXiv version), the number of pages, figures and tables (as the authors give them in
-the arXiv comments, else the page count on INSPIRE), the preprint (report) numbers and the arXiv category.
+the arXiv comments, else the page count on INSPIRE), the preprint (report) numbers, the arXiv category and the BibTeX entry.
 
 Run from the site folder:  python3 tools/pub_details.py
 It writes tools/pub_details.json, which build.py reads. Nothing on the site changes until the next build.
@@ -56,8 +56,9 @@ def main():
             reports += [x.strip() for x in r.get("value", "").split(",") if x.strip()]
         a = arx.get(p.get("arxiv", ""), {})
         cat = a.get("cat") or next(iter((m.get("arxiv_eprints") or [{}])[0].get("categories", [])), "")
+        bib = get(f"https://inspirehep.net/api/literature/{p['inspire']}?format=bibtex", "application/x-bibtex").strip()
         data[p["inspire"]] = dict(abstract=pick["value"] if pick else "", pages=m.get("number_of_pages"),
-                                  reports=reports, comment=a.get("comment", ""), cat=cat)
+                                  reports=reports, comment=a.get("comment", ""), cat=cat, bibtex=bib)
         time.sleep(0.4)
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"wrote {OUT.name} with {len(data)} publications")
