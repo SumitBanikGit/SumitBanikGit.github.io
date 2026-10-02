@@ -2290,3 +2290,37 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
   .card:hover .ix path.step, .pkg-head:hover .ix path.step {
     animation: redraw .4s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k) * 110ms + .2s); }
 }
+
+/* Software page: each package and the library fold up to their name, a line about them and their badges.
+   A click (or Enter) opens the rest: the links, the releases, what they need, the files and how to get them. */
+details.pkg-more > summary { display: block; list-style: none; cursor: pointer; border-radius: 4px; }
+details.pkg-more > summary::-webkit-details-marker { display: none; }
+details.pkg-more > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 8px; }
+.pkg-head { display: flex; }
+.pkg-title, .pkg-badges { display: flex; }
+.pkg-title { flex-direction: column; }
+.pkg-tagline, .pkg-what { display: block; }
+.pkg-what { margin: .9rem 0 0; }
+.pkg-toggle { display: inline-flex; align-items: center; gap: .45rem; margin-top: .85rem; padding-bottom: .15rem;
+              border-bottom: 1px solid rgba(168, 137, 79, .45); font-family: var(--sans); font-size: .62rem; font-weight: 600;
+              letter-spacing: .14em; text-transform: uppercase; color: var(--accent); transition: color .2s, border-color .2s; }
+.pkg-toggle .chev { width: .85rem; height: .85rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round;
+                    stroke-linejoin: round; transition: transform .4s cubic-bezier(.2, .7, .2, 1); }
+.pkg-toggle .t-hide, details.pkg-more[open] .pkg-toggle .t-show { display: none; }
+details.pkg-more[open] .pkg-toggle .t-hide { display: inline; }
+details.pkg-more[open] .pkg-toggle .chev { transform: rotate(180deg); }
+details.pkg-more > summary:hover .pkg-toggle { color: var(--navy); border-color: var(--gold); }
+.pkg { transition: box-shadow .25s, border-color .25s; }
+.pkg:has(details.pkg-more:not([open]) > summary:hover) { box-shadow: var(--lift); }
+.pkg-body { padding-top: 1.1rem; }
+.pkg-body > .pkg-actions:first-child { margin-top: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  details.pkg-more[open] > .pkg-body { animation: unfold .5s cubic-bezier(.2, .7, .2, 1) both; }
+  @supports (interpolate-size: allow-keywords) {
+    details.pkg-more { interpolate-size: allow-keywords; }
+    details.pkg-more::details-content { block-size: 0; overflow: clip;
+      transition: block-size .55s cubic-bezier(.2, .7, .2, 1), content-visibility .55s allow-discrete; }
+    details.pkg-more[open]::details-content { block-size: auto; }
+  }
+}
+@media (prefers-reduced-motion: reduce) { .pkg-toggle .chev { transition: none; } }

@@ -1326,6 +1326,31 @@ def _pkg_facts(heads, files, repo, load):
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
 
 
+PKG_CHEVRON = '<svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg>'
+
+
+def _pkg_card(slug, icon, name, tagline, badges, what, body, more):
+    """A package or library folded up to its name, a line about it and its badges. A click opens the rest."""
+    return (f'<article class="pkg" id="{slug}"><details class="pkg-more"><summary>'
+            f'<span class="pkg-head">{icon}<span class="pkg-title"><h3>{name}</h3>'
+            f'<span class="pkg-tagline">{tagline}</span></span><span class="pkg-badges">{badges}</span></span>'
+            f'<span class="pkg-what">{what}</span>'
+            f'<span class="pkg-toggle"><span class="t-show">{more}</span><span class="t-hide">Hide details</span>{PKG_CHEVRON}</span>'
+            f'</summary><div class="pkg-body">{body}</div></details></article>')
+
+
+PKG_OPEN_JS = """<script>
+(function () {                              // a link to a package opens it
+  function show() {
+    var id = decodeURIComponent((location.hash || '').slice(1)), el = id && document.getElementById(id);
+    var d = el && el.querySelector && el.querySelector('details.pkg-more');
+    if (d) d.open = true;
+  }
+  show(); window.addEventListener('hashchange', show);
+})();
+</script>"""
+
+
 def render_packages():
     out = []
     for pk in PACKAGES:
@@ -1333,19 +1358,18 @@ def render_packages():
         heads = [("Requires", _needs(pk["needs"]))]
         if pk["extras"]:
             heads.append((pk["extras"][0], _needs([(n, u, "") for n, u in pk["extras"][1]])))
-        out.append(
-            f'<article class="pkg" id="{pk["slug"]}">'
-            f'<div class="pkg-head">{_ix(SOFTWARE_ICONS[pk["name"]])}<div class="pkg-title"><h3>{pk["name"]}</h3>'
-            f'<p class="pkg-tagline">{pk["tagline"]}</p></div>'
-            f'<div class="pkg-badges"><span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span>'
-            f'<span class="tag soft">{latest}</span></div></div>'
-            f'<p class="pkg-what">{pk["what"]}</p>' + _pkg_links(pk["name"], pk["repo"], pk["paper"])
-            + render_releases(pk["releases"]) + _pkg_facts(heads, pk["files"], pk["repo"], pk["load"]) + '</article>')
+        out.append(_pkg_card(
+            pk["slug"], _ix(SOFTWARE_ICONS[pk["name"]]), pk["name"], pk["tagline"],
+            f'<span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span><span class="tag soft">{latest}</span>',
+            pk["what"],
+            _pkg_links(pk["name"], pk["repo"], pk["paper"]) + render_releases(pk["releases"])
+            + _pkg_facts(heads, pk["files"], pk["repo"], pk["load"]),
+            "Show details"))
     n_rel = sum(len(pk["releases"]) for pk in PACKAGES)
     return ('<section class="chapter" id="packages">\n<h2 class="chapter-title">Packages</h2>\n'
             f'<p class="prose">{NUMBER_WORDS[len(PACKAGES)].capitalize()} open-source <i>Mathematica</i> packages for Feynman integrals and hypergeometric '
             f'functions, developed with my collaborators, with {NUMBER_WORDS[n_rel]} releases so far. All are free to use under the GNU '
-            'General Public License, version 3.</p>\n' + "\n".join(out) + "\n" + RELEASES_JS + COPY_CODE_JS + "\n</section>")
+            'General Public License, version 3.</p>\n' + "\n".join(out) + "\n" + RELEASES_JS + COPY_CODE_JS + PKG_OPEN_JS + "\n</section>")
 
 
 def render_library():
@@ -1353,13 +1377,10 @@ def render_library():
     heads = [("Computed with", _needs(lb["tools"]))]
     return ('<section class="chapter" id="library">\n<h2 class="chapter-title">Library</h2>\n'
             '<p class="prose">Results that come with a paper, collected so that others can use them.</p>\n'
-            f'<article class="pkg" id="{lb["slug"]}">'
-            f'<div class="pkg-head">{_ix(LIBRARY_ICON)}<div class="pkg-title"><h3>{lb["name"]}</h3>'
-            f'<p class="pkg-tagline">{lb["tagline"]}</p></div>'
-            f'<div class="pkg-badges"><span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span>'
-            f'<span class="tag pheno">{lb["when"]}</span></div></div>'
-            f'<p class="pkg-what">{lb["what"]}</p>' + _pkg_links(lb["name"], lb["repo"], lb["paper"])
-            + _pkg_facts(heads, lb["files"], lb["repo"], "") + '</article>\n</section>')
+            + _pkg_card(lb["slug"], _ix(LIBRARY_ICON), lb["name"], lb["tagline"],
+                        f'<span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span><span class="tag pheno">{lb["when"]}</span>',
+                        lb["what"], _pkg_links(lb["name"], lb["repo"], lb["paper"]) + _pkg_facts(heads, lb["files"], lb["repo"], ""),
+                        "Show details") + '\n</section>')
 
 
 def software_jsonld():
