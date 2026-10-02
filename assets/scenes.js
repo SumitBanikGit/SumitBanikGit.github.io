@@ -2577,8 +2577,82 @@
                 ref: 'Phys. Rev. D 2023 · JHEP 2024 · Phys. Lett. B 2025',
                 init: function (v) { SPEC.init.call(SPEC, v); }, frame: function (v, t) { SPEC.frame.call(SPEC, v, t); } };
 
+  /* How far the triangulations reach (2309.00409, Table 2): the off-shell massless scalar one-loop N-point integral
+     with generic powers has an MB representation with N(N-1)/2 - 1 folds. For N = 4, 5, 10, 13 and 15 that is 5, 9,
+     44, 77 and 104 folds, and one series representation made of 11, 26, 1013, 8178 and 32752 series, the last found
+     in 8.9 hours. The loop is drawn as a polygon with one off-shell leg at each vertex. */
+  var NPT = [[4, 5, 11], [5, 9, 26], [10, 44, 1013], [13, 77, 8178], [15, 104, 32752]];
+  var NPOINT = {
+    key: 'npoint', paper: '2309.00409', dur: 12.5, cap: 'Up to the one-loop 15-point integral',
+    ref: 'Phys. Rev. D 110, 036002 (2024)',
+    layout: function (v) {
+      v.S = Math.max(9, Math.min(12, v.w / 44));
+      var r = Math.max(18, Math.min((v.h - 14 - 2.6 * v.S) / 2.8, v.w * 0.12));
+      v.G = { x: v.x + 8 + 1.4 * r, y: v.y + 4 + 1.4 * r, r: r };
+      v.L = v.G.x + 1.4 * r + 4.2 * v.S; v.R = v.x + v.w - 10; v.T = v.y + 22; v.B = v.y + v.h - 24;
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, S = v.S, G = v.G, L = v.L, Rr = v.R, T = v.T, B = v.B;
+      var step = 2, t0 = 0.8, idx = R ? 4 : Math.max(0, Math.min(4, Math.floor((t - t0) / step)));
+      var into = R ? 1 : clamp01((t - t0 - idx * step) / 0.45), ak = R ? 1 : ease(t / 0.6);
+      function X(n) { return L + (n - 3) / 13 * (Rr - L); }
+      function Y(lg) { return B - (lg - 0.6) / 4.2 * (B - T); }
+      function polygon(n, a) {                         // the loop with n propagators and an off-shell leg at each vertex
+        var pts = [];
+        for (var i = 0; i < n; i++) { var th = -Math.PI / 2 + (n % 2 ? 0 : Math.PI / n) + TAU * i / n; pts.push([Math.cos(th), Math.sin(th)]); }   // the box sits square
+        ctx.save(); ctx.globalAlpha *= a;
+        pts.forEach(function (q) { line(ctx, G.x + q[0] * G.r, G.y + q[1] * G.r, G.x + q[0] * G.r * 1.38, G.y + q[1] * G.r * 1.38, ink('slate', 0.75), 1); });
+        ctx.strokeStyle = ink('green', 0.9); ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.beginPath();
+        pts.forEach(function (q, i) { var x = G.x + q[0] * G.r, y = G.y + q[1] * G.r; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+        ctx.closePath(); ctx.stroke();
+        pts.forEach(function (q) { dot(ctx, G.x + q[0] * G.r, G.y + q[1] * G.r, n > 10 ? 1.6 : 2, ink('green', 1)); });
+        ctx.restore();
+      }
+      if (t > t0 || R) {                               // the N-gon of this step, faded in over the last
+        if (idx > 0 && into < 1) polygon(NPT[idx - 1][0], 1 - into);
+        polygon(NPT[idx][0], into);
+        var c = NPT[idx], yl = G.y + 1.4 * G.r + 1.05 * S;
+        ctx.save(); ctx.globalAlpha *= R ? 1 : ease((t - t0 - idx * step) / 0.4);
+        drawMath(ctx, 'N=' + c[0], G.x, yl, S * 1.05, ink('slate', 1), 'center');
+        caps(ctx, c[1] + '-FOLD MB', G.x, yl + 1.25 * S, ink('brassD', 0.95), 7.5, 'center');
+        ctx.restore();
+      }
+      ctx.save(); ctx.globalAlpha *= ak;               // the axes: N against the number of series, on a log scale
+      line(ctx, L, T, L, B, ink('green', 0.55), 1); line(ctx, L, B, Rr, B, ink('green', 0.55), 1);
+      [1, 2, 3, 4].forEach(function (k) {
+        line(ctx, L - 3, Y(k), L, Y(k), ink('green', 0.55), 1);
+        drawMath(ctx, '10^{' + k + '}', L - 5, Y(k) + 3.5, S * 0.8, ink('slate', 0.85), 'right');
+      });
+      NPT.forEach(function (c) {
+        line(ctx, X(c[0]), B, X(c[0]), B + 3, ink('green', 0.55), 1);
+        drawMath(ctx, String(c[0]), X(c[0]), B + 13, S * 0.8, ink('slate', 0.85), 'center');
+      });
+      drawMath(ctx, 'N', Rr, B - 5, S * 0.9, ink('slate', 0.9), 'right');
+      caps(ctx, 'SERIES IN ONE REPRESENTATION', L + 6, v.y + 10, ink('slate', 0.8), 7.5);
+      ctx.restore();
+      var shown = R ? 5 : (t > t0 ? idx + 1 : 0), prev = null;
+      for (var i = 0; i < shown; i++) {                // one point per integral, joined in order
+        var c2 = NPT[i], k = R || i < idx ? 1 : into, x = X(c2[0]), y = Y(Math.log10(c2[2]));
+        if (prev) { ctx.save(); ctx.setLineDash([2, 3]); line(ctx, prev[0], prev[1], prev[0] + (x - prev[0]) * k, prev[1] + (y - prev[1]) * k, ink('brass', 0.7), 1); ctx.restore(); }
+        ctx.save(); ctx.globalAlpha *= k;
+        dot(ctx, x, y, 2.6, ink(i === idx ? 'brassD' : 'green', 1));
+        if (i === idx) ring(ctx, x, y, 5.5, ink('brassD', 0.7), 1);
+        ctx.font = font(S * 0.85, SANS, 600); ctx.fillStyle = ink(i === idx ? 'brassD' : 'slate', 0.95); ctx.textAlign = i === 4 ? 'right' : 'center';
+        ctx.fillText(String(c2[2]), i === 4 ? x - 7 : x, y - 8);
+        ctx.restore();
+        prev = [x, y];
+      }
+      var nk = R ? 1 : ease((t - 10.4) / 0.6);         // the last one, and how long it took
+      if (nk > 0) {
+        ctx.save(); ctx.globalAlpha *= nk;
+        drawMath(ctx, 'N=15\\,\\rm{in}\\,8.9\\,\\rm{hours}', L + 6, T + 1.2 * S, S * 1.05, ink('brassD', 1), 'left');
+        ctx.restore();
+      }
+    }
+  };
+
   var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
-              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, PTSPEC, REVIEW, THESIS];
+              HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, NPOINT, PTSPEC, REVIEW, THESIS];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
