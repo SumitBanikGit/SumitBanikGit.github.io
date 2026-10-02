@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abf1d0e">
+<link rel="stylesheet" href="assets/style.css?v=6abf258a">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
@@ -264,7 +264,7 @@
       var parent = el.parentElement, n = seen.get(parent) || 0;
       seen.set(parent, n + 1);
       el.style.setProperty('--d', (n % 6) * 70 + 'ms');
-      if (el.querySelector('.ix path.flow')) el.dataset.hold = '1800';   // let its flowing lines finish drawing
+      if (el.querySelector('.ix path.flow, .ex-icon path.flow')) el.dataset.hold = '1800';   // let its flowing lines finish drawing
       el.classList.add('reveal');
     });
     // Elements revealed with a clip mask have zero visible area while hidden, so the

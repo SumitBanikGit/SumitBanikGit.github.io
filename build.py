@@ -1475,18 +1475,34 @@ LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research":
 
 
 # small line drawings for the explore cards, one per page, echoing its header animation
+# On hover (see style.css) each drawing does what its page shows: the vertices of the polytope light up in turn, the
+# papers along the running total, a talk flies along its arc, the medal wobbles, the releases appear in time order,
+# the chalk writes again, the students branch out from their supervisor, the career steps follow one another, and
+# the globe turns.
+def _kd(pts, r=1.6):                         # dots that light up one after another on hover
+    return "".join(f'<circle cx="{x}" cy="{y}" r="{r}" style="--k:{k}"/>' for k, (x, y) in enumerate(pts))
+
+
 EX_ICONS = {
     "research.html": _p("M6 22L14 5L32 3L43 14L36 27L15 27Z") + _p("M14 5L22 16L32 3M22 16L43 14M22 16L36 27M22 16L15 27M6 22L22 16", "thin")
-                     + _dots([(6, 22), (14, 5), (32, 3), (43, 14), (36, 27), (15, 27), (22, 16)]),
-    "publications.html": _p("M4 22L13 12L21 17L31 6L44 10", "thin") + _dots([(4, 22), (13, 12), (21, 17), (31, 6), (44, 10)], 2)
+                     + _kd([(6, 22), (14, 5), (32, 3), (43, 14), (36, 27), (15, 27), (22, 16)]),
+    "publications.html": _p("M4 22L13 12L21 17L31 6L44 10", "thin") + _kd([(4, 22), (13, 12), (21, 17), (31, 6), (44, 10)], 2)
                          + _p("M3 28H45"),
-    "talks.html": _p("M4 26Q24 -2 44 18") + _p("M2 28Q24 22 46 28", "thin") + _dots([(4, 26), (44, 18)], 2.2),
-    "funding.html": _p("M24 4A9 9 0 1 1 23.9 4Z") + _p("M24 8.5A4.5 4.5 0 1 1 23.9 8.5Z", "thin") + _p("M18.5 20L15 29L19.5 27L21 30M29.5 20L33 29L28.5 27L27 30", "thin"),
-    "software.html": _p("M5 8H44M15 15H44M33 22H44", "thin") + _dots([(5, 8), (16, 8), (24, 8), (40, 8), (15, 15), (33, 22), (37, 22)], 2),
+    "talks.html": _pf("M4 26Q24 -2 44 18", 48.69) + _p("M2 28Q24 22 46 28", "thin") + _dots([(4, 26)], 2.2)
+                  + '<circle cx="44" cy="18" r="2.2" style="--k:4"/>',
+    "funding.html": '<g class="wobble">' + _p("M24 4A9 9 0 1 1 23.9 4Z") + _p("M24 8.5A4.5 4.5 0 1 1 23.9 8.5Z", "thin")
+                    + _p("M18.5 20L15 29L19.5 27L21 30M29.5 20L33 29L28.5 27L27 30", "thin") + "</g>",
+    "software.html": _p("M5 8H44M15 15H44M33 22H44", "thin")
+                     + "".join(f'<circle cx="{x}" cy="{y}" r="2" style="--k:{k}"/>' for k, (x, y) in
+                               enumerate(sorted([(5, 8), (16, 8), (24, 8), (40, 8), (15, 15), (33, 22), (37, 22)]))),
     "teaching.html": _p("M5 4H43V23H5Z") + _p("M10 12Q13 8 16 12T22 12M25 15H36", "thin") + _p("M9 27H39"),
-    "supervision.html": _p("M6 15C18 15 20 5 40 5M6 15H40M6 15C18 15 20 25 40 25", "thin") + _dots([(6, 15)], 2.6) + _dots([(40, 5), (40, 15), (40, 25)], 2),
-    "cv.html": _p("M3 25H45") + _p("M6 19H16M14 13H27M26 7H38", "thin") + _dots([(38, 7)], 2),
-    "contact.html": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M12 15H36M24 3C18 9 18 21 24 27M24 3C30 9 30 21 24 27", "thin") + _dots([(19, 11)], 2),
+    "supervision.html": _pf("M6 15C18 15 20 5 40 5", 35.95, "thin") + _pf("M6 15H40", 34, "thin") + _pf("M6 15C18 15 20 25 40 25", 35.95, "thin")
+                        + _dots([(6, 15)], 2.6) + _kd([(40, 5), (40, 15), (40, 25)], 2),
+    "cv.html": _p("M3 25H45") + "".join(f'<path class="thin step" pathLength="1" style="--k:{k}" d="{d}"/>'
+                                        for k, d in enumerate(("M6 19H16", "M14 13H27", "M26 7H38")))
+               + '<circle cx="38" cy="7" r="2" style="--k:4"/>',
+    "contact.html": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M12 15H36M24 3C18 9 18 21 24 27M24 3C30 9 30 21 24 27", "thin")
+                    + '<circle class="turn" cx="19" cy="11" r="2"/>',
 }
 
 
@@ -2101,7 +2117,7 @@ Standard Model at particle colliders.</p>
       var parent = el.parentElement, n = seen.get(parent) || 0;
       seen.set(parent, n + 1);
       el.style.setProperty('--d', (n % 6) * 70 + 'ms');
-      if (el.querySelector('.ix path.flow')) el.dataset.hold = '1800';   // let its flowing lines finish drawing
+      if (el.querySelector('.ix path.flow, .ex-icon path.flow')) el.dataset.hold = '1800';   // let its flowing lines finish drawing
       el.classList.add('reveal');
     }});
     // Elements revealed with a clip mask have zero visible area while hidden, so the

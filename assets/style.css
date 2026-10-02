@@ -2232,3 +2232,24 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
    go missing for a moment. Now the flow starts at once and the line is whole again at once. */
 .ix path.flow { transition: none; }
 .js .reveal.in .ix path.flow { transition: stroke-dashoffset 1.4s cubic-bezier(.2, .7, .2, 1) .25s; }
+
+/* Home page, Explore: on hover each drawing does what its page shows. The vertices of the polytope light up in
+   turn, the papers along the running total, a talk flies along its arc to the city it lands in, the medal
+   wobbles, the releases appear in time order, the students branch out from their supervisor, the career steps
+   follow one another, and the globe turns. The chalk of Teaching writes again, as before. */
+.ex-icon path.flow { transition: none; }
+.js .reveal.in .ex-icon path.flow { transition: stroke-dashoffset 1.4s cubic-bezier(.2, .7, .2, 1) .2s; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ex-card:hover .ex-icon circle[style*="--k"] {
+    transform-box: fill-box; transform-origin: center; animation: th-lit .8s ease both; animation-delay: calc(var(--k) * 90ms + .3s); }
+  .ex-card:hover .ex-icon path.flow {
+    stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
+  .ex-card:hover .ex-icon path.step { animation: redraw .45s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k) * 130ms); }
+  .ex-card:hover .ex-icon .wobble { transform-box: view-box; transform-origin: 24px 13px; animation: ex-wobble 1.2s ease-out; }
+  .ex-card:hover .ex-icon circle.turn { animation: ex-turn 2s ease-in-out infinite; }
+}
+@keyframes ex-wobble { 0% { transform: rotate(0); } 22% { transform: rotate(-10deg); } 48% { transform: rotate(7deg); }
+                       72% { transform: rotate(-3deg); } 100% { transform: rotate(0); } }
+@keyframes ex-turn { 0% { transform: translateX(0); opacity: 1; } 70% { transform: translateX(9px); opacity: 1; }
+                     84% { transform: translateX(11px); opacity: 0; } 86% { transform: translateX(-3px); opacity: 0; }
+                     100% { transform: translateX(0); opacity: 1; } }
