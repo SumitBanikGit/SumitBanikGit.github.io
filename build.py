@@ -1697,7 +1697,7 @@ def main():
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_invited=n_invited,
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
-        software=render_software(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
+        software=render_software(), fav_v=_ver("assets/favicon.svg"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
@@ -1724,7 +1724,8 @@ TEMPLATE = """<!doctype html>
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{url}assets/portrait.jpg">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon.svg?v={fav_v}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v={touch_v}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
