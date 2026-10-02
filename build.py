@@ -9,6 +9,8 @@ All site content lives in this file. To update the website:
 
 Inline HTML is allowed in titles (e.g. <sub>, <i>, &gamma;).
 """
+import json
+import re
 from datetime import date
 from pathlib import Path
 
@@ -549,6 +551,136 @@ DOWNLOAD_ICON = ('<svg class="dl" viewBox="0 0 16 16" aria-hidden="true">'
                  '<path d="M8 2.5v7.5M4.6 6.8 8 10.2l3.4-3.4M3 13.5h10"/></svg>')
 
 
+# ---------------------------------------------------------------- publication details
+# The abstract, length and preprint numbers shown when a publication is opened, from tools/pub_details.json
+# (written by tools/pub_details.py from INSPIRE and arXiv).
+try:
+    PUB_DETAILS = json.loads(Path("tools/pub_details.json").read_text(encoding="utf-8"))
+except (OSError, ValueError):
+    PUB_DETAILS = {}
+
+_TEX_SYM = {"alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "ε", "varepsilon": "ε", "zeta": "ζ",
+            "eta": "η", "theta": "θ", "lambda": "λ", "mu": "μ", "nu": "ν", "xi": "ξ", "pi": "π", "rho": "ρ",
+            "sigma": "σ", "tau": "τ", "phi": "φ", "varphi": "φ", "chi": "χ", "psi": "ψ", "omega": "ω",
+            "Gamma": "Γ", "Delta": "Δ", "Theta": "Θ", "Lambda": "Λ", "Sigma": "Σ", "Phi": "Φ", "Psi": "Ψ", "Omega": "Ω",
+            "to": "→", "rightarrow": "→", "approx": "≈", "simeq": "≃", "sim": "∼", "pm": "±", "mp": "∓", "times": "×",
+            "cdot": "·", "geq": "≥", "leq": "≤", "geqslant": "⩾", "leqslant": "⩽", "gtrapprox": "⪆", "lessapprox": "⪅",
+            "gtrsim": "≳", "lesssim": "≲", "prime": "′", "ell": "ℓ", "infty": "∞", "partial": "∂", "neq": "≠",
+            "propto": "∝", "ldots": "…", "dots": "…", "%": "%", "{": "{", "}": "}", ",": " ", ";": " ", ":": " ",
+            "!": "", " ": " ", "quad": " ", "qquad": " ", "&": "&amp;", "$": "$", "#": "#", "_": "_"}
+
+
+def _tex_math(src):
+    """A little TeX for the maths in abstracts: letters in italics, scripts, bars, Greek and the usual signs."""
+    i, n = 0, len(src)
+
+    def group():
+        nonlocal i
+        if i < n and src[i] == "{":
+            i += 1
+            return seq("}")
+        return seq(None, one=True)
+
+    def seq(close, one=False, upright=False):
+        nonlocal i
+        out = []
+        while i < n:
+            c = src[i]
+            if close and c == close:
+                i += 1
+                break
+            if c == "{":
+                i += 1
+                out.append(seq("}", upright=upright))
+            elif c in "^_":
+                i += 1
+                tag = "sup" if c == "^" else "sub"
+                out.append(f"<{tag}>{group()}</{tag}>")
+            elif c == "\\":
+                m = re.match(r"\\([A-Za-z]+|.)", src[i:])
+                cmd = m.group(1)
+                i += len(m.group(0))
+                if cmd in ("bar", "overline"):
+                    while i < n and src[i] == " ":
+                        i += 1
+                    out.append(f'<span class="ov">{group()}</span>')
+                elif cmd in ("rm", "mathrm"):
+                    if cmd == "mathrm":
+                        out.append(_upright(group()))
+                    else:
+                        upright = True
+                elif cmd in ("text", "textrm", "mbox"):
+                    out.append(_upright(group()))
+                else:
+                    out.append(_TEX_SYM.get(cmd, cmd))
+            elif c == "~":
+                out.append(" ")
+                i += 1
+            elif c.isalpha() and c.isascii():
+                j = i
+                while j < n and src[j].isalpha() and src[j].isascii():
+                    j += 1
+                word = src[i:j]
+                out.append(word if upright else f"<i>{word}</i>")
+                i = j
+            else:
+                out.append({"<": "&lt;", ">": "&gt;", "&": "&amp;"}.get(c, c))
+                i += 1
+            if one and out:
+                break
+        return "".join(out)
+
+    return seq(None)
+
+
+def _upright(html):
+    return re.sub(r"</?i>", "", html)
+
+
+def _tex_html(text):
+    """An abstract with its TeX turned into HTML: maths between dollars, quotes, and plain hyphens."""
+    import html as _html
+    parts = re.split(r"(\$[^$]*\$)", text.replace("\n", " "))
+    out = []
+    for k, part in enumerate(parts):
+        if part.startswith("$") and part.endswith("$") and len(part) > 1:
+            out.append(_tex_math(part[1:-1]))
+        else:
+            t = _html.escape(part, quote=False).replace("``", "“").replace("''", "”").replace("~", " ")
+            t = re.sub(r"\s*\\cite\{[^}]*\}", "", t)            # citations stay in the paper
+            t = re.sub(r"\\%", "%", t).replace("\\,", "\u202f").replace("---", ", ").replace("--", "-").replace("–", "-").replace("—", ", ")
+            t = re.sub(r"\\([A-Za-z]+)", lambda m: _TEX_SYM.get(m.group(1), m.group(1)), t)
+            out.append(t)
+    return re.sub(r"\s+", " ", "".join(out)).strip()
+
+
+def _pub_more(p):
+    """What opens under a publication: its abstract, length, preprint numbers and arXiv category."""
+    d = PUB_DETAILS.get(p.get("inspire", ""), {})
+    if not d.get("abstract"):
+        return ""
+    c = d.get("comment", "")
+    def count(word):
+        m = re.search(rf"(\d+)\s+{word}", c)
+        return int(m.group(1)) if m else None
+    pages = count("pages") or d.get("pages")
+    length = [f"{pages} pages"] if pages else []
+    for word, one in (("figures?", "figure"), ("tables?", "table")):
+        k = count(word)
+        if k:
+            length.append(f"{k} {one}{'' if k == 1 else 's'}")
+    facts = []
+    if length:
+        facts.append(("Length", " · ".join(length)))
+    if d.get("reports"):
+        facts.append(("Preprint", " · ".join(d["reports"])))
+    if p.get("arxiv") and d.get("cat"):
+        facts.append(("arXiv", f'{p["arxiv"]} [{d["cat"]}]'))
+    facts_html = "".join(f'<div><span class="k">{k}</span>{v}</div>' for k, v in facts)
+    return (f'<div class="pub-abs"><p class="abstract"><span class="k">Abstract</span>{_tex_html(d["abstract"])}</p>'
+            f'<div class="pub-facts">{facts_html}</div></div>')
+
+
 def pub_entry(n, p):
     import html as _html
     links = []
@@ -570,12 +702,17 @@ def pub_entry(n, p):
     venue = f' <span class="sep">·</span> {p["venue"]}' if p.get("venue") else ""
     tags = "".join(f'<span class="tag {t}">{TOPIC_LABEL[t]}</span>' for t in p["topic"].split())
     links.append(f'<span class="tags">{tags}</span>')
+    more = _pub_more(p)
+    head = (f'<span class="title">{p["title"]}</span>'
+            f'<span class="meta">{authors_html(p["authors"])}</span>'
+            f'<span class="detail"><span class="muted">{p["ref"]}</span>{venue}</span>')
+    if more:                                   # the title, authors and journal open the abstract and the details
+        head = (f'<details class="pub-open"><summary>{head}<span class="pub-toggle"><span class="t-show">Abstract and details</span>'
+                f'<span class="t-hide">Hide abstract</span>{PKG_CHEVRON}</span></summary>{more}</details>')
     return (
         f'<div class="entry pub" data-topic="{p["topic"]}">'
         f'<div class="rail">[{n}]<br>{p["year"]}</div><div class="body">'
-        f'<span class="title">{p["title"]}</span>'
-        f'<div class="meta">{authors_html(p["authors"])}</div>'
-        f'<div class="detail"><span class="muted">{p["ref"]}</span>{venue}</div>'
+        + head +
         f'<div class="links">{" ".join(links)}</div>'
         f'</div></div>'
     )
@@ -2100,11 +2237,16 @@ Standard Model at particle colliders.</p>
   var more = document.querySelector('.pub-more');
   var empty = document.querySelector('.pub-empty');
   var LIMIT = 8, topic = 'all', query = '', open = false;
+  function pubText(p) {{                              // what a search looks through: the card, not the abstract
+    if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
+      function (x) {{ return x.textContent; }}).join(' ').toLowerCase();
+    return p.dataset.q;
+  }}
   function applyPubs() {{
     var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '', keys = [], arrived = 0;
     pubs.forEach(function (p) {{
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
-               (!query || p.textContent.toLowerCase().indexOf(query) >= 0);
+               (!query || pubText(p).indexOf(query) >= 0);
       if (ok) {{ matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/\u00a0/g, ' ').trim()); }}
       var vis = ok && (open || narrowed || shown < LIMIT);
       if (vis) shown++;

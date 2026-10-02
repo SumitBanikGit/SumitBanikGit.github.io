@@ -2332,3 +2332,36 @@ details.pkg-more > summary:hover .pkg-toggle { color: var(--navy); border-color:
 @media (min-width: 51.01rem) and (max-width: 66rem) { .brand { display: none; } }   /* the ten pages need the room */
 @media (min-width: 51.01rem) and (max-width: 58rem) { .navbar nav { font-size: .72rem; letter-spacing: .05em; } }
 @media (min-width: 51.01rem) and (max-width: 54rem) { .navbar nav { font-size: .7rem; } }
+
+/* Publications: a click on a paper (its title, authors or journal) opens its abstract, its length, its preprint
+   numbers and its arXiv category, as for the packages on the Software page */
+details.pub-open > summary { display: block; list-style: none; cursor: pointer; border-radius: 3px; }
+details.pub-open > summary::-webkit-details-marker { display: none; }
+details.pub-open > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+.pub .title, .pub .meta, .pub .detail { display: block; }
+.pub-toggle { display: inline-flex; align-items: center; gap: .4rem; margin-top: .3rem; font-family: var(--sans); font-size: .6rem;
+              font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); opacity: .8;
+              transition: opacity .2s, color .2s; }
+.pub-toggle .chev { width: .8rem; height: .8rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round;
+                    stroke-linejoin: round; transition: transform .35s cubic-bezier(.2, .7, .2, 1); }
+.pub-toggle .t-hide, details.pub-open[open] .pub-toggle .t-show { display: none; }
+details.pub-open[open] .pub-toggle .t-hide { display: inline; }
+details.pub-open[open] .pub-toggle .chev { transform: rotate(180deg); }
+details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle { opacity: 1; }
+.pub-abs { margin: .75rem 0 .35rem; padding: .85rem 1.05rem .85rem; max-width: 46rem; border-left: 2px solid rgba(168, 137, 79, .6);
+           border-radius: 0 4px 4px 0; background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.pub-abs .abstract { margin: 0; font-size: .95rem; line-height: 1.62; }
+.pub-abs .k { display: block; margin-bottom: .3rem; font-family: var(--sans); font-size: .58rem; font-weight: 600;
+              letter-spacing: .15em; text-transform: uppercase; color: var(--grey); }
+.pub-facts { display: flex; flex-wrap: wrap; gap: .5rem 2.2rem; margin-top: .85rem; font-size: .88rem; }
+.pub-facts .k { margin-bottom: .05rem; }
+@media (prefers-reduced-motion: no-preference) {
+  details.pub-open[open] > .pub-abs { animation: unfold .45s cubic-bezier(.2, .7, .2, 1) both; }
+  @supports (interpolate-size: allow-keywords) {
+    details.pub-open { interpolate-size: allow-keywords; }
+    details.pub-open::details-content { block-size: 0; overflow: clip;
+      transition: block-size .45s cubic-bezier(.2, .7, .2, 1), content-visibility .45s allow-discrete; }
+    details.pub-open[open]::details-content { block-size: auto; }
+  }
+}
+@media (prefers-reduced-motion: reduce) { .pub-toggle .chev { transition: none; } }
