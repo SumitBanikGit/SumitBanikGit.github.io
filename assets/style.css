@@ -2191,3 +2191,24 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
 @keyframes pub-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 .pub.pub-in { animation: pub-in .5s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k, 0) * 45ms); }
 @media (prefers-reduced-motion: reduce) { .pub.pub-in { animation: none; } }
+
+/* Software page: pointing at a package's name brings its drawing to life, as on the research cards.
+   The conic hull fills with lattice points, HyperPrecision's sight narrows onto its target, and the
+   three couplings of SLQ-RG run with the scale, changing pace at the leptoquark mass. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .pkg-head:hover .ix path { animation: redraw 1.1s cubic-bezier(.2, .7, .2, 1); }
+  .pkg-head:hover .ix circle[style*="--k"] {
+    transform-box: fill-box; transform-origin: center; animation: th-lit .8s ease both; animation-delay: calc(var(--k) * 90ms + .35s); }
+  .pkg-head:hover .ix path.flow {
+    stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
+  .pkg-head:hover .ix path.focus { transform-box: view-box; transform-origin: 24px 15px; animation: ix-focus 1.6s ease-in-out .3s infinite; }
+}
+
+/* The page not found names the event on its detector, as the home page does */
+.ev-note { margin: 1.25rem 0 0; padding: .1rem 0 .15rem .85rem; border-left: 1px solid rgba(168, 137, 79, .55); }
+.ev-note .ev-label { margin: .3rem 0 0; min-height: 1.35em; font-size: 1.15rem; }
+.ev-note .ev-say { margin: .1rem 0 0; font-size: .84rem; }
+@media print { .ev-note { display: none; } }
+@media (max-width: 52rem) {        /* on tablets and phones the rings reach above the stage, so it keeps clear of the note */
+  .page-404 .page-hero .hero-stage { margin-top: calc(.9rem + var(--ro-out, 0px)); }
+}

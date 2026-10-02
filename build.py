@@ -650,7 +650,11 @@ PAPER_ICONS = {
     "2306.15722": _p("M4 15H8M11 15H15M18 15H22", "thin") + _pf("M22 15C24 12 25 12 27 10S30 8 32 6S36 4 44 3M22 15C24 18 25 18 27 20S30 22 32 24S36 26 44 27", 52.23)
                   + _dots([(22, 15)], 1.8),
 }
-LIBRARY_ICON = _p("M10 6H36V26H10Z") + _p("M14 2H40V22", "thin") + _p("M15 12H31M15 16H27M15 20H29", "thin")
+# SLQ-RG: the three gauge couplings (as 1/α) against the log of the scale. At the leptoquark mass (the line)
+# every slope changes, since the new scalars add to all three beta functions. On hover the couplings run.
+LIBRARY_ICON = (_p("M4 28H44", "thin") + _p("M22 3V28", "thin")
+                + _pf("M4 6L22 10L44 18", 41.85) + _pf("M4 18L22 15.5L44 13.5", 40.26) + _pf("M4 26L22 20L44 14.5", 41.65)
+                + "".join(f'<circle cx="22" cy="{y}" r="1.4" style="--k:{k}"/>' for k, y in enumerate((10, 15.5, 20))))
 SOFTWARE_ICONS = {
     "MBConicHulls": CONE,
     "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z") + _p("M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15", "thin") + _dots([(24, 15)], 1.8),
@@ -1635,7 +1639,7 @@ def write_pages(html, n_articles, n_proc):
 
     scenes = page_scenes()
 
-    def page_hero(label, title, sub, file=""):
+    def page_hero(label, title, sub, file="", extra=""):
         scene = scenes.get(file)
         if scene:
             name, caption, hint, data = scene
@@ -1652,7 +1656,7 @@ def write_pages(html, n_articles, n_proc):
         return (f'<header class="masthead hero page-hero"{attr}>\n  <canvas class="field" aria-hidden="true"></canvas>\n'
                 f'  <div class="wrap hero-inner">\n   <div class="hero-text">\n'
                 f'    <p class="crumb"><a href="index.html">{P["name"]}</a><span aria-hidden="true">/</span>{label}</p>\n'
-                f'    <h1 class="page-title" aria-label="{title}">{letters(title)}</h1>\n    <p class="page-sub">{sub}</p>\n   </div>\n'
+                f'    <h1 class="page-title" aria-label="{title}">{letters(title)}</h1>\n    <p class="page-sub">{sub}</p>\n{extra}   </div>\n'
                 f'{stage}  </div>\n</header>\n')
 
     def relink(body, current):
@@ -1699,7 +1703,9 @@ def write_pages(html, n_articles, n_proc):
     # a friendly 404 page for mistyped addresses
     nf = (head.replace("<title>Sumit Banik | Theoretical Particle Physics</title>", "<title>Page not found | Sumit Banik</title>")
           + '<body id="top" class="page-404">\n' + INTRO + '<a class="skip" href="#main">Skip to content</a>\n\n' + page_hero("Not found", "Page not found",
-            "The page you are looking for does not exist. Like a neutrino, it left the detector without a trace.")
+            "The page you are looking for does not exist. Like a neutrino, it left the detector without a trace.",
+            extra='    <div class="ev-note" aria-hidden="true"><p class="ev-kicker">At the Large Hadron Collider</p>'
+                  '<p class="ev-label"></p><p class="ev-say"></p></div>\n')
           + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
           '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
           + sections["contact"] + "\n\n" + tail)
@@ -2221,8 +2227,8 @@ Standard Model at particle colliders.</p>
     }});
   }});
   var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar');
-  if (corner && navbar) {{                           // the corner switch steps aside once the menu bar with its own switch is at the top
-    var place = function () {{ corner.classList.toggle('away', navbar.getBoundingClientRect().top <= 1); }};
+  if (corner && navbar) {{                           // the corner switch steps aside as the menu bar with its own switch reaches it
+    var place = function () {{ corner.classList.toggle('away', navbar.getBoundingClientRect().top <= corner.offsetTop + corner.offsetHeight + 8); }};
     window.addEventListener('scroll', place, {{ passive: true }}); window.addEventListener('resize', place); place();
   }}
   var dq = window.matchMedia('(prefers-color-scheme: dark)'), follow = function (ev) {{
