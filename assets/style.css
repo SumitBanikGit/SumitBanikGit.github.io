@@ -1739,6 +1739,7 @@ footer .wrap.foot { row-gap: 1.6rem; }
     details.more::details-content { block-size: 0; overflow: clip;
       transition: block-size .65s cubic-bezier(.2, .7, .2, 1), content-visibility .65s allow-discrete; }
     details.more[open]::details-content { block-size: auto; }
+    details.more.instant::details-content { transition: none; }
   }
   details.more[open] > .entry { animation: unfold .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(min(var(--i, 0), 16) * 35ms); }
   @keyframes unfold { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
@@ -2428,3 +2429,49 @@ html[data-theme="dark"] .cite-copy.done { border-color: #7fb8a3; color: #7fb8a3;
 /* The scroll cue of the home page fades away once the reader has started to scroll, so that it never sits on the text */
 .scroll-cue { transition: opacity .45s ease, visibility 0s 0s; }
 .scroll-cue.gone { opacity: 0 !important; visibility: hidden; transition: opacity .45s ease, visibility 0s .45s; }
+
+/* ------------------------------------------- links between the pages */
+
+/* Research page: each package and the library in a few words, a link to its card on the Software page */
+.cards.soft-index { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 46rem) { .cards.soft-index { grid-template-columns: 1fr; } }
+a.soft-link { flex-direction: row; align-items: stretch; gap: 1.1rem; color: var(--ink); text-decoration: none; }
+a.soft-link .ix { flex: none; align-self: flex-start; margin: .3rem 0 0; width: 2.9rem; height: 1.85rem; }
+.soft-link .sl-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.soft-link h4 { font-size: 1.3rem; margin-bottom: .15rem; }
+.soft-link p { margin: 0 0 .65rem; font-size: .93rem; color: var(--grey); }
+.soft-link .sl-meta { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.soft-link .sl-meta .tag { margin-left: 0; }
+.soft-link .sl-go { font-family: var(--sans); font-size: .66rem; font-weight: 500; letter-spacing: .1em;
+                    text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+.soft-link .sl-go span { display: inline-block; transition: transform .2s; }
+.soft-link:hover .sl-go span, .soft-link:focus-visible .sl-go span { transform: translateX(3px); }
+@media (prefers-reduced-motion: no-preference) {
+  .soft-link:focus-visible .ix path { animation: redraw 1.1s cubic-bezier(.2, .7, .2, 1); }
+}
+
+/* home: each news item is a link to where the site says more about it, and so is each number */
+.news-link { color: inherit; text-decoration: none; }
+.news-link::after { content: ""; position: absolute; inset: 0; border-radius: 0 6px 6px 0; }
+.news-link .nl-go { position: relative; left: -4px; color: var(--accent); opacity: 0; transition: left .2s, opacity .2s; }   /* inline, held to the last word */
+.news li:hover .nl-go, .news-link:focus-visible .nl-go { opacity: 1; left: 0; }
+.news-link:focus-visible { outline: none; }
+.news-link:focus-visible::after { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (hover: none) { .news-link .nl-go { opacity: .75; left: 0; } }
+a.stat { color: inherit; text-decoration: none; }
+a.stat .l { transition: color .2s; }
+a.stat:hover .l, a.stat:focus-visible .l { color: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  a.stat:focus-visible .ix path { animation: redraw 1.1s cubic-bezier(.2, .7, .2, 1); }
+}
+@media (prefers-reduced-motion: reduce) { .soft-link .sl-go span, .news-link .nl-go { transition: none; } }
+/* where a link from another page lands: a brass ring that glows once and fades, so the eye finds it */
+@media (prefers-reduced-motion: no-preference) {
+  .pub:target, .pkg:target, .fund:target, .talk-card:target, #talks .entry:target, .course:target, .student:target {
+    animation: landed 2.4s cubic-bezier(.3, .6, .3, 1) .55s;
+  }
+}
+@keyframes landed {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--gold) 0%, transparent); }
+  16% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 60%, transparent), 0 14px 30px -18px rgba(28, 53, 47, .45); }
+}

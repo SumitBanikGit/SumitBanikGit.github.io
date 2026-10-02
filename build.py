@@ -200,12 +200,14 @@ PUBS = [
 ]
 
 # Recent news shown on the front page (newest first; keep ~5).
+# Each item links to where the site says more about it.
 NEWS = [
-    ("2026", "Invited virtual talk at <b>CERN</b>, FCC Precision Calculations Working Group."),
-    ("2026", "<b>HyperPrecision</b> published in <i>Computer Physics Communications</i>."),
-    ("2026", "Two-loop anomalous dimensions of baryon-number-violating operators in SMEFT published in <i>JHEP</i>."),
-    ("2026", "Joined the <b>Fundamental Physics Directorate</b> at SLAC, Stanford as a postdoctoral researcher."),
-    ("2025", "Awarded the <b>SNSF Postdoc.Mobility Fellowship</b>."),
+    ("2026", "Invited virtual talk at <b>CERN</b>, FCC Precision Calculations Working Group.", "talk:FCC Precision Calculations"),
+    ("2026", "<b>HyperPrecision</b> published in <i>Computer Physics Communications</i>.", "software.html#hyperprecision"),
+    ("2026", "Two-loop anomalous dimensions of baryon-number-violating operators in SMEFT published in <i>JHEP</i>.",
+     "publications.html#arxiv-2510.08682"),
+    ("2026", "Joined the <b>Fundamental Physics Directorate</b> at SLAC, Stanford as a postdoctoral researcher.", "cv.html#positions"),
+    ("2025", "Awarded the <b>SNSF Postdoc.Mobility Fellowship</b>.", "funding.html#postdoc-mobility-fellowship"),
 ]
 
 # The "Path" timeline in About (oldest first). logos: files in assets/logos/.
@@ -711,6 +713,23 @@ CITE_JS = """<script>
 </script>"""
 
 
+def _pub_id(p):
+    """The anchor of a paper on the Publications page, from its arXiv number where it has one."""
+    return f'arxiv-{p["arxiv"]}' if p.get("arxiv") else f'inspire-{p["inspire"]}' if p.get("inspire") else _slug(p["title"])
+
+
+def _pub_link(arx):
+    return f'publications.html#{_pub_id(_paper(arx))}'
+
+
+def _soft_of(p):
+    """The package or library that came with a paper, for a link to its card on the Software page."""
+    for k in PACKAGES + [LIBRARY]:
+        if p.get("code") == k["repo"] or (p.get("arxiv") and p.get("arxiv") == k["paper"]):
+            return k
+    return None
+
+
 def pub_entry(n, p):
     import html as _html
     links = []
@@ -723,7 +742,10 @@ def pub_entry(n, p):
         links.append(f'<a href="https://doi.org/{p["doi"]}">DOI</a>')
     if p.get("inspire"):
         links.append(f'<a href="https://inspirehep.net/literature/{p["inspire"]}">INSPIRE</a>')
-    if p.get("code"):
+    soft = _soft_of(p)
+    if soft:                                   # the code, with its versions and installation, on the Software page
+        links.append(f'<a href="software.html#{soft["slug"]}" title="{soft["name"]} on the Software page">Code</a>')
+    elif p.get("code"):
         links.append(f'<a href="{p["code"]}">Code</a>')
     key = p.get("arxiv") or p.get("doi")
     tour = key if key in tour_papers() else p.get("tour")   # proceedings point to their paper's animation
@@ -740,7 +762,7 @@ def pub_entry(n, p):
         head = (f'<details class="pub-open"><summary>{head}<span class="pub-toggle"><span class="t-show">Abstract and details</span>'
                 f'<span class="t-hide">Hide abstract</span>{PKG_CHEVRON}</span></summary>{more}</details>')
     return (
-        f'<div class="entry pub" data-topic="{p["topic"]}">'
+        f'<div class="entry pub" id="{_pub_id(p)}" data-topic="{p["topic"]}">'
         f'<div class="rail">[{n}]<br>{p["year"]}</div><div class="body">'
         + head +
         f'<div class="links">{" ".join(links)}</div>'
@@ -872,7 +894,7 @@ def render_journey():
     out = []
     last = len(JOURNEY) - 1
     for i, (year, city, role, inst, logos) in enumerate(JOURNEY):
-        imgs = "".join(f'<span class="logo-disc{" wide" if f in ("slac",) else ""}"><img src="assets/logos/{f}.png?v={_ver(f"assets/logos/{f}.png")}" alt="{alt}" loading="lazy"></span>'
+        imgs = "".join(f'<span class="logo-disc{" wide" if f in ("slac",) else ""}">{_logo(f, alt)}</span>'
                        for f, alt in logos)                    # each logo on a white disc of its own (a wordmark sits smaller)
         now = ' now' if i == last else ''
         badge = '<span class="j-now">Now</span>' if i == last else ''
@@ -1244,13 +1266,14 @@ def _news_kind(text):
 
 
 def render_news():
-    return "\n".join(f'<li><span class="when">{y}</span>{_ix(NEWS_ICONS[_news_kind(txt)])}<span>{txt}</span></li>'
-                     for y, txt in NEWS)
+    return "\n".join(f'<li><span class="when">{y}</span>{_ix(NEWS_ICONS[_news_kind(txt)])}'
+                     f'<a class="news-link" href="{href}">{txt}&nbsp;<span class="nl-go" aria-hidden="true">→</span></a></li>'
+                     for y, txt, href in ((y, t, _talk_link(h[5:]) if h.startswith("talk:") else h) for y, t, h in NEWS))
 
 
 def render_selected():
     return "\n".join(
-        f'<a class="pick {topic}" href="https://arxiv.org/abs/{arx}">'
+        f'<a class="pick {topic}" href="{_pub_link(arx)}">'      # to the paper, opened, on the Publications page
         f'{_ix(PAPER_ICONS[arx]) if arx in PAPER_ICONS else ""}'
         f'<span class="kicker">{TOPIC_LABEL[topic]}</span>'
         f'<span class="pick-title">{title}</span>'
@@ -1287,15 +1310,34 @@ def _talk_kind(event):
     return "meeting"
 
 
+def _talk_ids():
+    """An anchor for each talk: the year and the first words of the meeting, numbered if they repeat."""
+    import html as _html
+    seen, out = set(), []
+    for t in TALKS:
+        base = f"talk-{t[0]}-" + "-".join(_slug(_html.unescape(t[1])).split("-")[:4])
+        tid, k = base, 2
+        while tid in seen:
+            tid, k = f"{base}-{k}", k + 1
+        seen.add(tid)
+        out.append(tid)
+    return out
+
+
+def _talk_link(words):
+    """The link to the first talk whose meeting names these words, for the news on the home page."""
+    return "talks.html#" + next(tid for tid, t in zip(_talk_ids(), TALKS) if words in t[1])
+
+
 def render_talks():
-    cards = []
-    for year, event, city, title, note, invited in TALKS[:TALK_CARDS]:
+    cards, ids = [], _talk_ids()
+    for k, (year, event, city, title, note, invited) in enumerate(TALKS[:TALK_CARDS]):
         note_html = f'<div class="tc-note">{note}</div>' if note else ""
         kind = _talk_kind(event)
         cards.append(
-            f'<article class="talk-card"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
+            f'<article class="talk-card" id="{ids[k]}"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
-    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" style="--i:{i}">', 1)
+    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" id="{ids[TALK_CARDS + i]}" style="--i:{i}">', 1)
             for i, (y, ev, c, ti, no, _) in enumerate(TALKS[TALK_CARDS:])]
     out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
@@ -1315,7 +1357,7 @@ def fund_card(year, name, agency, country, amount, dur, status):
     medal = _ix(_p("M15 25L11 39L16 36.5L18 40M25 25L29 39L24 36.5L22 40", "thin") + _p("M20 3A13 13 0 1 1 19.9 3Z")
                 + _p("M20 6.5A9.5 9.5 0 1 1 19.9 6.5Z", "thin")
                 + f'<text x="20" y="19" text-anchor="middle" font-size="{7.4 if len(acr) < 4 else 6}">{acr}</text>', "ix fund-medal", "0 0 40 42") if acr else ""
-    return (f'<article class="fund">{medal}<div class="fund-top"><span>{year}</span><span>{country}</span></div>'
+    return (f'<article class="fund" id="{_slug(name)}">{medal}<div class="fund-top"><span>{year}</span><span>{country}</span></div>'
             f'<h4 class="fund-name">{name}</h4><div class="fund-agency">{agency}</div>'
             f'<div class="fund-amount">{main}</div>'
             f'<div class="fund-meta">{approx} <span class="sep">·</span> {dur}</div>'
@@ -1347,11 +1389,20 @@ def render_supervision():
         for y, name, lvl, inst, thesis in SUPERVISION) + '</div>'
 
 
+def _logo(f, alt, lazy=True):
+    """A logo with its size in pixels written in, so that the page keeps its place while it loads
+    (the CV shows its logos near the top, so there they load at once)."""
+    import struct
+    path = f"assets/logos/{f}.png"
+    w, h = struct.unpack(">II", Path(path).read_bytes()[16:24])          # from the PNG header
+    return (f'<img src="{path}?v={_ver(path)}" alt="{alt}" width="{w}" height="{h}" '
+            + ('loading="lazy">' if lazy else 'decoding="async">'))
+
+
 def render_positions(items):
     out = []
     for p in items:
-        logos = "".join(f'<img src="assets/logos/{f}.png?v={_ver(f"assets/logos/{f}.png")}" alt="{alt}" loading="lazy">'
-                        for f, alt in p["logos"])
+        logos = "".join(_logo(f, alt, lazy=False) for f, alt in p["logos"])
         note = f'<p class="blk-note">{p["note"]}</p>' if p.get("note") else ""
         meta = f'<p class="blk-meta">{p["meta"]}</p>' if p.get("meta") else ""
         if p.get("facts"):
@@ -1404,7 +1455,7 @@ def nav_drops():
                    ("Recent news", "index.html#recent-news", ""), ("Explore the site", "index.html#explore", "")],
         "research.html": [("A tour of my papers", "research.html#top", f"{_tour_slides()} animated slides"),
                           ("Research domains", "research.html#research-domains", ""),
-                          ("Selected work", "research.html#selected-work", ""), ("Software", "research.html#software", "")],
+                          ("Selected work", "research.html#selected-work", "")],
         "publications.html": [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
                               ("Conference proceedings", "publications.html#conference-proceedings", f"{procs} contributions"),
                               ("PhD thesis", "publications.html#thesis", "IISc, 2022")],
@@ -1436,11 +1487,15 @@ def render_tongues():
 
 
 def render_software():
+    """The Software part of the Research page: each package and the library in a few words, linked to its
+    card on the Software page (which opens it), so that the details live in one place only."""
+    items = [(pk["name"], pk["slug"], pk["tagline"], _ix(SOFTWARE_ICONS[pk["name"]]),
+              f'<span class="tag soft">{pk["releases"][-1][0]}</span>') for pk in PACKAGES]
+    items.append((LIBRARY["name"], LIBRARY["slug"], LIBRARY["tagline"], _ix(LIBRARY_ICON), '<span class="tag pheno">Library</span>'))
     return "\n".join(
-        f'<div class="card">{_ix(SOFTWARE_ICONS[name]) if name in SOFTWARE_ICONS else ""}<h4>{name}</h4><p>{desc}</p>'
-        f'<div class="links"><a href="{url}">GitHub</a> '
-        f'<a class="arx" href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a></div></div>'
-        for name, desc, url, arx in SOFTWARE)
+        f'<a class="card soft-link" href="software.html#{slug}">{icon}<div class="sl-text"><h4>{name}</h4><p>{tag}</p>'
+        f'<div class="sl-meta">{badge}<span class="sl-go">Details <span aria-hidden="true">→</span></span></div></div></a>'
+        for name, slug, tag, icon, badge in items)
 
 
 
@@ -2026,7 +2081,7 @@ def main():
         desc=desc, url=P["url"], jsonld=jsonld(), portrait=portrait,
         email=P["email"], orcid=P["orcid"], inspire=P["inspire"], scholar=P["scholar"],
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
-        n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_invited=n_invited,
+        n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
@@ -2037,6 +2092,22 @@ def main():
         updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(),
     )
     write_pages(html, n_articles, n_proc)
+    check_links()
+
+
+def check_links():
+    """Every link from one page of the site to a part of another must land on something: say so if not."""
+    pages = [f for f, *_ in PAGES]
+    ids = {f: set(re.findall(r'\sid="([^"]+)"', Path(f).read_text(encoding="utf-8"))) for f in pages}
+    bad = []
+    for f in pages:
+        for href in re.findall(r'href="([^"]+)"', Path(f).read_text(encoding="utf-8")):
+            page, _, frag = href.partition("#")
+            page = page or f
+            if page in ids and frag and frag != "top" and not frag.startswith("tour-") and frag not in ids[page]:
+                bad.append(f"{f} -> {href}")
+    for b in bad:
+        print("broken link:", b)
 
 
 TEMPLATE = """<!doctype html>
@@ -2142,11 +2213,11 @@ Standard Model at particle colliders.</p>
 {journey}
 </ol>
 
-<div class="stats" role="list">
-  <div class="stat" role="listitem">{ix_article}<span class="n">{n_articles}</span><span class="l">journal articles</span></div>
-  <div class="stat" role="listitem">{ix_proc}<span class="n">{n_proc}</span><span class="l">conference proceedings</span></div>
-  <div class="stat" role="listitem">{ix_talk}<span class="n">{n_talks}</span><span class="l">talks &amp; seminars</span></div>
-  <div class="stat" role="listitem">{ix_code}<span class="n">3</span><span class="l">software packages</span></div>
+<div class="stats">
+  <a class="stat" href="publications.html#journal-articles">{ix_article}<span class="n">{n_articles}</span><span class="l">journal articles</span></a>
+  <a class="stat" href="publications.html#conference-proceedings">{ix_proc}<span class="n">{n_proc}</span><span class="l">conference proceedings</span></a>
+  <a class="stat" href="talks.html#talks">{ix_talk}<span class="n">{n_talks}</span><span class="l">talks &amp; seminars</span></a>
+  <a class="stat" href="software.html#packages">{ix_code}<span class="n">{n_packages}</span><span class="l">software packages</span></a>
 </div>
 
 <h3 class="sect">Recent news</h3>
@@ -2180,7 +2251,7 @@ Standard Model at particle colliders.</p>
   <button type="button" data-filter="fi" aria-pressed="false">Feynman integrals</button>
   <button type="button" data-filter="pheno" aria-pressed="false">Phenomenology</button>
   <button type="button" data-filter="soft" aria-pressed="false">Software</button>
-  <input class="pub-search" type="search" placeholder="Search publications" aria-label="Search publications">
+  <input class="pub-search" id="pub-search" name="q" type="search" placeholder="Search publications" aria-label="Search publications">
 </div>
 <p class="pub-empty" hidden>No publications match your search.</p>
 {pubs}
@@ -2189,11 +2260,11 @@ Standard Model at particle colliders.</p>
 
 <section class="chapter" id="software">
 <h2 class="chapter-title">Software</h2>
-<p class="prose">Open-source <i>Mathematica</i> packages I have developed with my collaborators.</p>
-<div class="cards">
+<p class="prose">The open-source <i>Mathematica</i> packages and the library that came out of this research, developed with my collaborators.
+Each one opens on the <a href="software.html">Software page</a>, with its versions, requirements and installation.</p>
+<div class="cards soft-index">
 {software}
 </div>
-<p class="about-links"><a href="software.html">Versions, requirements and installation on the Software page <span aria-hidden="true">→</span></a></p>
 </section>
 
 <section class="chapter" id="talks">
@@ -2259,6 +2330,8 @@ Standard Model at particle colliders.</p>
     </ul>
   </div>
 </div>
+
+<p class="about-links"><a href="research.html#research-domains">The {n_domains} research domains on the Research page <span aria-hidden="true">→</span></a></p>
 
 <h3 class="sect">Computing</h3>
 <div class="toolkit">
@@ -2367,8 +2440,19 @@ Standard Model at particle colliders.</p>
     var id = decodeURIComponent((location.hash || '').slice(1)), el = id && document.getElementById(id);
     if (!el) return;
     var moved = false;
-    if (el.hidden && el.matches('h3.sect[data-group]') && more && !more.hidden) {{ more.click(); moved = true; }}   // the whole list of papers
-    var d = el.matches('details') ? el : el.querySelector('details.pkg-more');
+    if (el.hidden && el.matches('h3.sect[data-group], .pub')) {{          // the whole list of papers, unfiltered
+      if (topic !== 'all' || query) {{
+        topic = 'all'; query = ''; if (search) search.value = '';
+        buttons.forEach(function (x) {{ x.setAttribute('aria-pressed', x.dataset.filter === 'all'); }});
+      }}
+      open = true; applyPubs(); moved = true;
+    }}
+    var list = el.parentElement && el.parentElement.closest('details');   // inside a list that folds (the browser may have opened it)
+    if (list) {{                                   // open it at once, so that the page is long enough to scroll to the row
+      list.classList.add('instant'); list.open = true; moved = true;
+      setTimeout(function () {{ list.classList.remove('instant'); }}, 800);
+    }}
+    var d = el.matches('details') ? el : el.querySelector('details.pkg-more, details.pub-open');
     if (d && !d.open) {{ d.open = true; moved = true; }}
     if (moved) requestAnimationFrame(function () {{ el.scrollIntoView({{ block: 'start', behavior: reduce ? 'auto' : 'smooth' }}); }});
   }}
