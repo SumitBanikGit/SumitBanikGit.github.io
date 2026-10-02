@@ -2324,3 +2324,11 @@ details.pkg-more > summary:hover .pkg-toggle { color: var(--navy); border-color:
   }
 }
 @media (prefers-reduced-motion: reduce) { .pkg-toggle .chev { transition: none; } }
+
+/* The menu bar, a size larger, with About first, as wide as the page header above it */
+.navbar .nav-inner { max-width: 68rem; }
+.navbar nav { font-size: .78rem; padding: .62rem 0; }
+.brand { font-size: 1.42rem; }
+@media (min-width: 51.01rem) and (max-width: 66rem) { .brand { display: none; } }   /* the ten pages need the room */
+@media (min-width: 51.01rem) and (max-width: 58rem) { .navbar nav { font-size: .72rem; letter-spacing: .05em; } }
+@media (min-width: 51.01rem) and (max-width: 54rem) { .navbar nav { font-size: .7rem; } }

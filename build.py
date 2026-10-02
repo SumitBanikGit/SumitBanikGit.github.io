@@ -1671,8 +1671,9 @@ def write_pages(html, n_articles, n_proc):
 
     def navbar(current):
         here = ' class="here" aria-current="page"'
-        links = "".join(f'<a href="{f}"{here if f == current else ""}>{label}</a>'
-                        for f, label, *_ in PAGES if label)
+        about = "#about" if current == "index.html" else "index.html#about"      # About, on the home page, comes first
+        links = f'<a href="{about}">About</a>' + "".join(f'<a href="{f}"{here if f == current else ""}>{label}</a>'
+                                                         for f, label, *_ in PAGES if label)
         toggle = ('<button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode" title="Switch to dark mode">'
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="tt-sun"><circle cx="12" cy="12" r="4.2"/>'
                   '<path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></g>'
