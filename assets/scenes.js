@@ -3000,10 +3000,21 @@
       if (newest && !e.reduce && !e.hoverCity) {
         var la = c - newest.at, lk = la < 0.15 ? la / 0.15 : la < 1.1 ? 1 : 1 - (la - 1.1) / 0.3;
         if (lk > 0) {
-          var m2 = cities[newest.c], right = m2.x > e.x + e.w - 90;
-          ctx.font = font(10, SANS, 600); tracking(ctx, 0.3);
-          ctx.textAlign = right ? 'right' : 'left'; ctx.textBaseline = 'middle';
-          var lx = m2.x + (right ? -9 : 9), ly = m2.y - 10;
+          var m2 = cities[newest.c], tw;
+          ctx.font = font(10, SANS, 600); tracking(ctx, 0.3); tw = ctx.measureText(newest.c).width;
+          var cand = [[9, -10, 'left'], [-9, -10, 'right'], [9, 12, 'left'], [-9, 12, 'right']], best = null, fewest = Infinity;
+          if (m2.x > e.x + e.w - 90) cand = [cand[1], cand[0], cand[3], cand[2]];
+          cand.forEach(function (cd) {                   // of four places around the dot, the one that hides the fewest other cities
+            var x0 = cd[2] === 'left' ? m2.x + cd[0] : m2.x + cd[0] - tw, y0 = m2.y + cd[1] - 6, hits = 0;
+            if (x0 < e.x - 20 || x0 + tw > e.x + e.w + 20) hits += 10;
+            order.forEach(function (o) {
+              var rr = 2.7 + 1.15 * Math.sqrt(o.n);
+              if (o !== m2 && o.x + rr > x0 && o.x - rr < x0 + tw && o.y + rr > y0 && o.y - rr < y0 + 12) hits++;
+            });
+            if (hits < fewest) { fewest = hits; best = cd; }
+          });
+          ctx.textAlign = best[2]; ctx.textBaseline = 'middle';
+          var lx = m2.x + best[0], ly = m2.y + best[1];
           ctx.lineJoin = 'round'; ctx.lineWidth = 3.5; ctx.strokeStyle = ink('paper', 0.92 * lk); ctx.strokeText(newest.c, lx, ly);
           ctx.fillStyle = ink('green', lk); ctx.fillText(newest.c, lx, ly);
           tracking(ctx, 0);

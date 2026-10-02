@@ -199,7 +199,7 @@ PUBS = [
 
 # Recent news shown on the front page (newest first; keep ~5).
 NEWS = [
-    ("2026", "Invited talk at <b>CERN</b>, FCC Precision Calculations Working Group."),
+    ("2026", "Invited virtual talk at <b>CERN</b>, FCC Precision Calculations Working Group."),
     ("2026", "<b>HyperPrecision</b> published in <i>Computer Physics Communications</i>."),
     ("2026", "Two-loop anomalous dimensions of baryon-number-violating operators in SMEFT published in <i>JHEP</i>."),
     ("2026", "Joined the <b>Fundamental Physics Directorate</b> at SLAC, Stanford as a postdoctoral researcher."),
@@ -282,7 +282,7 @@ TALK_CARDS = 6
 
 # --------------------------------------------------------------------------
 TALKS = [
-    (2026, "FCC Precision Calculations WG Meeting, CERN", "Geneva",
+    (2026, "FCC Precision Calculations WG Meeting, CERN (online)", "Geneva",
      "Algorithms for analytic and numerical evaluation of multiple Mellin-Barnes integrals",
      "Invited by J. Gluza and M. Zaro", True),
     (2026, "EPP Theory Seminar, SLAC &amp; Stanford University", "Menlo Park",
@@ -1832,7 +1832,7 @@ TEMPLATE = """<!doctype html>
       <span class="org"><a href="https://theory.slac.stanford.edu/">SLAC National Accelerator Laboratory</a>
         <span class="sep">·</span> <a href="https://www.stanford.edu/">Stanford University</a></span>
     </div>
-    <p class="tagline">From the mathematics of Feynman integrals <br class="hero-br">to new physics beyond the Standard&nbsp;Model.</p>
+    <p class="tagline">From the mathematics of Feynman integrals <br class="hero-br">to search for physics beyond the Standard&nbsp;Model.</p>
     <div class="hero-cta">
       <a class="btn solid" href="#research">Explore my research</a>
       <a class="btn" href="#publications">Publications</a>
