@@ -3194,6 +3194,40 @@
     if (side) f.glyphs(fb.prims, cx + L + 2.2 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
     else f.glyphs(fb.prims, (bw - fb.w) / 2, cy + 0.67 * R0 + 2.2 * S - fb.ext[0]);
   }
+  /* The magnetic field of a long straight wire, from Ampère's law: circles around the wire, B = μ0 I / 2πr,
+     turning anticlockwise seen from where the current goes (the right-hand rule). The circles are drawn in
+     perspective, seen from a little above, so their near side passes in front of the wire and their far side
+     behind it, and the arrows on the near side point to the right. */
+  function ampere(f, bw, bh) {
+    var S = Math.min(21, bh * 0.08, bw / 22), top = 44, bot = bh - 12, k = 0.36;
+    var formula = 'B=\\frac{μ_0I}{2πr}', fb = f.box(formula, S * 1.05), fh = fb.ext[1] - fb.ext[0];
+    var Rs = Math.min((bw - 4 * S) / 2, (bot - top - fh - 2 * S) / 1.4, 125);                 // formula below
+    var Rr = Math.min((bw - 16 - 2.2 * S - fb.w) / 2, (bot - top - 0.6 * S) / 1.4, 125);      // or beside
+    var side = Rr > Rs * 1.15, R0 = side ? Rr : Rs, Hd = 1.4 * R0, cx, cy;
+    if (side) { cx = (bw - 2 * R0 - 2.2 * S - fb.w) / 2 + R0; cy = (top + bot) / 2; }
+    else { cx = bw / 2; cy = top + (bot - top - Hd - 2 * S - fh) / 2 + Hd / 2; }
+    var s = Math.max(3.2, S * 0.26), g = 0.3 * S, rs = [0.55 * R0, R0];
+    function P(r, a) { return [cx + r * Math.cos(a), cy - k * r * Math.sin(a)]; }
+    function arc(r, a0, a1) { var pts = []; for (var i = 0; i <= 40; i++) pts.push(P(r, a0 + (a1 - a0) * i / 40)); return pts; }
+    var yb = cy + Hd / 2, yt = cy - Hd / 2, yn = rs.map(function (r) { return cy + k * r; }), ya = cy - 0.5 * R0;
+    f.stroke([[cx, yb], [cx, yn[1] + g]], 240);      // the wire, from the bottom up, hidden where the circles pass in front
+    f.stroke([[cx, yn[1] - g], [cx, yn[0] + g]], 240);
+    f.stroke([[cx, yn[0] - g], [cx, yt]], 240);
+    chevron(f, [cx, ya + 0.1 * R0], [cx, ya - 0.1 * R0], 1, s); f.label('I', cx + 0.7 * S, ya, S);
+    rs.forEach(function (r) {
+      var gap = Math.asin(Math.min(1, g / r));
+      f.stroke(arc(r, -Math.PI, 0), 300);            // the near side, in front of the wire
+      f.stroke(arc(r, 0, Math.PI / 2 - gap), 300);   // the far side, behind it
+      f.stroke(arc(r, Math.PI / 2 + gap, Math.PI), 300);
+      chevron(f, P(r, -Math.PI / 3 - 0.1), P(r, -Math.PI / 3 + 0.1), 1, s);
+    });
+    var pb = P(R0, -Math.PI / 3);
+    f.label('\\bf{B}', pb[0] + 0.6 * S, pb[1] + 0.8 * S, S);
+    f.stroke([[cx + 0.08 * S, cy], [cx + R0, cy]], 240);   // the distance from the wire
+    f.label('r', cx + 0.8 * R0, cy - 0.42 * S, S * 0.92);
+    if (side) f.glyphs(fb.prims, cx + R0 + 2.2 * S, cy - (fb.ext[0] + fb.ext[1]) / 2);
+    else f.glyphs(fb.prims, (bw - fb.w) / 2, yb + 1.6 * S - fb.ext[0]);
+  }
   var EQUATIONS = [
     { name: 'The Dirac equation', course: 'Quantum Field Theory', lines: ['(iγ^μ\\,∂_μ−m)\\,ψ=0'] },
     { name: 'The Feynman propagator', course: 'Quantum Field Theory', lines: ['D_F(p)=\\frac{i}{p^2−m^2+iε}'] },
@@ -3202,7 +3236,8 @@
     { name: 'Unitarity of the CKM matrix', course: 'Flavour Physics', lines: ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0'] },
     { name: 'The unitarity triangle', course: 'Flavour Physics', fig: unitarityTriangle },
     { name: 'The box diagram of B meson mixing', course: 'Flavour Physics', fig: boxMixing },
-    { name: 'Gauss’s law and Faraday’s law', course: 'Introductory Physics', lines: ['\\oint\\bf{E}\\cdot\\rm{d}\\bf{A}=\\frac{Q}{ε_0}', '\\oint\\bf{E}\\cdot\\rm{d}\\bf{l}=−\\frac{\\rm{d}Φ_B}{\\rm{d}t}'] }
+    { name: 'Gauss’s law and Faraday’s law', course: 'Introductory Physics', lines: ['\\oint\\bf{E}\\cdot\\rm{d}\\bf{A}=\\frac{Q}{ε_0}', '\\oint\\bf{E}\\cdot\\rm{d}\\bf{l}=−\\frac{\\rm{d}Φ_B}{\\rm{d}t}'] },
+    { name: 'The magnetic field of a long straight wire', course: 'Introductory Physics', fig: ampere }
   ];
   function courseOf(e, eq) {
     var list = (e.data && e.data.courses) || [];
