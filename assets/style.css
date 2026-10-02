@@ -2372,34 +2372,43 @@ details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle
 }
 
 /* =====================================================================
-   Menu dropdowns: pointing at a page in the menu (or tabbing to it) shows the parts of that page,
-   with a line about some of them, as on many large sites. Computers only, the menu scrolls on phones.
+   Menu dropdowns: pointing at a page in the menu (or tabbing to it) shows the parts of that page, with a
+   line about some of them, as on many large sites. On touch screens (iPad and phone) a tap opens the panel,
+   with the page itself first, and a second tap on the item goes to the page.
    ===================================================================== */
 .nav-item { position: relative; display: flex; }
 .navbar nav .nav-item > a { margin-left: 0; margin-right: 0; }
 .navbar nav .nav-item:last-child > a { margin-right: -.36rem; }
-.nav-drop { display: none; }
 [id] { scroll-margin-top: 4.8rem; }        /* clear of the menu bar when a link jumps to a part of a page */
-@media (min-width: 51.01rem) {
-  .nav-drop { display: block; position: absolute; z-index: 40; top: 100%; left: -.4rem; min-width: 18rem; padding: .45rem 0 .5rem;
-              background: #1f3a33; border: 1px solid rgba(220, 197, 143, .28); border-top: 2px solid var(--gold); border-radius: 0 0 6px 6px;
-              box-shadow: 0 18px 36px -18px rgba(0, 0, 0, .55); opacity: 0; visibility: hidden; transform: translateY(6px);
+.nav-drop { display: none; z-index: 40; min-width: 18rem; width: max-content; max-width: min(25rem, calc(100vw - 16px)); padding: .45rem 0 .5rem; background: #1f3a33;
+            border: 1px solid rgba(220, 197, 143, .28); border-top: 2px solid var(--gold); border-radius: 0 0 6px 6px;
+            box-shadow: 0 18px 36px -18px rgba(0, 0, 0, .55); }
+.navbar nav .nav-drop a { display: block; margin: 0; padding: .48rem 1.05rem; border: 0; white-space: normal;
+                          font-size: .8rem; letter-spacing: .02em; text-transform: none; color: rgba(238, 231, 214, .9); }
+.navbar nav .nav-drop a::after { content: none; }
+.navbar nav .nav-drop a:hover, .navbar nav .nav-drop a:focus-visible { background: rgba(220, 197, 143, .1); color: #f3ead6; }
+.nav-drop .nd-t { display: block; font-family: var(--sans); font-weight: 500; }
+.nav-drop .nd-n { display: block; margin-top: .1rem; font-family: var(--display); font-style: italic; font-size: .95rem;
+                  letter-spacing: 0; color: rgba(220, 197, 143, .85); }
+.navbar nav .nav-drop a:hover .nd-t { color: #dcc58f; }
+.nav-item > a[aria-current="page"] + .nav-drop { border-top-color: #dcc58f; }
+.navbar nav .nav-drop a.nd-page { display: none; margin-bottom: .3rem; padding-top: .6rem; padding-bottom: .65rem;
+                                  border-bottom: 1px solid rgba(220, 197, 143, .2); font-size: .64rem; font-weight: 600;
+                                  letter-spacing: .14em; text-transform: uppercase; color: #dcc58f; }
+@media (min-width: 51.01rem) and (hover: hover) {
+  .nav-drop { display: block; position: absolute; top: 100%; left: -.4rem; opacity: 0; visibility: hidden; transform: translateY(6px);
               transition: opacity .18s ease .08s, transform .18s ease .08s, visibility 0s .26s; }
   .nav-item:nth-last-child(-n+3) .nav-drop { left: auto; right: -.4rem; }
   .nav-item:hover > .nav-drop, .nav-item:focus-within > .nav-drop {
     opacity: 1; visibility: visible; transform: none; transition: opacity .18s ease, transform .18s ease, visibility 0s; }
-  .navbar nav .nav-drop a { display: block; margin: 0; padding: .48rem 1.05rem; border: 0; white-space: normal;
-                            font-size: .8rem; letter-spacing: .02em; text-transform: none; color: rgba(238, 231, 214, .9); }
-  .navbar nav .nav-drop a::after { content: none; }
-  .navbar nav .nav-drop a:hover, .navbar nav .nav-drop a:focus-visible { background: rgba(220, 197, 143, .1); color: #f3ead6; }
-  .nav-drop .nd-t { display: block; font-family: var(--sans); font-weight: 500; }
-  .nav-drop .nd-n { display: block; margin-top: .1rem; font-family: var(--display); font-style: italic; font-size: .95rem;
-                    letter-spacing: 0; color: rgba(220, 197, 143, .85); }
-  .navbar nav .nav-drop a:hover .nd-t { color: #dcc58f; }
-  .nav-item > a[aria-current="page"] + .nav-drop { border-top-color: #dcc58f; }
 }
-@media (min-width: 51.01rem) and (hover: none) { .nav-item:hover > .nav-drop { opacity: 0; visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) { .nav-drop { transition: none !important; transform: none !important; } }
+@media (hover: none) {                       /* iPad and other touch screens: the panel opens on a tap */
+  .navbar nav .nav-drop a.nd-page { display: block; }
+  .nav-item.open > .nav-drop { display: block; position: fixed; max-width: calc(100vw - 16px); animation: nd-in .2s ease both; }
+  .navbar nav .nav-item.open > a { color: #dcc58f; }
+}
+@keyframes nd-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .nav-drop { transition: none !important; transform: none !important; animation: none !important; } }
 @media print { .nav-drop { display: none !important; } }
 
 /* Publications: each paper's BibTeX, copied with one click (or read on INSPIRE) */
@@ -2414,3 +2423,4 @@ details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle
 .cite-copy.done { border-color: #2e5c4e; color: #2e5c4e; background: rgba(46, 92, 78, .08); }
 html[data-theme="dark"] .cite-copy.done { border-color: #7fb8a3; color: #7fb8a3; }
 .cite-raw { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; color: var(--grey); }
+.navbar nav.has-open { -webkit-mask-image: none; mask-image: none; }   /* an open panel is not faded with the menu's edges */

@@ -1403,7 +1403,7 @@ def nav_drops():
                               ("Conference proceedings", "publications.html#conference-proceedings", f"{procs} contributions"),
                               ("PhD thesis", "publications.html#thesis", "IISc, 2022")],
         "software.html": [(pk["name"], f'software.html#{pk["slug"]}', pk["tagline"]) for pk in PACKAGES]
-                         + [(LIBRARY["name"], f'software.html#{LIBRARY["slug"]}', "The library")],
+                         + [(LIBRARY["name"], f'software.html#{LIBRARY["slug"]}', "Two-loop RG equations of the SM with five scalar leptoquarks")],
         "talks.html": [("Recent talks", "talks.html#talks", f"The latest {TALK_CARDS}"),
                        ("Earlier talks", "talks.html#earlier-talks", f"{rest} more since {TALKS[-1][0]}")],
         "funding.html": [(h, f"funding.html#{_slug(h)}", "") for h in ("Postdoctoral fellowships and grants", "Doctoral and master’s fellowships")],
@@ -1881,7 +1881,8 @@ def write_pages(html, n_articles, n_proc):
         def item(key, href, label, cur):
             sub = "".join(f'<a href="{_local(h, current)}"><span class="nd-t">{t}</span>'
                           + (f'<span class="nd-n">{n}</span>' if n else "") + '</a>' for t, h, n in drops.get(key, []))
-            panel = f'<div class="nav-drop">{sub}</div>' if sub else ""
+            page = "" if key == "#about" else f'<a class="nd-page" href="{href}">{label} page <span aria-hidden="true">→</span></a>'   # first, on touch screens
+            panel = f'<div class="nav-drop">{page}{sub}</div>' if sub else ""
             return f'<div class="nav-item"><a href="{href}"{here if cur else ""}>{label}</a>{panel}</div>'
         about = "#about" if current == "index.html" else "index.html#about"      # About, on the home page, comes first
         links = item("#about", about, "About", False) + "".join(item(f, f, label, f == current) for f, label, *_ in PAGES if label)
@@ -2536,6 +2537,33 @@ Standard Model at particle colliders.</p>
   if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
     nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
   }}
+  /* ---------- the menu's dropdowns on touch screens (iPad and phone): a tap opens one (the page itself
+     comes first in it), a second tap on the same item goes to the page, a tap anywhere else closes it ---------- */
+  var touchNav = window.matchMedia('(hover: none)'), bar0 = document.querySelector('.navbar');
+  var navItems = Array.prototype.slice.call(document.querySelectorAll('.navbar .nav-item'));
+  function closeDrops(keep) {{
+    navItems.forEach(function (it) {{ if (it !== keep) it.classList.remove('open'); }});
+    if (nav) nav.classList.toggle('has-open', !!keep);       // the faded edges of a phone's menu would hide the panel
+  }}
+  function placeDrop(it) {{
+    var a = it.firstElementChild, d = a.nextElementSibling, r = a.getBoundingClientRect(), b = bar0.getBoundingClientRect();
+    d.style.top = Math.round(b.bottom - 1) + 'px';
+    d.style.left = Math.round(Math.max(8, Math.min(r.left - 6, window.innerWidth - d.offsetWidth - 8))) + 'px';
+  }}
+  navItems.forEach(function (it) {{
+    var a = it.firstElementChild;
+    if (!a || !a.nextElementSibling) return;
+    a.addEventListener('click', function (ev) {{
+      if (!touchNav.matches || it.classList.contains('open')) return;     // a second tap goes to the page
+      ev.preventDefault(); closeDrops(it); it.classList.add('open'); placeDrop(it);
+    }});
+  }});
+  document.addEventListener('click', function (ev) {{ if (!(ev.target.closest && ev.target.closest('.nav-item'))) closeDrops(null); }});
+  document.addEventListener('keydown', function (ev) {{ if (ev.key === 'Escape') closeDrops(null); }});
+  window.addEventListener('scroll', function () {{ var o = document.querySelector('.nav-item.open'); if (o) placeDrop(o); }}, {{ passive: true }});
+  window.addEventListener('resize', function () {{ closeDrops(null); }});
+  if (nav) nav.addEventListener('scroll', function () {{ var o = document.querySelector('.nav-item.open'); if (o) placeDrop(o); }}, {{ passive: true }});
+
   if (nav) {{                                       // a menu that scrolls sideways fades out at the edge with more beyond it
     var edges = function () {{
       var max = getComputedStyle(nav).overflowX === 'auto' ? nav.scrollWidth - nav.clientWidth : 0;
