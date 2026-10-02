@@ -2020,3 +2020,66 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 }
 @keyframes dl-drop { 0% { transform: translateY(-3px); opacity: .3; } 100% { transform: none; opacity: 1; } }
 .meta .au { white-space: nowrap; }
+
+/* =====================================================================
+   Software page: each package with its versions, what it needs and how to get it
+   ===================================================================== */
+#packages, #library { --sec: #2f5d52; }
+.pkg { position: relative; margin: 1.6rem 0 0; padding: 1.6rem 1.7rem 1.5rem; background: var(--card, #fff);
+       border: 1px solid var(--hair); border-top: 2px solid var(--gold); border-radius: 4px; }
+.pkg + .pkg { margin-top: 1.4rem; }
+.pkg-head { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.pkg-head .ix { position: static; width: 2.9rem; height: 1.8rem; flex: none; color: var(--sec); }
+.pkg-title { flex: 1; min-width: 12rem; }
+.pkg-title h3 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 1.75rem; line-height: 1.1; color: var(--navy); }
+.pkg-tagline { margin: .15rem 0 0; font-family: var(--display); font-style: italic; font-size: 1.08rem; color: var(--accent); }
+.pkg-badges { display: flex; flex-wrap: wrap; gap: .35rem; }
+.pkg-badges .tag { margin: 0; }
+.pkg-what { margin: .95rem 0 .9rem; max-width: 46rem; }
+.pkg-actions { margin-top: .2rem; gap: .5rem .9rem; }
+.links a.button.gh { display: inline-flex; align-items: center; gap: .45rem; font-size: .6rem; letter-spacing: .12em;
+                     padding: .36rem .75rem .34rem; border: 1px solid var(--gold); color: #eee7d6; }
+.links a.button.gh:hover { color: #eee7d6; border-color: var(--gold); }
+.links a.button.gh .ico { width: .9rem; height: .9rem; }
+.pkg .releases { margin-top: 1.7rem; }
+.rel-when { display: block; margin-top: .15rem; font-family: var(--sans); font-size: .62rem; font-weight: 600;
+            letter-spacing: .12em; text-transform: uppercase; color: var(--grey); }
+.pkg-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr)); gap: 1.1rem 1.6rem;
+             margin-top: 1.6rem; padding-top: 1.3rem; border-top: 1px solid var(--hair); }
+.pkg-fact .kicker { margin-bottom: .45rem; }
+.pkg-fact ul { list-style: none; margin: 0; padding: 0; font-size: .92rem; line-height: 1.55; }
+.pkg-fact li { margin: 0 0 .2rem; }
+.pkg-fact .muted { color: var(--grey); font-size: .86em; }
+.pkg-files code, .pkg-code code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: .8rem; }
+.pkg-code { margin: 0; padding: .65rem .8rem; background: var(--panel, #f3f0e8); border: 1px solid var(--hair); border-radius: 3px;
+            overflow-x: auto; white-space: pre; line-height: 1.55; }
+.pkg-note { margin: .45rem 0 0; font-size: .82rem; color: var(--grey); }
+@media (max-width: 34rem) {
+  .pkg { padding: 1.25rem 1.05rem 1.2rem; }
+  .pkg-title h3 { font-size: 1.5rem; }
+  .pkg-code code { font-size: .72rem; }
+}
+html[data-theme="dark"] .pkg { background: var(--card); border-color: rgba(214,185,121,.18); border-top-color: var(--gold); }
+html[data-theme="dark"] .pkg-code { background: rgba(255,255,255,.04); border-color: rgba(214,185,121,.16); }
+html[data-theme="dark"] #packages, html[data-theme="dark"] #library { --sec: #8fc3af; }
+
+/* the Explore grid now has nine cards: three by three */
+.explore { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 44rem) { .explore { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 34rem) { .explore { grid-template-columns: 1fr; } }
+.ex-card:nth-child(9) { --c: #46625a; }
+html[data-theme="dark"] .ex-card:nth-child(9) { --c: #a8c7bb; }
+
+/* nine pages in the menu: a little less spacing so they fit beside the name, which steps aside on
+   small laptop windows (the menu scrolls sideways on tablets and phones, as before) */
+@media (min-width: 51.01rem) {
+  .navbar nav { letter-spacing: .07em; gap: .05rem; }
+  .navbar nav a { padding-left: .36rem; padding-right: .36rem; }
+}
+@media (min-width: 51.01rem) and (max-width: 60rem) { .brand { display: none; } }
+
+/* arXiv keeps its own capitals, also where the labels around it are in small capitals */
+.links a.arx, .rel-ref.arx { text-transform: none; letter-spacing: .03em; font-size: .74rem; }
+.scene-hint .arx { text-transform: none; letter-spacing: .05em; }
+.pkg-get { grid-column: 1 / -1; }                     /* the whole command on one line where it fits */
+.pkg-code { white-space: pre-wrap; overflow-wrap: anywhere; }

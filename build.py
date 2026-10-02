@@ -419,6 +419,46 @@ SOFTWARE = [
 ]
 
 
+# The Software page: each package with its versions, as its README and its releases on GitHub give them
+# (a version that came out with a paper is dated by the paper on arXiv), what it needs, and how to get it.
+PACKAGES = [
+    dict(name="MBConicHulls", slug="mbconichulls", repo="https://github.com/SumitBanikGit/MBConicHulls",
+         tagline="Mellin-Barnes integrals as hypergeometric series", what=SOFTWARE[0][1], paper="2012.15108",
+         releases=[("v1.0", "Dec 2020", "Two-fold and higher Mellin-Barnes integrals with non-straight contours", "2012.15108", "conic hulls"),
+                   ("v1.1", "Dec 2022", "Straight contours, and one-fold Mellin-Barnes integrals", "2212.11839", "straight contours"),
+                   ("v1.2", "Sep 2023", "Triangulations, much faster than conic hulls for higher-fold integrals", "2309.00409", "triangulations"),
+                   ("v1.3", "Dec 2025", "Polygamma functions, with both conic hulls and triangulations", "2512.19803", "polygamma functions")],
+         needs=[("MultivariateResidues.m", "https://arxiv.org/abs/1701.01040", "included in the repository"),
+                ("TOPCOM", "https://www.wm.uni-bayreuth.de/de/team/rambau_joerg/TOPCOM/", "")],
+         extras=("The example notebooks also use", [("FIESTA5", "https://bitbucket.org/feynmanIntegrals/fiesta/src"),
+                 ("MB.m", "https://mbtools.hepforge.org/"), ("MBresolve.m", "https://mbtools.hepforge.org/"),
+                 ("EvaluateMultiSums", "https://www3.risc.jku.at/research/combinat/software/EvaluateMultiSums/index.php")]),
+         files=["MBConicHulls.wl", "Examples.nb", "Pentagon.nb", "Examples_PolyGamma.nb"], load=""),
+    dict(name="FeynGKZ", slug="feyngkz", repo="https://github.com/anant-group/FeynGKZ",
+         tagline="Feynman integrals from GKZ hypergeometric systems", what=SOFTWARE[1][1], paper="2211.01285",
+         releases=[("v1.0", "Nov 2022", "The first release, with the paper", "2211.01285", "first release")],
+         needs=[("AMBRE 2.1.1", "https://jgluza.us.edu.pl/ambre/", ""), ("Olsson.wl", "https://arxiv.org/abs/2201.01189", "ancillary file of the paper"),
+                ("polymake 4.6", "https://polymake.org/doku.php", ""), ("TOPCOM 0.17.8", "https://www.wm.uni-bayreuth.de/de/team/rambau_joerg/TOPCOM/", ""),
+                ("Macaulay2 1.20", "http://www2.macaulay2.com/Macaulay2/", "")],
+         extras=None, files=["FeynGKZ.wl", "Examples.nb"], load=""),
+    dict(name="HyperPrecision", slug="hyperprecision", repo="https://github.com/HyperPrecision/HyperPrecision",
+         tagline="Hypergeometric functions to high precision", what=SOFTWARE[2][1], paper="2605.30216",
+         releases=[("v1.0", "May 2026", "The first release, with the paper", "2605.30216", "first release"),
+                   ("v1.2", "Jul 2026", "Adds DESolver_patch.m for the interface with DESolver, and updated examples",
+                    "https://github.com/HyperPrecision/HyperPrecision/releases/tag/HyperPrecisionv1.2", "the DESolver interface")],
+         needs=[("FiniteFlow", "https://github.com/peraro/finiteflow", ""),
+                ("DESolver from AMFlow", "https://gitlab.com/multiloop-pku/amflow", "included, with DESolver_patch.m")],
+         extras=None, files=["HyperPrecision.wl", "DESolver.m", "DESolver_patch.m", "Examples.nb"], load="<< HyperPrecision`"),
+]
+LIBRARY = dict(name="SLQ-RG", slug="slq-rg", repo="https://github.com/SumitBanikGit/SLQ-RG",
+               tagline="Renormalization group equations with scalar leptoquarks", paper="2307.06800", when="Jul 2023",
+               what="The one- and two-loop renormalization group equations of the Standard Model extended with five scalar "
+                    "leptoquarks, and the one-loop threshold corrections for matching onto the Standard Model.",
+               tools=[("PyR@TE", "https://github.com/LSartore/pyrate", ""), ("RGBeta", "https://github.com/aethomsen/RGBeta", "as a cross-check"),
+                      ("Matchete", "https://gitlab.com/matchete/matchete", "for the threshold corrections")],
+               files=["SLQ_RGE_PyR@TE.model", "SLQ_RGE_PyR@TE_Results.m", "SLQ_RGE_RGBeta.nb", "SLQ_Threshold_Matchete.nb"])
+
+
 # Small monochrome line icons for the contact row (24x24, drawn in currentColor).
 def _svg(body):
     return ('<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" '
@@ -515,7 +555,7 @@ def pub_entry(n, p):
         label = _html.escape(f"Download the PDF of {_plain(p['title'])} from arXiv", quote=True)
         links.append(f'<a class="button pdf" href="https://arxiv.org/pdf/{p["arxiv"]}" aria-label="{label}">'
                      f'{DOWNLOAD_ICON}Download PDF</a>')
-        links.append(f'<a href="https://arxiv.org/abs/{p["arxiv"]}">arXiv:{p["arxiv"]}</a>')
+        links.append(f'<a class="arx" href="https://arxiv.org/abs/{p["arxiv"]}">arXiv:{p["arxiv"]}</a>')
     if p.get("doi"):
         links.append(f'<a href="https://doi.org/{p["doi"]}">DOI</a>')
     if p.get("inspire"):
@@ -609,6 +649,7 @@ PAPER_ICONS = {
     "2306.15722": _p("M4 15H8M11 15H15M18 15H22", "thin") + _pf("M22 15C24 12 25 12 27 10S30 8 32 6S36 4 44 3M22 15C24 18 25 18 27 20S30 22 32 24S36 26 44 27", 52.23)
                   + _dots([(22, 15)], 1.8),
 }
+LIBRARY_ICON = _p("M10 6H36V26H10Z") + _p("M14 2H40V22", "thin") + _p("M15 12H31M15 16H27M15 20H29", "thin")
 SOFTWARE_ICONS = {
     "MBConicHulls": CONE,
     "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z") + _p("M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15", "thin") + _dots([(24, 15)], 1.8),
@@ -940,6 +981,7 @@ def page_scenes():
                        "Hollow circles mark online talks", talk_scene_data),
         "funding.html": ("medals", f"{len(FUNDING)} fellowships and grants since {min(int(f[0]) for f in FUNDING)}",
                          "Click for the next award", funding_scene_data),
+        "software.html": ("releases", f"{len(PACKAGES)} packages and a library since 2020", "Click for the next release", software_scene_data),
         "teaching.html": ("chalkboard", "From the blackboard", "Click for the next equation", teaching_scene_data),
         "supervision.html": ("mentoring", f"{len(SUPERVISION)} students since {min(int(x[0]) for x in SUPERVISION)}",
                              "Click for the next student", supervision_scene_data),
@@ -1174,38 +1216,122 @@ def render_software():
     return "\n".join(
         f'<div class="card">{_ix(SOFTWARE_ICONS[name]) if name in SOFTWARE_ICONS else ""}<h4>{name}</h4><p>{desc}</p>'
         f'<div class="links"><a href="{url}">GitHub</a> '
-        f'<a href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a></div></div>'
+        f'<a class="arx" href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a></div></div>'
         for name, desc, url, arx in SOFTWARE)
 
 
-# MBConicHulls, version by version, as its README on GitHub describes them.
-MB_RELEASES = [
-    ("v1.0", "Two-fold and higher Mellin-Barnes integrals with non-straight contours", "2012.15108"),
-    ("v1.1", "Straight contours, and one-fold Mellin-Barnes integrals", "2212.11839"),
-    ("v1.2", "Triangulations, much faster than conic hulls for higher-fold integrals", "2309.00409"),
-    ("v1.3", "Polygamma functions, with both conic hulls and triangulations", "2512.19803"),
-]
 
 RELEASES_JS = """<script>
-(function () {                              // the line of versions draws itself once it is on screen
-  var el = document.querySelector('.releases');
-  if (!el) return;
-  if (!('IntersectionObserver' in window)) { el.classList.add('drawn'); return; }
+(function () {                              // each line of versions draws itself once it is on screen
+  var els = Array.prototype.slice.call(document.querySelectorAll('.releases'));
+  if (!els.length) return;
+  if (!('IntersectionObserver' in window)) { els.forEach(function (el) { el.classList.add('drawn'); }); return; }
   var io = new IntersectionObserver(function (en) {
-    if (en[0].isIntersecting) { el.classList.add('drawn'); io.disconnect(); }
+    en.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add('drawn'); io.unobserve(x.target); } });
   }, { threshold: 0.45 });
-  io.observe(el);
+  els.forEach(function (el) { io.observe(el); });
 })();
 </script>"""
 
 
-def render_releases():
+def render_releases(releases, kicker="Releases"):
+    def ref(r):
+        return (f'<a class="rel-ref" href="{r}">GitHub release</a>' if r.startswith("http")
+                else f'<a class="rel-ref arx" href="https://arxiv.org/abs/{r}">arXiv:{r}</a>')
     items = "".join(
         f'<li style="--i:{i}"><span class="rel-dot" aria-hidden="true"></span><span class="rel-v">{v}</span>'
-        f'<span class="rel-what">{what}</span><a class="rel-ref" href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a></li>'
-        for i, (v, what, arx) in enumerate(MB_RELEASES))
-    return (f'<div class="releases"><div class="rel-kicker">MBConicHulls, release by release</div>'
-            f'<ol class="rel-line">{items}</ol></div>' + RELEASES_JS)
+        f'<span class="rel-when">{when}</span><span class="rel-what">{what}</span>{ref(r)}</li>'
+        for i, (v, when, what, r, _) in enumerate(releases))
+    return f'<div class="releases"><div class="rel-kicker">{kicker}</div><ol class="rel-line">{items}</ol></div>'
+
+
+def _paper(arx):
+    return next(p for p in PUBS if p.get("arxiv") == arx)
+
+
+def _pkg_links(name, repo, arx):
+    p = _paper(arx)
+    doi = f'<a href="https://doi.org/{p["doi"]}">DOI</a>' if p.get("doi") else ""
+    return (f'<div class="links pkg-actions"><a class="button gh" href="{repo}" aria-label="{name} on GitHub">'
+            f'{ICONS["i_github"]}View on GitHub</a>'
+            f'<a class="button pdf" href="https://arxiv.org/pdf/{arx}" aria-label="Download the paper on {name} from arXiv">'
+            f'{DOWNLOAD_ICON}Download PDF</a>'
+            f'<a class="arx" href="https://arxiv.org/abs/{arx}">arXiv:{arx}</a>{doi}</div>')
+
+
+def _needs(items):
+    return "".join(f'<li><a href="{url}">{n}</a>{f" <span class=\"muted\">({note})</span>" if note else ""}</li>'
+                   for n, url, note in items)
+
+
+def _pkg_facts(heads, files, repo, load):
+    clone = f"git clone {repo}.git"
+    code = clone + (f"\n{load}" if load else "")
+    get = (f'<div class="pkg-fact pkg-get"><div class="kicker">Get it</div><pre class="pkg-code"><code>{code}</code></pre>'
+           + ('<p class="pkg-note">then, in <i>Mathematica</i>, load the package with the second line.</p>' if load else "")
+           + '</div>')
+    blocks = "".join(f'<div class="pkg-fact"><div class="kicker">{h}</div><ul>{body}</ul></div>' for h, body in heads)
+    files_html = "".join(f"<li><code>{f}</code></li>" for f in files)
+    return (f'<div class="pkg-facts">{blocks}<div class="pkg-fact"><div class="kicker">Files</div><ul class="pkg-files">{files_html}</ul></div>'
+            f'{get}</div>')
+
+
+NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
+
+
+def render_packages():
+    out = []
+    for pk in PACKAGES:
+        latest = pk["releases"][-1][0]
+        heads = [("Requires", _needs(pk["needs"]))]
+        if pk["extras"]:
+            heads.append((pk["extras"][0], _needs([(n, u, "") for n, u in pk["extras"][1]])))
+        out.append(
+            f'<article class="pkg" id="{pk["slug"]}">'
+            f'<div class="pkg-head">{_ix(SOFTWARE_ICONS[pk["name"]])}<div class="pkg-title"><h3>{pk["name"]}</h3>'
+            f'<p class="pkg-tagline">{pk["tagline"]}</p></div>'
+            f'<div class="pkg-badges"><span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span>'
+            f'<span class="tag soft">{latest}</span></div></div>'
+            f'<p class="pkg-what">{pk["what"]}</p>' + _pkg_links(pk["name"], pk["repo"], pk["paper"])
+            + render_releases(pk["releases"]) + _pkg_facts(heads, pk["files"], pk["repo"], pk["load"]) + '</article>')
+    n_rel = sum(len(pk["releases"]) for pk in PACKAGES)
+    return ('<section class="chapter" id="packages">\n<h2 class="chapter-title">Packages</h2>\n'
+            f'<p class="prose">{NUMBER_WORDS[len(PACKAGES)].capitalize()} open-source <i>Mathematica</i> packages for Feynman integrals and hypergeometric '
+            f'functions, developed with my collaborators, with {NUMBER_WORDS[n_rel]} releases so far. All are free to use under the GNU '
+            'General Public License, version 3.</p>\n' + "\n".join(out) + "\n" + RELEASES_JS + "\n</section>")
+
+
+def render_library():
+    lb = LIBRARY
+    heads = [("Computed with", _needs(lb["tools"]))]
+    return ('<section class="chapter" id="library">\n<h2 class="chapter-title">Library</h2>\n'
+            '<p class="prose">Results that come with a paper, collected so that others can use them.</p>\n'
+            f'<article class="pkg" id="{lb["slug"]}">'
+            f'<div class="pkg-head">{_ix(LIBRARY_ICON)}<div class="pkg-title"><h3>{lb["name"]}</h3>'
+            f'<p class="pkg-tagline">{lb["tagline"]}</p></div>'
+            f'<div class="pkg-badges"><span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span>'
+            f'<span class="tag pheno">{lb["when"]}</span></div></div>'
+            f'<p class="pkg-what">{lb["what"]}</p>' + _pkg_links(lb["name"], lb["repo"], lb["paper"])
+            + _pkg_facts(heads, lb["files"], lb["repo"], "") + '</article>\n</section>')
+
+
+def software_scene_data():
+    """The packages and the library in time, for the header of the Software page."""
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    full = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    def when(w):
+        m, y = w.split()
+        return int(y) + (months.index(m) + 0.5) / 12, f"{full[months.index(m)]} {y}"
+    rel = []
+    for i, pk in enumerate(PACKAGES):
+        for v, w, _what, r, short in pk["releases"]:
+            d, wl = when(w)
+            rel.append(dict(l=i, v=v, d=round(d, 3), c=f'{pk["name"]} {v}, {short}', h=wl + " · " + (f'<span class="arx">arXiv</span>:{r}' if not r.startswith("http") else "on GitHub")))
+    d, wl = when(LIBRARY["when"])
+    rel.append(dict(l=len(PACKAGES), v="", d=round(d, 3), c=f'{LIBRARY["name"]}, the library', h=f'{wl} · <span class="arx">arXiv</span>:{LIBRARY["paper"]}'))
+    rel.sort(key=lambda r: r["d"])
+    t = date.today()
+    return dict(lanes=[pk["name"] for pk in PACKAGES] + [LIBRARY["name"]], releases=rel, now=round(t.year + (t.month - 0.5) / 12, 3))
 
 
 def jsonld():
@@ -1237,6 +1363,7 @@ PAGES = [
     ("index.html",        None,           None,                    None,                                                             ["about", "explore"]),
     ("research.html",     "Research",     "Research",              "Feynman integrals, effective field theories and physics beyond the Standard Model.", ["research", "software"]),
     ("publications.html", "Publications", "Publications",          "Journal articles, conference proceedings and my PhD thesis.",   ["publications"]),
+    ("software.html",     "Software",     "Software",              "Open-source packages and a library for precision calculations.", ["packages", "library"]),
     ("talks.html",        "Talks",        "Talks",                 "Invited seminars and conference talks since 2020.",             ["talks"]),
     ("funding.html",      "Funding",      "Research Funding",      "Fellowships and grants awarded for my research.",               ["funding"]),
     ("teaching.html",     "Teaching",     "Teaching",              "Courses I have taught in Zürich and Bengaluru.",                 ["teaching"]),
@@ -1251,7 +1378,7 @@ INTRO = ('<div class="intro" aria-hidden="true"><svg viewBox="0 0 100 100">'
 
 # Where each old in-page anchor now lives.
 LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research": "research.html", "#publications": "publications.html",
-            "#software": "research.html#software", "#talks": "talks.html", "#funding": "funding.html",
+            "#software": "software.html", "#talks": "talks.html", "#funding": "funding.html",
             "#teaching": "teaching.html", "#supervision": "supervision.html", "#refereeing": "cv.html#refereeing", "#cv": "cv.html"}
 
 
@@ -1263,6 +1390,7 @@ EX_ICONS = {
                          + _p("M3 28H45"),
     "talks.html": _p("M4 26Q24 -2 44 18") + _p("M2 28Q24 22 46 28", "thin") + _dots([(4, 26), (44, 18)], 2.2),
     "funding.html": _p("M24 4A9 9 0 1 1 23.9 4Z") + _p("M24 8.5A4.5 4.5 0 1 1 23.9 8.5Z", "thin") + _p("M18.5 20L15 29L19.5 27L21 30M29.5 20L33 29L28.5 27L27 30", "thin"),
+    "software.html": _p("M5 8H44M15 15H44M33 22H44", "thin") + _dots([(5, 8), (16, 8), (24, 8), (40, 8), (15, 15), (33, 22), (37, 22)], 2),
     "teaching.html": _p("M5 4H43V23H5Z") + _p("M10 12Q13 8 16 12T22 12M25 15H36", "thin") + _p("M9 27H39"),
     "supervision.html": _p("M6 15C18 15 20 5 40 5M6 15H40M6 15C18 15 20 25 40 25", "thin") + _dots([(6, 15)], 2.6) + _dots([(40, 5), (40, 15), (40, 25)], 2),
     "cv.html": _p("M3 25H45") + _p("M6 19H16M14 13H27M26 7H38", "thin") + _dots([(38, 7)], 2),
@@ -1274,6 +1402,7 @@ def render_explore(n_articles, n_proc):
     cards = [
         ("research.html", "Research", "Feynman integrals, EFTs and Higgs physics", f"{len(DOMAINS)} research domains · {len(SOFTWARE)} software packages"),
         ("publications.html", "Publications", "Articles, proceedings and thesis", f"{n_articles} journal articles · {n_proc} proceedings"),
+        ("software.html", "Software", "Packages and a library", f"{len(PACKAGES)} packages · {sum(len(pk['releases']) for pk in PACKAGES)} releases"),
         ("talks.html", "Talks", "Seminars and conference talks", f"{len(TALKS)} talks since {min(t[0] for t in TALKS)}"),
         ("funding.html", "Funding", "Fellowships and grants", f"{len(FUNDING)} fellowships and grants"),
         ("teaching.html", "Teaching", "Courses and tutorials", f"{len(TEACHING)} courses since {min(t[0] for t in TEACHING)}"),
@@ -1399,6 +1528,8 @@ def write_pages(html, n_articles, n_proc):
                 re.finditer(r'<section class="chapter" id="([a-z]+)">.*?</section>', html, re.S)}
     sections["explore"] = render_explore(n_articles, n_proc)
     sections["reach"] = render_reach()
+    sections["packages"] = render_packages()
+    sections["library"] = render_library()
 
     def navbar(current):
         here = ' class="here" aria-current="page"'
@@ -1533,7 +1664,7 @@ def main():
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_invited=n_invited,
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
-        software=render_software(), releases=render_releases(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
+        software=render_software(), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
@@ -1693,7 +1824,7 @@ at CERN.</p>
 <div class="cards">
 {software}
 </div>
-{releases}
+<p class="about-links"><a href="software.html">Versions, requirements and installation on the Software page <span aria-hidden="true">→</span></a></p>
 </section>
 
 <section class="chapter" id="talks">

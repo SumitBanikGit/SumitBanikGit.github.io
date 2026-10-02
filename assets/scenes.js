@@ -3654,6 +3654,88 @@
   };
 
   /* =====================================================================
+     Software: the packages and the library in time, a lane each, every
+     release a dot on its lane as the years go by (dates from GitHub and arXiv)
+     ===================================================================== */
+  SCENES.releases = {
+    touchHint: 'Tap for the next release',
+    init: function (e) {
+      var d = e.data || {};
+      e.lanes = d.lanes || []; e.rel = d.releases || []; e.now = d.now || 2026.8;
+      e.y0 = 2020.5; e.y1 = e.now + 0.35; e.c0 = 0; e.cur = -2;
+    },
+    layout: function (e) {
+      var ctx = e.ctx, n = Math.max(1, e.lanes.length);
+      ctx.font = font(7.5, SANS, 600); tracking(ctx, 1.1);
+      var lw = 0;
+      e.lanes.forEach(function (l) { lw = Math.max(lw, ctx.measureText(l.toUpperCase()).width); });
+      tracking(ctx, 0);
+      e.L = e.x + Math.min(lw + 16, e.w * 0.36); e.R = e.x + e.w - 8;
+      e.top = e.y + 8; e.bot = e.y + e.h - 30; e.lh = (e.bot - e.top) / n;
+      var X = e.X = function (yr) { return e.L + (yr - e.y0) / (e.y1 - e.y0) * (e.R - e.L); };
+      ctx.font = font(10, SANS, 600);
+      var lastX = {};
+      e.rel.forEach(function (r) {                    // a version label goes below its lane if it would touch the one before
+        var x = X(r.d), w = ctx.measureText(r.v).width, p = lastX[r.l];
+        r.below = !!(p && x - w / 2 < p.x + p.w / 2 + 5 && !p.below);
+        lastX[r.l] = { x: x, w: w, below: r.below };
+      });
+    },
+    frame: function (e, t) {
+      var ctx = e.ctx, R = e.reduce, T = 9.5, C = 14, X = e.X;
+      if (!e.X || !e.lanes.length) return;
+      var c = R ? 99 : (t - e.c0) % C, yc = R ? e.y1 : e.y0 + (e.y1 - e.y0) * clamp01(c / T), done = R || c > T;
+      var cols = ['brassD', 'pine', 'crimson', 'slate'], ay = e.bot + 8;
+      line(ctx, e.L, ay, X(e.y1), ay, ink('green', 0.35), 1);                      // the years
+      ctx.font = font(9, SANS, 500); ctx.textAlign = 'center'; ctx.fillStyle = ink('slate', 0.85);
+      for (var yr = 2021; yr <= Math.floor(e.now); yr++) {
+        line(ctx, X(yr), ay, X(yr), ay + 4, ink('green', 0.4), 1);
+        ctx.fillText(String(yr), X(yr), ay + 16);
+      }
+      e.lanes.forEach(function (name, i) {                                            // the lanes
+        var y = e.top + e.lh * (i + 0.5), first = null;
+        for (var k = 0; k < e.rel.length; k++) if (e.rel[k].l === i) { first = e.rel[k]; break; }
+        caps(ctx, name.toUpperCase(), e.x + 2, y + 3, ink(i === e.lanes.length - 1 ? 'slate' : cols[i], 0.95), 7.5);
+        line(ctx, e.L, y, X(e.y1), y, ink('green', 0.08), 1);
+        if (first && yc > first.d) line(ctx, X(first.d), y, X(Math.min(yc, e.now)), y, ink(cols[i] || 'slate', 0.7), 1.6);
+      });
+      var last = -1;
+      e.rel.forEach(function (r, k) {                                                 // the releases
+        if (yc < r.d) return;
+        last = k;
+        var x = X(r.d), y = e.top + e.lh * (r.l + 0.5), a = R ? 1 : clamp01((yc - r.d) / 0.18), col = cols[r.l] || 'slate';
+        var on = !done && k === last;
+        dot(ctx, x, y, 4.2 * a, ink('paper', 1)); ring(ctx, x, y, 4.2 * a, ink(col, 1), 1.5);
+        if (k === e.rel.length - 1 || r.l === e.lanes.length - 1) dot(ctx, x, y, 2 * a, ink(col, 1));
+        if (r.v) {
+          ctx.save(); ctx.globalAlpha *= a; ctx.font = font(10, SANS, 600); ctx.textAlign = 'center'; ctx.fillStyle = ink(col, 1);
+          ctx.fillText(r.v, x, r.below ? y + 17 : y - 9); ctx.restore();
+        }
+      });
+      if (!R) {                                                                       // the present, moving along
+        var xc = X(Math.min(yc, e.y1)), g = ctx.createRadialGradient(xc, ay, 0, xc, ay, 10);
+        g.addColorStop(0, ink('brass', 0.5)); g.addColorStop(1, ink('brass', 0));
+        ctx.fillStyle = g; ctx.fillRect(xc - 10, ay - 10, 20, 20); dot(ctx, xc, ay, 2.4, ink('brassD', 1));
+      }
+      if (done) caps(ctx, 'NOW', X(e.now), ay + 16, ink('pine', 0.9), 7.5, 'center');
+      var show = done ? -1 : last;                                                   // the latest release so far names itself
+      if (show !== e.cur) {
+        e.cur = show;
+        if (show < 0) { e.caption(null); e.hint(null); }
+        else { e.caption(e.rel[show].c); e.hint(e.rel[show].h); }
+      }
+    },
+    click: function (e) {                              // jump to the next release
+      var T = 9.5, C = 14;
+      if (!e.rel.length || !e.X) return;
+      var c = (e.t - e.c0) % C, yc = e.y0 + (e.y1 - e.y0) * clamp01(c / T), next = null;
+      for (var i = 0; i < e.rel.length; i++) if (e.rel[i].d > yc + 0.02) { next = e.rel[i].d; break; }
+      var target = next === null ? 0.01 : (next - e.y0) / (e.y1 - e.y0) * T + 0.25;
+      e.c0 = e.t - target;
+    }
+  };
+
+  /* =====================================================================
      Contact: a globe turning under SLAC, with messages arriving from afar
      ===================================================================== */
   var CITIES = [[51.51, -0.13], [35.68, 139.69], [-33.87, 151.21], [-23.55, -46.63], [12.97, 77.59], [39.9, 116.4],
