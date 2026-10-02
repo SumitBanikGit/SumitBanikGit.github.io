@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abef802">
+<link rel="stylesheet" href="assets/style.css?v=6abef942">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
@@ -453,7 +453,8 @@
      electrons in crimson, muons reaching the outer chambers, neutrinos as a dotted
      missing-momentum arrow, and b jets from displaced secondary vertices. */
   var hero = document.querySelector('.hero:not([data-scene])'), cv = hero && hero.querySelector('.field');
-  var stage = hero && hero.querySelector('.hero-stage'), evLabel = hero && hero.querySelector('.ev-label');
+  var stage = hero && hero.querySelector('.hero-stage');
+  var evLabels = hero ? hero.querySelectorAll('.ev-label') : [], evSays = hero ? hero.querySelectorAll('.ev-say') : [];
   if (cv && cv.getContext) {
     var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
     var W = 0, H = 0, CX = 0, CY = 0, RO = 200, parts = [], flashAt = -1e9, nextAt = 0, visible = true, raf = null;
@@ -476,8 +477,13 @@
         CX = p.left - r.left + p.width / 2; CY = p.top - r.top + p.height / 2;
         var stacked = window.matchMedia('(max-width: 52rem)').matches;   // phones and tablets: detector above the name
         RO = stacked ? Math.min(p.width * 0.4, p.height * 0.62, 240) : Math.min(p.width * 0.6, H * 0.44);
+        var out = stacked ? Math.max(0, Math.round(CY + RO + 14 - (p.top - r.top + p.height))) : 0;   // how far the rings reach below the stage
+        if (out !== overhang) {                        // the caption under the detector starts below the rings
+          overhang = out; stage.style.setProperty('--ro-out', out + 'px'); requestAnimationFrame(size);
+        }
       } else { CX = W * 0.72; CY = H / 2; RO = Math.min(W, H) * 0.38; }
     }
+    var overhang = -1;
     function rnd(a, b) { return a + Math.random() * (b - a); }
     function sign() { return Math.random() < 0.5 ? -1 : 1; }
 
@@ -507,15 +513,15 @@
       return l;
     }
     var EVENTS = [
-      { label: 'H → γγ', make: function () {
+      { label: 'H → γγ', say: 'A Higgs boson decays into two photons', make: function () {
           var a = rnd(0, TAU); return [photon(a), photon(a + Math.PI + rnd(-0.3, 0.3))].concat(soft(9)); } },
-      { label: 'Z → μ⁺μ⁻', make: function () {
+      { label: 'Z → μ⁺μ⁻', say: 'A Z boson decays into two muons', make: function () {
           var a = rnd(0, TAU); return [muon(a, 1), muon(a + Math.PI + rnd(-0.25, 0.25), -1)].concat(soft(10)); } },
-      { label: 'pp → gg → two jets', make: function () {
+      { label: 'pp → gg → two jets', say: 'Two gluons scatter into two jets of particles', make: function () {
           var a = rnd(0, TAU); return jet(a, 9).concat(jet(a + Math.PI + rnd(-0.2, 0.2), 8), soft(6)); } },
-      { label: 'W → eν', make: function () {
+      { label: 'W → eν', say: 'A W boson decays into an electron and an unseen neutrino', make: function () {
           var a = rnd(0, TAU); return [electron(a, sign()), neutrino(a + Math.PI + rnd(-0.3, 0.3))].concat(soft(10)); } },
-      { label: 't<span class="ov">t</span> → b <span class="ov">b</span> μ ν + jets', make: function () {
+      { label: 't<span class="ov">t</span> → b <span class="ov">b</span> μ ν + jets', say: 'A pair of top quarks decays into jets, a muon and a neutrino', make: function () {
           var l = [], a = rnd(0, TAU);
           [a, a + 2.3].forEach(function (p) {          // two b jets from displaced secondary vertices
             var ox = Math.cos(p) * RO * 0.04, oy = Math.sin(p) * RO * 0.04;
@@ -525,10 +531,10 @@
           l = l.concat(jet(a + 3.9, 6, { len: 0.16 }), jet(a + 4.6, 5, { len: 0.14 }));
           l.push(muon(a + 1.2, 1), neutrino(a + 0.8));
           return l.concat(soft(5)); } },
-      { label: 'H → ZZ* → 4ℓ', make: function () {
+      { label: 'H → ZZ* → 4ℓ', say: 'A Higgs boson decays into four leptons through two Z bosons', make: function () {
           var a = rnd(0, TAU);
           return [muon(a, 1), muon(a + 2.1, -1), electron(a + 3.3, 1), electron(a + 4.6, -1)].concat(soft(8)); } },
-      { label: 'HH → b<span class="ov">b</span>γγ', make: function () {
+      { label: 'HH → b<span class="ov">b</span>γγ', say: 'Two Higgs bosons decay into two b quarks and two photons', make: function () {
           // two Higgs bosons back to back: one gives two photons, the other two b jets from displaced vertices
           var a = rnd(0, TAU), d1 = rnd(0.45, 0.85), d2 = rnd(0.45, 0.85), l = [photon(a - d1), photon(a + d1)];
           [a + Math.PI - d2, a + Math.PI + d2].forEach(function (p) {
@@ -539,7 +545,7 @@
           return l.concat(soft(6)); } }
     ];
     if (document.body.classList.contains('page-404')) EVENTS = [   // a missing page: events where something leaves unseen
-      { label: 'Z → ν<span class="ov">ν</span> + jet', make: function () {
+      { label: 'Z → ν<span class="ov">ν</span> + jet', say: 'A Z boson decays into two unseen neutrinos', make: function () {
           var a = rnd(0, TAU); return jet(a, 9).concat([neutrino(a + Math.PI + rnd(-0.2, 0.2))], soft(6)); } },
       EVENTS[3]
     ];
@@ -547,7 +553,8 @@
       var ev = EVENTS[evIndex++ % EVENTS.length], list = ev.make();
       list.forEach(function (p) { p.born = now + (p.delay || 0) * 1000 + rnd(20, 90); });
       parts = parts.concat(list); flashAt = now;
-      if (evLabel) { evLabel.classList.remove('on'); void evLabel.offsetWidth; evLabel.innerHTML = ev.label; evLabel.classList.add('on'); }
+      Array.prototype.forEach.call(evLabels, function (el) { el.classList.remove('on'); void el.offsetWidth; el.innerHTML = ev.label; el.classList.add('on'); });
+      Array.prototype.forEach.call(evSays, function (el) { el.classList.remove('on'); void el.offsetWidth; el.textContent = ev.say || ''; el.classList.add('on'); });
     }
     function helix(p, s) {                           // transverse projection of a helix: a circle of radius rc
       if (!p.q) return [p.ox + Math.cos(p.phi) * s, p.oy + Math.sin(p.phi) * s];
