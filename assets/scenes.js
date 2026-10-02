@@ -3872,94 +3872,168 @@
   };
 
   /* =====================================================================
-     Software: how the packages fit together. A Feynman integral (the
-     one-loop bubble with two masses, the worked example of FeynGKZ) is turned
-     into multiple hypergeometric series either through its Mellin-Barnes
-     representation, by MBConicHulls, or through its GKZ system, by FeynGKZ.
-     HyperPrecision then evaluates such functions to any precision, here
-     Appell F1(1;1,1;2;-2,-3) = ln(4/3), far outside the region where its
-     defining series converges.
+     Software: how the packages fit together, with HyperPrecision in the
+     middle of the chain. A Feynman integral (the one-loop bubble with two
+     masses, the worked example of FeynGKZ) becomes multiple hypergeometric
+     series in two ways. MBConicHulls takes its Mellin-Barnes representation
+     and sums the residues of the poles in each cone. FeynGKZ takes its GKZ
+     system: the Newton polytope of the Lee-Pomeransky polynomial
+     G = U + F, with the five monomials x1^2, x1x2, x1, x2^2, x2 as lattice
+     points, has normalized volume 3, and a unimodular triangulation into
+     three triangles gives three series. HyperPrecision then evaluates such
+     functions anywhere, to any precision. Here Appell F1(1;1,1;2;-2,-3),
+     whose series converges only for |x| < 1 and |y| < 1: it follows the ray
+     from the origin to (-2,-3), matching expansions along the way, and
+     returns 0.28768 20724 51780 92743 92190 05993 = ln(4/3).
      ===================================================================== */
   var TC_DIGITS = '0.28768 20724 51780 92743 92190 05993';
+  var TC_GKZ = { pts: [[2, 0], [1, 1], [1, 0], [0, 2], [0, 1]], tri: [[0, 1, 2], [1, 3, 4], [1, 2, 4]] };
   function qp(a, c, b, u) { var v = 1 - u; return [v * v * a[0] + 2 * v * u * c[0] + u * u * b[0], v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]]; }
   SCENES.toolchain = {
     touchHint: 'Tap a package to open it',
     init: function (e) { e.pk = (e.data && e.data.pk) || []; e.c0 = 0; e.beat = -2; e.hov = -1; e.hit = []; },
-    layout: function (e) { e.F = dFrame(e, 2, 4); e.S = Math.max(7.5, Math.min(11, e.F.s / 17)); },
-    beats: [[0.9, 4.4], [4.6, 8.1], [8.3, 13.6]],     // MBConicHulls, FeynGKZ, HyperPrecision
+    layout: function (e) { e.F = dFrame(e, 2.2, 6); e.S = Math.max(7.5, Math.min(11.5, e.F.s / 18)); },
+    beats: [[0.9, 5.0], [5.1, 9.2], [9.3, 14.9]],     // MBConicHulls, FeynGKZ, HyperPrecision
+    C: 16,
     frame: function (e, t) {
-      var ctx = e.ctx, R = e.reduce, F = e.F, S = e.S, C = 15, c = R ? 60 : (t - e.c0) % C, self = this;
-      function P(x, y) { return [F.x + x * F.s, F.y + y * F.s]; }
-      var ak = R ? 1 : ease(t / 0.7), fade = R ? 1 : 1 - clamp01((c - 14.2) / 0.7);   // the chain stays, the numbers come and go
-      // the three stations, as labelled pills sized to their names
-      ctx.font = font(S * 0.8, SANS, 600); tracking(ctx, 1.1);
-      var names = ['MBCONICHULLS', 'FEYNGKZ', 'HYPERPRECISION'], wu = names.map(function (n) { return (ctx.measureText(n).width + S * 1.6) / F.s; });
-      tracking(ctx, 0);
-      var hu = (S * 2.1) / F.s, mb = [0.74, 0.2], gk = [0.74, 0.8];
-      var hp = [Math.min(2 - wu[2] / 2 - 0.02, Math.max(1.32, mb[0] + wu[0] / 2 + 0.2 + wu[2] / 2)), 0.3];
-      var st = [mb, gk, hp];
+      var ctx = e.ctx, R = e.reduce, F = e.F, S = e.S, c = R ? 60 : (t - e.c0) % this.C;
+      function P(u, v) { return [F.x + u * F.s, F.y + v * F.s]; }
+      function U(px) { return px / F.s; }
+      var ak = R ? 1 : ease(t / 0.7);
       var beat = -1;
       if (!R) this.beats.forEach(function (b, i) { if (c >= b[0] && c < b[1]) beat = i; });
       if (beat !== e.beat && e.hov < 0) {               // the caption names the package at work
         e.beat = beat;
         if (beat >= 0 && e.pk[beat]) { e.caption(e.pk[beat].n); e.hint(e.pk[beat].tag); } else { e.caption(null); e.hint(null); }
       }
-      // the Feynman integral: a bubble with two masses
-      var D = P(0.2, 0.5), r = 0.13 * F.s, va = P(0.07, 0.5), vb = P(0.33, 0.5);
+      // the stations, sized to their names: MBConicHulls above, FeynGKZ below, HyperPrecision in the middle
+      ctx.font = font(S * 0.8, SANS, 600); tracking(ctx, 1.1);
+      var names = ['MBCONICHULLS', 'FEYNGKZ', 'HYPERPRECISION'], wu = names.map(function (n) { return U(ctx.measureText(n).width + S * 1.7); });
+      tracking(ctx, 0);
+      var hu = U(S * 2.15), mb = [0.8, 0.17], gk = [0.8, 0.83], hp = [1.4, 0.5];
+      var dx = Math.min(2.18, Math.max(hp[0] + wu[2] / 2 + 0.06, 2.2 - 0.02));   // the right edge of the numbers
+      var colL = hp[0] + wu[2] / 2 + 0.07, colC = (colL + 2.2) / 2;
+      var st = [mb, gk, hp];
+      // the Feynman integral: the bubble with two masses
+      var D = P(0.2, 0.5), r = 0.11 * F.s, va = P(0.09, 0.5), vb = P(0.31, 0.5);
       ctx.save(); ctx.globalAlpha *= ak;
-      line(ctx, F.x + 0.01 * F.s, D[1], va[0], va[1], ink('green', 0.9), 1.4); line(ctx, vb[0], vb[1], F.x + 0.39 * F.s, D[1], ink('green', 0.9), 1.4);
+      line(ctx, F.x + 0.015 * F.s, D[1], va[0], va[1], ink('green', 0.9), 1.4); line(ctx, vb[0], vb[1], F.x + 0.385 * F.s, D[1], ink('green', 0.9), 1.4);
       ctx.strokeStyle = ink('green', 0.9); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(D[0], D[1], r, 0, TAU); ctx.stroke();
       dot(ctx, va[0], va[1], 2, ink('green', 1)); dot(ctx, vb[0], vb[1], 2, ink('green', 1));
       drawMath(ctx, 'm_1', D[0], D[1] - r - 0.45 * S, S * 1.05, ink('slate', 0.95), 'center');
       drawMath(ctx, 'm_2', D[0], D[1] + r + 1.25 * S, S * 1.05, ink('slate', 0.95), 'center');
-      caps(ctx, 'FEYNMAN INTEGRAL', D[0], F.y + 0.97 * F.s, ink('slate', 0.8), S * 0.7, 'center');
+      drawMath(ctx, 'p', F.x + 0.03 * F.s, D[1] - 0.5 * S, S * 0.95, ink('slate', 0.85), 'center');
+      caps(ctx, 'FEYNMAN INTEGRAL', D[0], F.y + 0.98 * F.s, ink('slate', 0.8), S * 0.68, 'center');
       ctx.restore();
-      // the routes, from the integral to series and from the series to numbers
-      var L = function (q, dx) { return [F.x + (q[0] + dx) * F.s, F.y + q[1] * F.s]; };
-      var out = P(0.39, 0.5);
+      // the routes: integral to series (two ways), series to numbers
+      function L(q, du) { return [F.x + (q[0] + du) * F.s, F.y + q[1] * F.s]; }
+      var out = P(0.395, 0.5), hpL = L(hp, -wu[2] / 2), hpR = L(hp, wu[2] / 2);
       var routes = [
-        [out, P(0.47, mb[1]), L(mb, -wu[0] / 2)], [L(mb, wu[0] / 2), P(hp[0] - wu[2] / 2 - 0.02, mb[1]), L(hp, -wu[2] / 2)],
-        [out, P(0.47, gk[1]), L(gk, -wu[1] / 2)], [L(gk, wu[1] / 2), P(hp[0] - wu[2] / 2 - 0.03, gk[1]), L(hp, -wu[2] / 2)]
+        [out, P(0.47, mb[1]), L(mb, -wu[0] / 2)], [L(mb, wu[0] / 2), P(hp[0] - wu[2] / 2 - 0.05, mb[1] + 0.02), hpL],
+        [out, P(0.47, gk[1]), L(gk, -wu[1] / 2)], [L(gk, wu[1] / 2), P(hp[0] - wu[2] / 2 - 0.05, gk[1] - 0.02), hpL]
       ];
-      routes.forEach(function (q) {
-        ctx.strokeStyle = ink('brass', 0.42 * ak); ctx.lineWidth = 1.1; ctx.beginPath();
-        for (var i = 0; i <= 24; i++) { var p = qp(q[0], q[1], q[2], i / 24); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
+      function curve(q, a, w) {
+        ctx.strokeStyle = ink('brass', a); ctx.lineWidth = w; ctx.beginPath();
+        for (var i = 0; i <= 28; i++) { var p = qp(q[0], q[1], q[2], i / 28); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
         ctx.stroke();
-      });
-      ctx.save(); ctx.globalAlpha *= ak;                 // what each route is
-      caps(ctx, 'MELLIN-BARNES', F.x + mb[0] * F.s, F.y + mb[1] * F.s - hu * F.s / 2 - 0.45 * S, ink('slate', 0.75), S * 0.66, 'center');
-      caps(ctx, 'GKZ SYSTEM', F.x + gk[0] * F.s, F.y + gk[1] * F.s + hu * F.s / 2 + 1.05 * S, ink('slate', 0.75), S * 0.66, 'center');
-      var sm = qp(routes[3][0], routes[3][1], routes[3][2], 0.5);
-      caps(ctx, 'SERIES', sm[0] - 0.5 * S, sm[1] + 1.2 * S, ink('slate', 0.7), S * 0.66, 'right');   // clear of the digits
+      }
+      routes.forEach(function (q, i) { curve(q, 0.4 * ak * (beat < 0 || beat === 2 || (i < 2) === (beat === 0) ? 1 : 0.55), 1.1); });
+      ctx.save(); ctx.globalAlpha *= ak; ctx.setLineDash([2, 3]);
+      line(ctx, hpR[0] + 3, hpR[1], F.x + (colL - 0.015) * F.s, hpR[1], ink('brass', 0.5), 1); ctx.restore();
+      ctx.save(); ctx.globalAlpha *= ak;                 // what each route carries
+      caps(ctx, 'MELLIN-BARNES', F.x + mb[0] * F.s, F.y + mb[1] * F.s - hu * F.s / 2 - 0.5 * S, ink('slate', 0.75), S * 0.64, 'center');
+      caps(ctx, 'GKZ SYSTEM', F.x + gk[0] * F.s, F.y + gk[1] * F.s + hu * F.s / 2 + 1.1 * S, ink('slate', 0.75), S * 0.64, 'center');
       ctx.restore();
-      // a token runs along the route of the current step
-      function run(q, u0, u1) {
-        var k = clamp01((c - u0) / (u1 - u0)); if (k <= 0 || k >= 1) return;
-        var u = easeInOut(k);
-        ctx.strokeStyle = ink('brassD', 0.85); ctx.lineWidth = 1.8; ctx.beginPath();
-        for (var i = 0; i <= 16; i++) { var p = qp(q[0], q[1], q[2], Math.max(0, u - 0.25) + (u - Math.max(0, u - 0.25)) * i / 16); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
+      // a token carries the integral (∫) to a package, and its series (Σ) on to HyperPrecision
+      function token(q, u0, u1, glyph) {
+        var k = clamp01((c - u0) / (u1 - u0)); if (R || k <= 0 || k >= 1) return;
+        var u = easeInOut(k), a0 = Math.max(0, u - 0.22);
+        ctx.strokeStyle = ink('brassD', 0.8); ctx.lineWidth = 1.8; ctx.beginPath();
+        for (var i = 0; i <= 14; i++) { var p = qp(q[0], q[1], q[2], a0 + (u - a0) * i / 14); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
         ctx.stroke();
-        var hd = qp(q[0], q[1], q[2], u), g = ctx.createRadialGradient(hd[0], hd[1], 0, hd[0], hd[1], 9);
-        g.addColorStop(0, ink('brass', 0.6)); g.addColorStop(1, ink('brass', 0));
-        ctx.fillStyle = g; ctx.fillRect(hd[0] - 9, hd[1] - 9, 18, 18); dot(ctx, hd[0], hd[1], 2.4, ink('brassD', 1));
+        var hd = qp(q[0], q[1], q[2], u), rr = S * 0.95, g = ctx.createRadialGradient(hd[0], hd[1], 0, hd[0], hd[1], rr * 2.2);
+        g.addColorStop(0, ink('brass', 0.45)); g.addColorStop(1, ink('brass', 0));
+        ctx.fillStyle = g; ctx.fillRect(hd[0] - rr * 2.2, hd[1] - rr * 2.2, rr * 4.4, rr * 4.4);
+        dot(ctx, hd[0], hd[1], rr, ink('paper', 1)); ring(ctx, hd[0], hd[1], rr, ink('brassD', 0.95), 1.2);
+        ctx.font = font(S * (glyph === '∫' ? 1.15 : 0.95), SERIF, 400, glyph === '∫'); ctx.fillStyle = ink('brassD', 1);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(glyph, hd[0], hd[1] + 0.5); ctx.textBaseline = 'alphabetic';
       }
-      if (!R) {
-        run(routes[0], 0.9, 1.9); run(routes[1], 2.4, 3.4);
-        run(routes[2], 4.6, 5.6); run(routes[3], 6.1, 7.1);
+      token(routes[0], 0.9, 1.8, '∫'); token(routes[1], 4.0, 5.0, 'Σ');
+      token(routes[2], 5.1, 6.0, '∫'); token(routes[3], 8.2, 9.2, 'Σ');
+      // the work of each package, drawn in the space between the routes while it runs
+      var ik = function (a, b) { return R ? 0 : clamp01((c - a) / 0.4) * clamp01((b - c) / 0.4); };
+      var box = { x: F.x + (mb[0] - 0.24) * F.s, y: F.y + 0.33 * F.s, w: 0.48 * F.s, h: 0.34 * F.s };
+      var k1 = ik(1.8, 4.2);                             // MBConicHulls: the residues of the poles in a cone, summed into a series
+      if (k1 > 0) {
+        ctx.save(); ctx.globalAlpha *= k1;
+        var ox = box.x + box.w * 0.18, oy = box.y + box.h * 0.86, sp = Math.min(box.w * 0.13, box.h * 0.2);
+        line(ctx, ox, oy, ox + sp * 5.3, oy, ink('green', 0.85), 1.2); line(ctx, ox, oy, ox + sp * 3.6, oy - sp * 3.6, ink('green', 0.85), 1.2);
+        ctx.fillStyle = ink('brass', 0.1); ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + sp * 5.3, oy); ctx.lineTo(ox + sp * 5.3, oy - sp * 3.6); ctx.lineTo(ox + sp * 3.6, oy - sp * 3.6); ctx.closePath(); ctx.fill();
+        var n = 0;
+        for (var a = 1; a <= 5; a++) for (var b2 = 0; b2 <= Math.min(a, 3); b2++) {
+          var lit = clamp01((c - 2.0 - (a + b2) * 0.22) / 0.3);
+          dot(ctx, ox + a * sp, oy - b2 * sp, 1.5 + 0.9 * lit, ink(lit > 0 ? 'brassD' : 'slate', 0.35 + 0.6 * lit)); n++;
+        }
+        var sk = clamp01((c - 3.4) / 0.4);
+        if (sk > 0) { ctx.globalAlpha *= sk; drawMath(ctx, '\\sum_{m,n}', box.x + box.w * 0.9, box.y + box.h * 0.32, S * 1.1, ink('brassD', 1), 'center'); }
+        ctx.restore();
+        ctx.save(); ctx.globalAlpha *= k1; caps(ctx, 'RESIDUES IN A CONE', box.x + box.w / 2, box.y + box.h + 1.25 * S, ink('slate', 0.85), S * 0.6, 'center'); ctx.restore();
       }
-      // the stations, each lit while it works, with a ring when the token arrives
+      var k2 = ik(6.0, 8.3);                             // FeynGKZ: the Newton polytope of U + F, cut into three triangles
+      if (k2 > 0) {
+        ctx.save(); ctx.globalAlpha *= k2;
+        var gs = Math.min(box.w * 0.3, box.h * 0.46), gx = box.x + box.w * 0.5 - gs, gy = box.y + box.h * 0.97;
+        function G(q) { return [gx + q[0] * gs, gy - q[1] * gs]; }
+        var hull = [[1, 0], [2, 0], [0, 2], [0, 1]].map(G), hk = clamp01((c - 6.3) / 0.6);
+        ctx.strokeStyle = ink('green', 0.85 * hk); ctx.lineWidth = 1.2; ctx.beginPath();
+        hull.forEach(function (q, i) { if (i) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); }); ctx.closePath(); ctx.stroke();
+        var tint = ['brass', 'pine', 'crimson'];
+        TC_GKZ.tri.forEach(function (tr, i) {
+          var tk = clamp01((c - 6.9 - i * 0.35) / 0.35); if (tk <= 0) return;
+          var q = tr.map(function (j) { return G(TC_GKZ.pts[j]); });
+          ctx.fillStyle = ink(tint[i], 0.2 * tk); ctx.strokeStyle = ink('green', 0.6 * tk); ctx.lineWidth = 0.9; ctx.beginPath();
+          ctx.moveTo(q[0][0], q[0][1]); ctx.lineTo(q[1][0], q[1][1]); ctx.lineTo(q[2][0], q[2][1]); ctx.closePath(); ctx.fill(); ctx.stroke();
+        });
+        TC_GKZ.pts.forEach(function (q) { var g2 = G(q); dot(ctx, g2[0], g2[1], 2, ink('green', 1)); });
+        ctx.restore();
+        ctx.save(); ctx.globalAlpha *= k2 * clamp01((c - 7.3) / 0.4);
+        caps(ctx, 'THREE TRIANGLES, THREE SERIES', box.x + box.w / 2, box.y + box.h + 1.25 * S, ink('slate', 0.85), S * 0.6, 'center');
+        ctx.restore();
+      }
+      // HyperPrecision: the plane of F1, where its series converges, and the ray out to (-2,-3)
+      var k3 = R ? 1 : clamp01((c - 9.3) / 0.4) * (1 - clamp01((c - 15.2) / 0.6));
+      if (k3 > 0) {
+        var pw = Math.min(0.42 * F.s, wu[2] * F.s), ph = 0.29 * F.s, px0 = F.x + hp[0] * F.s - pw / 2, py0 = F.y + 0.035 * F.s;
+        function X(x) { return px0 + (x + 3.2) / 4.8 * pw; }
+        function Y(y) { return py0 + (1.5 - y) / 5.1 * ph; }
+        ctx.save(); ctx.globalAlpha *= k3;
+        ctx.fillStyle = ink('pine', 0.12); ctx.fillRect(X(-1), Y(1), X(1) - X(-1), Y(-1) - Y(1));
+        line(ctx, X(-3.2), Y(0), X(1.6), Y(0), ink('slate', 0.45), 0.8); line(ctx, X(0), Y(1.5), X(0), Y(-3.6), ink('slate', 0.45), 0.8);
+        ctx.save(); ctx.setLineDash([2, 2]);
+        line(ctx, X(1), Y(1.5), X(1), Y(-3.6), ink('crimson', 0.5), 0.8); line(ctx, X(-3.2), Y(1), X(1.6), Y(1), ink('crimson', 0.5), 0.8);
+        ctx.restore();
+        var rk = R ? 1 : easeInOut((c - 9.8) / 1.6), tx = -2 * rk, ty = -3 * rk;
+        if (rk > 0) {
+          line(ctx, X(0), Y(0), X(tx), Y(ty), ink('brassD', 0.95), 1.4);
+          [0.3, 0.55, 0.8].forEach(function (f) { if (rk >= f) ring(ctx, X(-2 * f), Y(-3 * f), 2.1, ink('brassD', 0.9), 1); });
+        }
+        dot(ctx, X(-2), Y(-3), 2.4, ink('crimson', 0.9)); ring(ctx, X(-2), Y(-3), 4.4, ink('crimson', 0.5), 1);
+        drawMath(ctx, '(−2,−3)', X(-2) + 0.55 * S, Y(-3) + 0.35 * S, S * 0.72, ink('slate', 0.95), 'left');
+        ctx.restore();
+      }
+      // the stations, each lit while it works, with a ring when its token arrives
       e.hit = [];
       st.forEach(function (q, i) {
         var w = wu[i] * F.s, h = hu * F.s, x = F.x + q[0] * F.s - w / 2, y = F.y + q[1] * F.s - h / 2;
-        var on = R || beat === i || e.hov === i, arrive = [1.9, 5.6, 3.4][i], k = R ? 1 : ease((c - 0.3 - i * 0.2) / 0.6);
+        var on = R || beat === i || e.hov === i, k = R ? 1 : ease((t - 0.3 - i * 0.2) / 0.6);
         e.hit.push([x, y, w, h]);
         ctx.save(); ctx.globalAlpha *= k;
-        roundRect(ctx, x, y, w, h, h / 2); ctx.fillStyle = ink(on ? 'brass' : 'paper', on ? 0.16 : 0.9); ctx.fill();
+        roundRect(ctx, x, y, w, h, h / 2); ctx.fillStyle = ink(on ? 'brass' : 'paper', on ? 0.17 : 0.92); ctx.fill();
         ctx.strokeStyle = ink(on ? 'brassD' : 'green', on ? 0.9 : 0.55); ctx.lineWidth = on ? 1.4 : 1; ctx.stroke();
         ctx.font = font(S * 0.8, SANS, 600); tracking(ctx, 1.1); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillStyle = ink(on ? 'brassD' : 'green', 1); ctx.fillText(names[i], x + w / 2 + 0.55, y + h / 2 + 0.5);
         tracking(ctx, 0); ctx.textBaseline = 'alphabetic';
-        [arrive, i === 2 ? 7.1 : -9].forEach(function (a0) {
+        ([[1.8], [6.0], [5.0, 9.2]][i]).forEach(function (a0) {
           var ra = c - a0;
           if (!R && ra > 0 && ra < 0.9) {
             ctx.strokeStyle = ink('brassD', 0.6 * (1 - ra / 0.9)); ctx.lineWidth = 1;
@@ -3968,24 +4042,27 @@
         });
         ctx.restore();
       });
-      // the numbers: F1 at a point outside its region of convergence, digit by digit
-      var nk = R ? 1 : ease((c - 8.4) / 0.5);
+      // the numbers, digit by digit, to the right of HyperPrecision
+      var nk = R ? 1 : clamp01((c - 11.2) / 0.4) * (1 - clamp01((c - 15.2) / 0.6));
       if (nk > 0) {
-        ctx.save(); ctx.globalAlpha *= nk * fade;
-        var cx = F.x + hp[0] * F.s, y0 = F.y + (hp[1] + hu / 2) * F.s + 1.55 * S;
-        drawMath(ctx, 'F_1(1;1,1;2;−2,−3)', cx, y0, S * 0.95, ink('slate', 0.95), 'center');
-        var shown = R ? TC_DIGITS.length : Math.floor(clamp01((c - 9) / 3) * TC_DIGITS.length);
-        var lines = [TC_DIGITS.slice(0, 13), TC_DIGITS.slice(14, 25), TC_DIGITS.slice(26)];
-        ctx.font = font(S * 1.02, SANS, 500); ctx.textAlign = 'left';
-        var lw = ctx.measureText(lines[0]).width, lx = cx - lw / 2 + S * 0.5, left = shown;
+        ctx.save(); ctx.globalAlpha *= nk;
+        var colW = (2.2 - colL) * F.s, cx2 = F.x + colC * F.s, lines = [TC_DIGITS.slice(0, 13), TC_DIGITS.slice(14, 25), TC_DIGITS.slice(26)];
+        var fs = S * 1.02; ctx.font = font(fs, SANS, 500);
+        var lw = ctx.measureText(lines[0]).width; if (lw > colW * 0.98) { fs *= colW * 0.98 / lw; ctx.font = font(fs, SANS, 500); lw = ctx.measureText(lines[0]).width; }
+        var y0 = F.y + 0.5 * F.s - 2.6 * fs;
+        drawMath(ctx, 'F_1(1;1,1;2;−2,−3)', cx2, y0, Math.min(S * 0.9, fs * 0.95), ink('slate', 0.95), 'center');
+        var shown = R ? TC_DIGITS.length : Math.floor(clamp01((c - 11.4) / 2.6) * TC_DIGITS.length), left = shown, lx = cx2 - lw / 2;
+        ctx.textAlign = 'left';
         lines.forEach(function (ln, j) {
-          var n = Math.max(0, Math.min(ln.length, left)); left -= ln.length + 1;
-          if (n <= 0) return;
+          var m = Math.max(0, Math.min(ln.length, left)); left -= ln.length + 1;
+          if (m <= 0) return;
           ctx.fillStyle = ink(j === 0 ? 'brassD' : 'green', j === 0 ? 1 : 0.85);
-          ctx.fillText((j === 0 ? '= ' : '') + ln.slice(0, n), lx - (j === 0 ? ctx.measureText('= ').width : 0), y0 + (1.45 + j * 1.3) * S);
+          if (j === 0) { ctx.textAlign = 'right'; ctx.fillText('= ', lx, y0 + 1.55 * fs); ctx.textAlign = 'left'; }
+          ctx.fillText(ln.slice(0, m), lx, y0 + (1.55 + j * 1.3) * fs);
         });
-        var ek = R ? 1 : ease((c - 12.3) / 0.5);
-        if (ek > 0) { ctx.globalAlpha *= ek; drawMath(ctx, '=\\rm{ln}\\,(4/3)', cx, y0 + 5.5 * S, S, ink('brassD', 1), 'center'); }
+        var ek = R ? 1 : ease((c - 14.1) / 0.5);
+        if (ek > 0) { ctx.globalAlpha *= ek; drawMath(ctx, '=\\rm{ln}\\,(4/3)', cx2, y0 + 5.6 * fs, Math.min(S, fs * 1.02), ink('brassD', 1), 'center');
+          caps(ctx, '30 DIGITS', cx2, y0 + 7.1 * fs, ink('slate', 0.75), S * 0.6, 'center'); }
         ctx.restore();
       }
     },
@@ -3999,7 +4076,7 @@
     click: function (e, x, y) {                        // a package opens its card, anywhere else goes on to the next step
       this.move(e, { x: x, y: y });
       if (e.hov >= 0 && e.pk[e.hov]) { window.location.hash = e.pk[e.hov].slug; return; }
-      var c = (e.t - e.c0) % 15, next = 0.9;
+      var c = (e.t - e.c0) % this.C, next = this.beats[0][0];
       for (var i = 0; i < this.beats.length; i++) if (c < this.beats[i][0] - 0.05) { next = this.beats[i][0]; break; }
       e.c0 = e.t - next + 0.01;
     }
