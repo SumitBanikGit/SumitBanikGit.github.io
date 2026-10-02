@@ -2180,3 +2180,9 @@ html[data-theme="dark"].intro-on .intro { background: #0e1714; }
 
 .intro .beam, .intro .tr { opacity: 0; }
 .intro .tr.nu { opacity: 0; }
+
+/* the copy button of each block of commands, in the corner of the block */
+.pkg-codebox { position: relative; }
+.pkg-codebox .pkg-code { padding-right: 3.1rem; }
+.pkg-codebox .code-copy { position: absolute; top: .4rem; right: .4rem; width: 2rem; height: 2rem; background: var(--paper); }
+html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }

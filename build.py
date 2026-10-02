@@ -1265,10 +1265,42 @@ def _needs(items):
                    for n, url, note in items)
 
 
+COPY_CODE_JS = """<script>
+(function () {                              // copy the commands of a package with one click, and say so
+  var bs = document.querySelectorAll('.code-copy');
+  if (!bs.length) return;
+  var ok = navigator.clipboard && window.isSecureContext;
+  Array.prototype.forEach.call(bs, function (b) {
+    if (!ok) { b.remove(); return; }
+    var said = b.nextElementSibling, timer;
+    b.addEventListener('click', function () {
+      navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+        b.classList.add('done'); if (said) said.textContent = 'Commands copied';
+        clearTimeout(timer);
+        timer = setTimeout(function () { b.classList.remove('done'); if (said) said.textContent = ''; }, 2200);
+      }).catch(function () {});
+    });
+  });
+})();
+</script>"""
+
+
+def _code_copy(code):
+    """The round copy button of the email address, for a block of commands."""
+    import html as _html
+    return (f'<button class="copy-mail code-copy" type="button" data-copy="{_html.escape(code, quote=True)}" '
+            'aria-label="Copy the commands" title="Copy the commands">'
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="cm-b" d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/>'
+            '<rect class="cm-a" x="8.5" y="8.5" width="11" height="11" rx="2"/><path class="cm-ok" pathLength="1" d="M5.5 12.5l4 4L18.5 7.5"/></svg>'
+            '<span class="cm-tip" aria-hidden="true">Copied</span></button><span class="sr-only" role="status" aria-live="polite"></span>')
+
+
 def _pkg_facts(heads, files, repo, load):
+    import html as _html
     clone = f"git clone {repo}.git"
     code = clone + (f"\n{load}" if load else "")
-    get = (f'<div class="pkg-fact pkg-get"><div class="kicker">Get it</div><pre class="pkg-code"><code>{code}</code></pre>'
+    get = (f'<div class="pkg-fact pkg-get"><div class="kicker">Get it</div><div class="pkg-codebox"><pre class="pkg-code"><code>{_html.escape(code)}</code></pre>'
+           + _code_copy(code) + '</div>'
            + ('<p class="pkg-note">then, in <i>Mathematica</i>, load the package with the second line.</p>' if load else "")
            + '</div>')
     blocks = "".join(f'<div class="pkg-fact"><div class="kicker">{h}</div><ul>{body}</ul></div>' for h, body in heads)
@@ -1299,7 +1331,7 @@ def render_packages():
     return ('<section class="chapter" id="packages">\n<h2 class="chapter-title">Packages</h2>\n'
             f'<p class="prose">{NUMBER_WORDS[len(PACKAGES)].capitalize()} open-source <i>Mathematica</i> packages for Feynman integrals and hypergeometric '
             f'functions, developed with my collaborators, with {NUMBER_WORDS[n_rel]} releases so far. All are free to use under the GNU '
-            'General Public License, version 3.</p>\n' + "\n".join(out) + "\n" + RELEASES_JS + "\n</section>")
+            'General Public License, version 3.</p>\n' + "\n".join(out) + "\n" + RELEASES_JS + COPY_CODE_JS + "\n</section>")
 
 
 def render_library():
@@ -1314,6 +1346,22 @@ def render_library():
             f'<span class="tag pheno">{lb["when"]}</span></div></div>'
             f'<p class="pkg-what">{lb["what"]}</p>' + _pkg_links(lb["name"], lb["repo"], lb["paper"])
             + _pkg_facts(heads, lb["files"], lb["repo"], "") + '</article>\n</section>')
+
+
+def software_jsonld():
+    import json
+    def entry(name, what, repo, arx, version=None):
+        p = _paper(arx)
+        e = {"@type": "SoftwareSourceCode", "name": name, "description": _plain(what), "codeRepository": repo,
+             "programmingLanguage": "Wolfram Language", "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+             "author": [{"@type": "Person", "name": a.strip()} for a in p["authors"].split(",")],
+             "citation": f"https://doi.org/{p['doi']}" if p.get("doi") else f"https://arxiv.org/abs/{arx}"}
+        if version:
+            e["softwareVersion"] = version.lstrip("v")
+        return e
+    graph = [entry(pk["name"], pk["what"], pk["repo"], pk["paper"], pk["releases"][-1][0]) for pk in PACKAGES]
+    graph.append(entry(LIBRARY["name"], LIBRARY["what"], LIBRARY["repo"], LIBRARY["paper"]))
+    return json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
 
 
 def software_scene_data():
@@ -1625,6 +1673,8 @@ def write_pages(html, n_articles, n_proc):
             h = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{desc}">', h)
             h = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{title} | Sumit Banik">', h)
             h = re.sub(r'<script type="application/ld\+json">.*?</script>\n', "", h, flags=re.S)
+        if file == "software.html":                 # the packages, described for search engines
+            h = h.replace("</head>", f'<script type="application/ld+json">{software_jsonld()}</script>\n</head>', 1)
         h = re.sub(r'<link rel="canonical" href="[^"]*">', f'<link rel="canonical" href="{url}">', h)
         h = re.sub(r'<meta property="og:url" content="[^"]*">', f'<meta property="og:url" content="{url}">', h)
 
