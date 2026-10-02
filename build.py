@@ -471,9 +471,9 @@ ICONS = {
     "i_mail": _svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/>'),
     "i_orcid": _svg('<circle cx="12" cy="12" r="9"/><path d="M8.5 10v6"/><circle cx="8.5" cy="7.6" r=".4" fill="currentColor"/>'
                     '<path d="M11.5 16V8h2a4 4 0 0 1 0 8h-2z"/>'),
-    "i_inspire": _svg('<circle cx="12" cy="12" r="1.3" fill="currentColor"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/>'
-                      '<ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/>'
-                      '<ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/>'),
+    # INSPIRE-HEP's own mark: a lower-case i cut out of a rounded square
+    "i_inspire": _svg('<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M7 3.5h10A3.5 3.5 0 0 1 20.5 7v10a3.5 3.5 0 0 1-3.5 3.5H7'
+                      'A3.5 3.5 0 0 1 3.5 17V7A3.5 3.5 0 0 1 7 3.5ZM12 6.6a1.45 1.45 0 1 0 0 2.9a1.45 1.45 0 1 0 0-2.9ZM10.8 10.9v6.6h2.4v-6.6Z"/>'),
     "i_scholar": _svg('<path d="m2.5 9.5 9.5-5 9.5 5-9.5 5z"/><path d="M6.5 11.6v4.2c0 1.5 2.5 3 5.5 3s5.5-1.5 5.5-3v-4.2"/><path d="M21.5 9.5v5"/>'),
     "i_arxiv": _svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/>'),
     "i_github": _svg('<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 '
@@ -1388,6 +1388,12 @@ def _slug(text):
     return re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
 
 
+def _tour_slides():
+    """How many slides the research tour has, counted in assets/scenes.js."""
+    m = re.search(r"var TOUR = \[([^\]]*)\]", Path("assets/scenes.js").read_text(encoding="utf-8"))
+    return len(re.findall(r"[A-Z][A-Z0-9]+", m.group(1))) if m else 0
+
+
 def nav_drops():
     """What opens under each item of the menu: the parts of its page, with a line about some of them."""
     arts = sum(1 for p in PUBS if p["kind"] == "article")
@@ -1396,7 +1402,7 @@ def nav_drops():
     return {
         "#about": [("About me", "index.html#about", ""), ("Academic journey", "index.html#academic-journey", "Kolkata to San Francisco"),
                    ("Recent news", "index.html#recent-news", ""), ("Explore the site", "index.html#explore", "")],
-        "research.html": [("A tour of my papers", "research.html#top", "One animation per paper"),
+        "research.html": [("A tour of my papers", "research.html#top", f"{_tour_slides()} animated slides"),
                           ("Research domains", "research.html#research-domains", ""),
                           ("Selected work", "research.html#selected-work", ""), ("Software", "research.html#software", "")],
         "publications.html": [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
