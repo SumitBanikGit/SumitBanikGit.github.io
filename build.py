@@ -990,7 +990,7 @@ def page_scenes():
                        "Hollow circles mark online talks", talk_scene_data),
         "funding.html": ("medals", f"{len(FUNDING)} fellowships and grants since {min(int(f[0]) for f in FUNDING)}",
                          "Click for the next award", funding_scene_data),
-        "software.html": ("releases", f"{len(PACKAGES)} packages and a library since 2020", "Click for the next release", software_scene_data),
+        "software.html": ("toolchain", "From Feynman integrals to numbers", "Click a package to open it", toolchain_scene_data),
         "teaching.html": ("chalkboard", "From the blackboard", "Click for the next equation", teaching_scene_data),
         "supervision.html": ("mentoring", f"{len(SUPERVISION)} students since {min(int(x[0]) for x in SUPERVISION)}",
                              "Click for the next student", supervision_scene_data),
@@ -1397,6 +1397,12 @@ def software_jsonld():
     graph = [entry(pk["name"], pk["what"], pk["repo"], pk["paper"], pk["releases"][-1][0]) for pk in PACKAGES]
     graph.append(entry(LIBRARY["name"], LIBRARY["what"], LIBRARY["repo"], LIBRARY["paper"]))
     return json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
+
+
+def toolchain_scene_data():
+    """The packages in the order of the chain in the Software header, with the line about each."""
+    by = {pk["name"]: pk for pk in PACKAGES}
+    return dict(pk=[dict(n=n, tag=by[n]["tagline"], slug=by[n]["slug"]) for n in ("MBConicHulls", "FeynGKZ", "HyperPrecision")])
 
 
 def software_scene_data():
