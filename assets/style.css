@@ -2263,3 +2263,15 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
   .navbar nav.fade-l { --fl: 1.8rem; }
   .navbar nav.fade-r { --fr: 1.8rem; }
 }
+
+/* The same small motions for keyboard users, when a card that is a link takes the focus */
+@media (prefers-reduced-motion: no-preference) {
+  .ex-card:focus-visible .ex-icon path, .pick:focus-visible .ix path { animation: redraw 1.1s cubic-bezier(.2, .7, .2, 1); }
+  .ex-card:focus-visible .ex-icon circle[style*="--k"], .pick:focus-visible .ix circle[style*="--k"] {
+    transform-box: fill-box; transform-origin: center; animation: th-lit .8s ease both; animation-delay: calc(var(--k) * 90ms + .3s); }
+  .ex-card:focus-visible .ex-icon path.flow, .pick:focus-visible .ix path.flow {
+    stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
+  .ex-card:focus-visible .ex-icon path.step { animation: redraw .45s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k) * 130ms); }
+  .ex-card:focus-visible .ex-icon .wobble { transform-box: view-box; transform-origin: 24px 13px; animation: ex-wobble 1.2s ease-out; }
+  .ex-card:focus-visible .ex-icon circle.turn { animation: ex-turn 2s ease-in-out infinite; }
+}
