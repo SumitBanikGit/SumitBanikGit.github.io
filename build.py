@@ -1373,9 +1373,41 @@ PAGES = [
     ("contact.html",      "Contact",      "Contact",               "Feel free to get in touch. I am always happy to hear from you.", ["reach"]),
 ]
 
-# Opening reveal: a brass monogram on Oxford green (shown once per visit, see <head>).
-INTRO = ('<div class="intro" aria-hidden="true"><svg viewBox="0 0 100 100">'
-         '<circle cx="50" cy="50" r="46" pathLength="1"/><text x="50" y="61" text-anchor="middle">SB</text></svg></div>\n')
+def _intro():
+    """Opening reveal, once per visit (see <head>): two proton beams meet at the centre of the screen and the
+    collision sends charged particles out through the faint layers of a detector, each track bent into a
+    circle by the magnetic field (the softer the particle, the tighter its curl), with two neutral ones
+    straight. The page then opens from the collision point."""
+    import math
+    import random
+    rnd = random.Random(7)                      # the same collision every time
+    tracks = []
+    n = 17
+    for i in range(n):
+        phi = 2 * math.pi * (i + rnd.uniform(-0.3, 0.3)) / n
+        q = rnd.choice((-1, 1))
+        R = rnd.choice((rnd.uniform(26, 60), rnd.uniform(70, 160), rnd.uniform(200, 520)))   # radius of curvature
+        L = rnd.uniform(48, 92) if R > 60 else rnd.uniform(30, 0.9 * math.pi * R)            # arc length
+        cx, cy = -math.sin(phi) * q * R, math.cos(phi) * q * R                                 # centre of the circle
+        a = q * L / R
+        x = cx + (0 - cx) * math.cos(a) - (0 - cy) * math.sin(a)
+        y = cy + (0 - cx) * math.sin(a) + (0 - cy) * math.cos(a)
+        large = 1 if abs(a) > math.pi else 0
+        sweep = 1 if q > 0 else 0
+        hard = R > 180
+        tracks.append(f'<path class="tr{" hard" if hard else ""}" pathLength="1" style="--d:{0.66 + i * 0.014:.3f}s;--t:{0.42 if hard else 0.62:.2f}s"'
+                      f' d="M0 0A{R:.1f} {R:.1f} 0 {large} {sweep} {x:.1f} {y:.1f}"/>')
+    for i, phi in enumerate((0.9, 3.9)):     # two neutral particles, straight
+        tracks.append(f'<path class="tr nu" pathLength="1" style="--d:{0.7 + i * 0.03:.2f}s;--t:.5s" d="M0 0L{95 * math.cos(phi):.1f} {95 * math.sin(phi):.1f}"/>')
+    rings = "".join(f'<circle class="ly" cx="0" cy="0" r="{r}" style="--d:{0.12 + k * 0.08:.2f}s"/>' for k, r in enumerate((9, 21, 34, 52)))
+    return ('<div class="intro" aria-hidden="true"><svg viewBox="-100 -60 200 120" preserveAspectRatio="xMidYMid slice">'
+            f'<g class="det">{rings}</g>'
+            '<path class="beam l" pathLength="1" d="M-104 0H-0.6"/><path class="beam r" pathLength="1" d="M104 0H0.6"/>'
+            f'<g class="trs">{"".join(tracks)}</g><circle class="flash" cx="0" cy="0" r="6"/></svg></div>\n')
+
+
+# Opening reveal: a collision at the centre of the screen opens the page (shown once per visit, see <head>).
+INTRO = _intro()
 
 # Where each old in-page anchor now lives.
 LINK_MAP = {"#about": "index.html#about", "#reach": "contact.html", "#research": "research.html", "#publications": "publications.html",
@@ -2066,7 +2098,9 @@ Standard Model at particle colliders.</p>
 
   /* ---------- opening reveal: lift the curtain, then let the page animations run ---------- */
   if (document.documentElement.classList.contains('intro-on')) {{
-    setTimeout(function () {{ document.documentElement.classList.remove('intro-on'); }}, 2450);
+    var endIntro = function () {{ document.documentElement.classList.remove('intro-on'); }};
+    setTimeout(endIntro, 2150);
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {{ window.addEventListener(ev, endIntro, {{ once: true, passive: true }}); }});
   }}
 
   /* ---------- magnetic buttons: they lean gently towards the pointer ---------- */

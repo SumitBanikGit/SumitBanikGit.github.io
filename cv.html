@@ -19,11 +19,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abef942">
+<link rel="stylesheet" href="assets/style.css?v=6abefa78">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
-<div class="intro" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" pathLength="1"/><text x="50" y="61" text-anchor="middle">SB</text></svg></div>
+<div class="intro" aria-hidden="true"><svg viewBox="-100 -60 200 120" preserveAspectRatio="xMidYMid slice"><g class="det"><circle class="ly" cx="0" cy="0" r="9" style="--d:0.12s"/><circle class="ly" cx="0" cy="0" r="21" style="--d:0.20s"/><circle class="ly" cx="0" cy="0" r="34" style="--d:0.28s"/><circle class="ly" cx="0" cy="0" r="52" style="--d:0.36s"/></g><path class="beam l" pathLength="1" d="M-104 0H-0.6"/><path class="beam r" pathLength="1" d="M104 0H0.6"/><g class="trs"><path class="tr" pathLength="1" style="--d:0.660s;--t:0.62s" d="M0 0A39.4 39.4 0 0 0 37.9 -38.8"/><path class="tr" pathLength="1" style="--d:0.674s;--t:0.62s" d="M0 0A27.3 27.3 0 0 0 34.0 -31.9"/><path class="tr" pathLength="1" style="--d:0.688s;--t:0.62s" d="M0 0A58.2 58.2 0 0 0 89.3 -26.0"/><path class="tr" pathLength="1" style="--d:0.702s;--t:0.62s" d="M0 0A27.6 27.6 0 0 0 46.7 3.4"/><path class="tr" pathLength="1" style="--d:0.716s;--t:0.62s" d="M0 0A29.5 29.5 0 0 0 43.9 23.4"/><path class="tr" pathLength="1" style="--d:0.730s;--t:0.62s" d="M0 0A114.7 114.7 0 0 0 8.0 67.0"/><path class="tr" pathLength="1" style="--d:0.744s;--t:0.62s" d="M0 0A36.2 36.2 0 0 1 -32.6 11.3"/><path class="tr" pathLength="1" style="--d:0.758s;--t:0.62s" d="M0 0A55.8 55.8 0 0 1 -43.0 8.5"/><path class="tr hard" pathLength="1" style="--d:0.772s;--t:0.42s" d="M0 0A212.5 212.5 0 0 1 -51.1 4.2"/><path class="tr" pathLength="1" style="--d:0.786s;--t:0.62s" d="M0 0A101.5 101.5 0 0 1 -45.5 -21.9"/><path class="tr hard" pathLength="1" style="--d:0.800s;--t:0.42s" d="M0 0A219.4 219.4 0 0 1 -50.5 -34.9"/><path class="tr" pathLength="1" style="--d:0.814s;--t:0.62s" d="M0 0A35.7 35.7 0 0 1 46.2 -52.2"/><path class="tr hard" pathLength="1" style="--d:0.828s;--t:0.42s" d="M0 0A292.0 292.0 0 0 0 -23.4 -53.9"/><path class="tr" pathLength="1" style="--d:0.842s;--t:0.62s" d="M0 0A28.7 28.7 0 0 1 52.9 -13.5"/><path class="tr" pathLength="1" style="--d:0.856s;--t:0.62s" d="M0 0A158.8 158.8 0 0 1 65.4 -60.2"/><path class="tr hard" pathLength="1" style="--d:0.870s;--t:0.42s" d="M0 0A203.9 203.9 0 0 0 32.3 -45.6"/><path class="tr" pathLength="1" style="--d:0.884s;--t:0.62s" d="M0 0A40.2 40.2 0 0 0 4.4 -71.3"/><path class="tr nu" pathLength="1" style="--d:0.70s;--t:.5s" d="M0 0L59.1 74.4"/><path class="tr nu" pathLength="1" style="--d:0.73s;--t:.5s" d="M0 0L-69.0 -65.3"/></g><circle class="flash" cx="0" cy="0" r="6"/></svg></div>
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="masthead hero page-hero" data-scene="timeline">
@@ -326,7 +326,9 @@
 
   /* ---------- opening reveal: lift the curtain, then let the page animations run ---------- */
   if (document.documentElement.classList.contains('intro-on')) {
-    setTimeout(function () { document.documentElement.classList.remove('intro-on'); }, 2450);
+    var endIntro = function () { document.documentElement.classList.remove('intro-on'); };
+    setTimeout(endIntro, 2150);
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { window.addEventListener(ev, endIntro, { once: true, passive: true }); });
   }
 
   /* ---------- magnetic buttons: they lean gently towards the pointer ---------- */

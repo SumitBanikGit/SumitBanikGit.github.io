@@ -2139,3 +2139,44 @@ html[data-theme="dark"] .logo-disc { border-color: rgba(214,185,121,.55); }
   .hero:not(.page-hero) .hero-stage { margin-bottom: calc(3.9rem + var(--ro-out, 0px)); }
   .ev-mini { top: calc(100% + var(--ro-out, 0px) + .3rem); }
 }
+
+/* =====================================================================
+   Opening reveal, once per visit: two proton beams meet at the centre and
+   the collision sends particles out through the layers of a detector,
+   their tracks bent by the magnetic field. Then the page opens from the
+   collision point.
+   ===================================================================== */
+@property --hole { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.intro-on .intro {
+  display: block; position: fixed; inset: 0; z-index: 100; background: #16302a; transform: none;
+  --hole: 0px;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1.5px));
+          mask-image: radial-gradient(circle at 50% 50%, transparent var(--hole), #000 calc(var(--hole) + 1.5px));
+  animation: intro-open .8s cubic-bezier(.65, 0, .25, 1) 1.2s forwards, intro-fade .35s ease 1.75s forwards;
+}
+html[data-theme="dark"].intro-on .intro { background: #0e1714; }
+.intro svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.intro path, .intro circle { fill: none; }          /* strokes in drawing units: one unit is about 6 to 9 pixels */
+.intro .ly { stroke: rgba(214, 185, 121, .2); stroke-width: .16; opacity: 0; animation: intro-in .6s ease var(--d) forwards; }
+.intro .beam { stroke: #dcc58f; stroke-width: .24; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+               animation: intro-draw .55s cubic-bezier(.55, 0, .9, .4) .05s forwards, intro-out .4s ease .62s forwards; }
+.intro .tr { stroke: rgba(238, 231, 214, .8); stroke-width: .15; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
+             animation: intro-draw var(--t) cubic-bezier(.2, .6, .3, 1) var(--d) forwards; }
+.intro .tr.hard { stroke: #e4c98a; stroke-width: .21; }
+.intro .tr.nu { stroke: rgba(214, 185, 121, .6); stroke-dasharray: .012 .018; stroke-dashoffset: 0; opacity: 0;
+                animation: intro-in .25s ease var(--d) forwards; }
+.intro .flash { fill: #fff3d6; stroke: none; opacity: 0; transform-box: fill-box; transform-origin: center;
+                animation: intro-flash .5s ease-out .6s forwards; }
+@keyframes intro-draw { from { opacity: 1; } to { stroke-dashoffset: 0; opacity: 1; } }   /* hidden until its turn, so no stray end caps */
+@keyframes intro-in { to { opacity: 1; } }
+@keyframes intro-out { to { opacity: 0; } }
+@keyframes intro-flash { 0% { opacity: 0; transform: scale(.1); } 18% { opacity: .95; transform: scale(.5); }
+                         100% { opacity: 0; transform: scale(1.6); } }
+@keyframes intro-open { to { --hole: 150vmax; } }
+@keyframes intro-fade { to { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .intro-on .intro { display: none; } }
+.intro .ly { stroke-dasharray: none; stroke-dashoffset: 0; }
+.intro > svg { animation: none; }
+
+.intro .beam, .intro .tr { opacity: 0; }
+.intro .tr.nu { opacity: 0; }
