@@ -238,7 +238,8 @@ CITY_GEO = {
 
 # Research areas scrolling in the band under the navigation.
 TICKER = ["Feynman integrals", "Hypergeometric functions", "Special functions", "Mellin-Barnes integrals", "Effective field theories",
-          "Renormalization group", "Higgs physics", "Collider phenomenology", "Beyond the Standard Model",
+          "Renormalization group", "Higgs physics", "Two-Higgs-doublet models", "Higgs triplets",
+          "Collider phenomenology", "Beyond the Standard Model",
           "Computer algebra"]
 
 # Research domains on the Research page (one card each).
@@ -696,8 +697,8 @@ def render_journey():
     out = []
     last = len(JOURNEY) - 1
     for i, (year, city, role, inst, logos) in enumerate(JOURNEY):
-        imgs = "".join(f'<img src="assets/logos/{f}.png?v={_ver(f"assets/logos/{f}.png")}" alt="{alt}" loading="lazy">'
-                       for f, alt in logos)
+        imgs = "".join(f'<span class="logo-disc{" wide" if f in ("slac",) else ""}"><img src="assets/logos/{f}.png?v={_ver(f"assets/logos/{f}.png")}" alt="{alt}" loading="lazy"></span>'
+                       for f, alt in logos)                    # each logo on a white disc of its own (a wordmark sits smaller)
         now = ' now' if i == last else ''
         badge = '<span class="j-now">Now</span>' if i == last else ''
         out.append(
@@ -1757,11 +1758,11 @@ TEMPLATE = """<!doctype html>
 <div class="about-grid">
 {portrait}
 <div class="about-text">
-<p class="statement" data-hold="2600">My research spans a broad range of topics in theoretical particle
-physics, from applied mathematics to the computation of multi-loop
-Feynman integrals, effective field theories, model building, Higgs
-physics and the search for New Physics at the Large Hadron Collider
-at CERN.</p>
+<p class="statement" data-hold="2600">I am a postdoctoral researcher at SLAC National Accelerator Laboratory
+and Stanford University. My research in theoretical particle physics spans
+applied mathematics, multi-loop Feynman integrals, effective field theories,
+model building, Higgs physics and the search for New Physics beyond the
+Standard Model at particle colliders.</p>
 <p class="about-links"><a href="assets/cv/Sumit_Banik_CV.pdf">Read the full CV <span aria-hidden="true">→</span></a>
 <a href="contact.html">Get in touch <span aria-hidden="true">→</span></a></p>
 </div>

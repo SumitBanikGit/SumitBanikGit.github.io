@@ -2083,3 +2083,35 @@ html[data-theme="dark"] .ex-card:nth-child(9) { --c: #a8c7bb; }
 .scene-hint .arx { text-transform: none; letter-spacing: .05em; }
 .pkg-get { grid-column: 1 / -1; }                     /* the whole command on one line where it fits */
 .pkg-code { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Journey logos: each on a white disc of its own, a little bigger, two institutions overlapping slightly */
+.stop-node, .journey.legend .stop-node { height: auto; min-width: 0; padding: 0; gap: 0; background: none; border: 0; box-shadow: none; }
+html[data-theme="dark"] .stop-node { background: none; }
+.logo-disc { position: relative; width: 4.7rem; height: 4.7rem; flex: none; border-radius: 50%; display: grid; place-items: center;
+             background: #fff; border: 1px solid rgba(168,137,79,.6); box-shadow: 0 12px 22px -14px rgba(28,53,47,.55); }
+.logo-disc img, .stop-node.n2 .logo-disc img { width: 70%; height: 70%; max-width: none; object-fit: contain; }
+.stop-node.n2 .logo-disc + .logo-disc { margin-left: -.85rem; box-shadow: -4px 0 0 0 var(--paper), 0 12px 22px -14px rgba(28,53,47,.55); }
+html[data-theme="dark"] .logo-disc { border-color: rgba(214,185,121,.55); }
+.stop:hover .stop-node { box-shadow: none; }
+.stop.now .logo-disc { border-color: var(--accent); }
+.stop.now .stop-node::after { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .stop.now .logo-disc::after { content: ""; position: absolute; inset: -1px; border-radius: 50%; pointer-events: none;
+                                animation: ring 2.6s ease-out infinite; }
+}
+@media (max-width: 46rem) {
+  .stop { grid-template-columns: 6rem 1fr; }
+  .stop-node, .journey.legend .stop-node { width: 6rem; justify-content: flex-start; }
+  .logo-disc { width: 3.7rem; height: 3.7rem; }
+  .stop-node.n2 .logo-disc { width: 3.3rem; height: 3.3rem; }
+  .stop-node.n2 .logo-disc + .logo-disc { margin-left: -.75rem; }
+}
+.stop-node.n2 .logo-disc + .logo-disc { margin-left: -.4rem; }
+.logo-disc.wide img, .stop-node.n2 .logo-disc.wide img { width: 62%; }
+@media (max-width: 46rem) { .stop-node.n2 .logo-disc + .logo-disc { margin-left: -.4rem; } }
+@media (max-width: 46rem) {
+  .stop { grid-template-columns: 5.4rem 1fr; column-gap: 1rem; }
+  .stop-node, .journey.legend .stop-node { width: 5.4rem; justify-content: center; }
+  .logo-disc { width: 3.6rem; height: 3.6rem; }
+  .stop-node.n2 .logo-disc { width: 2.9rem; height: 2.9rem; }
+}
