@@ -2275,3 +2275,12 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
   .ex-card:focus-visible .ex-icon .wobble { transform-box: view-box; transform-origin: 24px 13px; animation: ex-wobble 1.2s ease-out; }
   .ex-card:focus-visible .ex-icon circle.turn { animation: ex-turn 2s ease-in-out infinite; }
 }
+
+/* Home page, recent news: the gold spine of the timeline draws itself down from the newest item as the list
+   comes into view, while the items arrive one after another */
+.news { position: relative; border-left-color: transparent; }
+.news::before { content: ""; position: absolute; left: -1px; top: 0; bottom: 0; width: 1px; background: var(--gold);
+                transform-origin: 50% 0; transition: transform 1.4s cubic-bezier(.2, .7, .2, 1); }
+.js .news:not(.drawn)::before { transform: scaleY(0); }
+@media (prefers-reduced-motion: reduce) { .news::before { transition: none; } .js .news:not(.drawn)::before { transform: none; } }
+@media print { .news::before { transform: none; } }

@@ -2138,6 +2138,15 @@ Standard Model at particle colliders.</p>
     }});
   }}
 
+  /* ---------- the spine of the news timeline draws itself down as the list comes into view ---------- */
+  var spines = document.querySelectorAll('.news');
+  if (!reduce && 'IntersectionObserver' in window) {{
+    var so = new IntersectionObserver(function (en) {{
+      en.forEach(function (x) {{ if (x.isIntersecting) {{ x.target.classList.add('drawn'); so.unobserve(x.target); }} }});
+    }}, {{ rootMargin: '0px 0px -8% 0px', threshold: 0.05 }});
+    Array.prototype.forEach.call(spines, function (el) {{ so.observe(el); }});
+  }} else Array.prototype.forEach.call(spines, function (el) {{ el.classList.add('drawn'); }});
+
   /* ---------- counters in the number boxes ---------- */
   var counters = document.querySelectorAll('.stat .n');
   function count(el) {{
