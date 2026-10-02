@@ -2365,3 +2365,39 @@ details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle
   }
 }
 @media (prefers-reduced-motion: reduce) { .pub-toggle .chev { transition: none; } }
+@media (max-width: 34rem) {                 /* phones: a little more room for the abstract */
+  .pub-abs { padding: .7rem .8rem .75rem; }
+  .pub-abs .abstract { font-size: .9rem; line-height: 1.58; }
+  .pub-facts { gap: .45rem 1.4rem; }
+}
+
+/* =====================================================================
+   Menu dropdowns: pointing at a page in the menu (or tabbing to it) shows the parts of that page,
+   with a line about some of them, as on many large sites. Computers only, the menu scrolls on phones.
+   ===================================================================== */
+.nav-item { position: relative; display: flex; }
+.navbar nav .nav-item > a { margin-left: 0; margin-right: 0; }
+.navbar nav .nav-item:last-child > a { margin-right: -.36rem; }
+.nav-drop { display: none; }
+[id] { scroll-margin-top: 4.8rem; }        /* clear of the menu bar when a link jumps to a part of a page */
+@media (min-width: 51.01rem) {
+  .nav-drop { display: block; position: absolute; z-index: 40; top: 100%; left: -.4rem; min-width: 18rem; padding: .45rem 0 .5rem;
+              background: #1f3a33; border: 1px solid rgba(220, 197, 143, .28); border-top: 2px solid var(--gold); border-radius: 0 0 6px 6px;
+              box-shadow: 0 18px 36px -18px rgba(0, 0, 0, .55); opacity: 0; visibility: hidden; transform: translateY(6px);
+              transition: opacity .18s ease .08s, transform .18s ease .08s, visibility 0s .26s; }
+  .nav-item:nth-last-child(-n+3) .nav-drop { left: auto; right: -.4rem; }
+  .nav-item:hover > .nav-drop, .nav-item:focus-within > .nav-drop {
+    opacity: 1; visibility: visible; transform: none; transition: opacity .18s ease, transform .18s ease, visibility 0s; }
+  .navbar nav .nav-drop a { display: block; margin: 0; padding: .48rem 1.05rem; border: 0; white-space: normal;
+                            font-size: .8rem; letter-spacing: .02em; text-transform: none; color: rgba(238, 231, 214, .9); }
+  .navbar nav .nav-drop a::after { content: none; }
+  .navbar nav .nav-drop a:hover, .navbar nav .nav-drop a:focus-visible { background: rgba(220, 197, 143, .1); color: #f3ead6; }
+  .nav-drop .nd-t { display: block; font-family: var(--sans); font-weight: 500; }
+  .nav-drop .nd-n { display: block; margin-top: .1rem; font-family: var(--display); font-style: italic; font-size: .95rem;
+                    letter-spacing: 0; color: rgba(220, 197, 143, .85); }
+  .navbar nav .nav-drop a:hover .nd-t { color: #dcc58f; }
+  .nav-item > a[aria-current="page"] + .nav-drop { border-top-color: #dcc58f; }
+}
+@media (min-width: 51.01rem) and (hover: none) { .nav-item:hover > .nav-drop { opacity: 0; visibility: hidden; } }
+@media (prefers-reduced-motion: reduce) { .nav-drop { transition: none !important; transform: none !important; } }
+@media print { .nav-drop { display: none !important; } }

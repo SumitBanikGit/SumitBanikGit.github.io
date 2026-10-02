@@ -1269,7 +1269,7 @@ def render_talks():
             for i, (y, ev, c, ti, no, _) in enumerate(TALKS[TALK_CARDS:])]
     out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
-        out += (f'\n<details class="more"><summary>Show {len(rest)} earlier talks</summary>\n'
+        out += (f'\n<details class="more" id="earlier-talks"><summary>Show {len(rest)} earlier talks</summary>\n'
                 + "\n".join(rest) + "\n</details>")
     return out
 
@@ -1303,7 +1303,7 @@ def render_funding():
 
 def render_teaching():
     return '<div class="courses">' + "".join(
-        f'<article class="course">{_pick_icon(COURSE_ICONS, course)}<div class="kicker">{y} <span class="sep">·</span> {inst}</div>'
+        f'<article class="course" id="{_slug(course)}">{_pick_icon(COURSE_ICONS, course)}<div class="kicker">{y} <span class="sep">·</span> {inst}</div>'
         f'<h4 class="course-title">{course}</h4><div class="course-role">{role}</div>'
         f'<p>{desc}</p></article>'
         for y, course, role, inst, desc in TEACHING) + '</div>'
@@ -1311,7 +1311,7 @@ def render_teaching():
 
 def render_supervision():
     return '<div class="students">' + "".join(
-        f'<article class="student">{_pick_icon(STUDENT_ICONS, thesis)}<div class="kicker">{y} <span class="sep">·</span> {lvl}</div>'
+        f'<article class="student" id="{_slug(name)}">{_pick_icon(STUDENT_ICONS, thesis)}<div class="kicker">{y} <span class="sep">·</span> {lvl}</div>'
         f'<h4 class="student-name">{name}</h4><div class="student-inst">{inst}</div>'
         f'<p class="student-thesis"><span>Thesis</span><i>{thesis}</i></p></article>'
         for y, name, lvl, inst, thesis in SUPERVISION) + '</div>'
@@ -1349,6 +1349,41 @@ TOOL_ICONS = [
     ("Diagrams", _p("M4 4L15 15L4 26M44 4L33 15L44 26", "thin") + _pf("M15 15Q17 11 19 15T23 15T27 15T31 15T33 15", 28.4) + _dots([(15, 15), (33, 15)], 1.7)),
     ("Loop integrals", _p("M3 15H14M34 15H45", "thin") + _pf("M24 5A10 10 0 1 1 23.9 5Z", 62.83) + _dots([(14, 15), (34, 15)], 1.7)),
 ]
+
+
+def _slug(text):
+    """An id for a heading or a card: lower case, plain letters, words joined by hyphens."""
+    import unicodedata
+    t = unicodedata.normalize("NFKD", re.sub(r"<[^>]+>", "", text)).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")
+
+
+def nav_drops():
+    """What opens under each item of the menu: the parts of its page, with a line about some of them."""
+    arts = sum(1 for p in PUBS if p["kind"] == "article")
+    procs = sum(1 for p in PUBS if p["kind"] == "proceedings")
+    rest = len(TALKS) - TALK_CARDS
+    return {
+        "#about": [("About me", "index.html#about", ""), ("Academic journey", "index.html#academic-journey", "Kolkata to San Francisco"),
+                   ("Recent news", "index.html#recent-news", ""), ("Explore the site", "index.html#explore", "")],
+        "research.html": [("A tour of my papers", "research.html#top", "One animation per paper"),
+                          ("Research domains", "research.html#research-domains", ""),
+                          ("Selected work", "research.html#selected-work", ""), ("Software", "research.html#software", "")],
+        "publications.html": [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
+                              ("Conference proceedings", "publications.html#conference-proceedings", f"{procs} contributions"),
+                              ("PhD thesis", "publications.html#thesis", "IISc, 2022")],
+        "software.html": [(pk["name"], f'software.html#{pk["slug"]}', pk["tagline"]) for pk in PACKAGES]
+                         + [(LIBRARY["name"], f'software.html#{LIBRARY["slug"]}', "The library")],
+        "talks.html": [("Recent talks", "talks.html#talks", f"The latest {TALK_CARDS}"),
+                       ("Earlier talks", "talks.html#earlier-talks", f"{rest} more since {TALKS[-1][0]}")],
+        "funding.html": [(h, f"funding.html#{_slug(h)}", "") for h in ("Postdoctoral fellowships and grants", "Doctoral and master’s fellowships")],
+        "teaching.html": [(c, f"teaching.html#{_slug(c)}", f"{inst}, {y}") for y, c, _r, inst, _d in TEACHING],
+        "supervision.html": [(n, f"supervision.html#{_slug(n)}", f"{lvl}, {y}") for y, n, lvl, _i, _t in SUPERVISION],
+        "cv.html": [("Positions", "cv.html#positions", ""), ("Education", "cv.html#education", ""),
+                    ("Research interests", "cv.html#research-interests", ""), ("Computing", "cv.html#computing", ""),
+                    ("Refereeing", "cv.html#refereeing", ""), ("Download the CV (PDF)", "assets/cv/Sumit_Banik_CV.pdf", "")],
+        "contact.html": [("Write to me", f"mailto:{PROFILE['email']}", PROFILE["email"]), ("Address and profiles", "contact.html#reach", "")],
+    }
 
 
 def render_toolkit():
@@ -1806,11 +1841,20 @@ def write_pages(html, n_articles, n_proc):
     sections["packages"] = render_packages()
     sections["library"] = render_library()
 
+    def _local(href, current):
+        page, _, frag = href.partition("#")
+        return f"#{frag}" if frag and page == current else href
+
     def navbar(current):
         here = ' class="here" aria-current="page"'
+        drops = nav_drops()
+        def item(key, href, label, cur):
+            sub = "".join(f'<a href="{_local(h, current)}"><span class="nd-t">{t}</span>'
+                          + (f'<span class="nd-n">{n}</span>' if n else "") + '</a>' for t, h, n in drops.get(key, []))
+            panel = f'<div class="nav-drop">{sub}</div>' if sub else ""
+            return f'<div class="nav-item"><a href="{href}"{here if cur else ""}>{label}</a>{panel}</div>'
         about = "#about" if current == "index.html" else "index.html#about"      # About, on the home page, comes first
-        links = f'<a href="{about}">About</a>' + "".join(f'<a href="{f}"{here if f == current else ""}>{label}</a>'
-                                                         for f, label, *_ in PAGES if label)
+        links = item("#about", about, "About", False) + "".join(item(f, f, label, f == current) for f, label, *_ in PAGES if label)
         toggle = ('<button class="theme-toggle" type="button" aria-pressed="false" aria-label="Dark mode" title="Switch to dark mode">'
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="tt-sun"><circle cx="12" cy="12" r="4.2"/>'
                   '<path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></g>'
@@ -1888,6 +1932,8 @@ def write_pages(html, n_articles, n_proc):
         if file in scenes:                                # the page scenes live in their own script
             body = body.replace("</body>", f'<script src="assets/scenes.js?v={_ver("assets/scenes.js")}" defer></script>\n</body>', 1)
         body = body.replace("</body>", stats_tag() + "</body>", 1)
+        body = re.sub(r'<h3 class="sect"((?: data-[a-z]+="[^"]*")?)>(.*?)</h3>',
+                      lambda m: f'<h3 class="sect" id="{_slug(m.group(2))}"{m.group(1)}>{m.group(2)}</h3>', body)   # for the menu's links
         Path(file).write_text(relink(h + body, file), encoding="utf-8")
         written.append(file)
 
@@ -2278,6 +2324,18 @@ Standard Model at particle colliders.</p>
   var booted = false;
   applyPubs();
   booted = true;
+
+  /* ---------- a link to a part of a page (from the menu): show it, open it, and bring it into view ---------- */
+  function toTarget() {{
+    var id = decodeURIComponent((location.hash || '').slice(1)), el = id && document.getElementById(id);
+    if (!el) return;
+    var moved = false;
+    if (el.hidden && el.matches('h3.sect[data-group]') && more && !more.hidden) {{ more.click(); moved = true; }}   // the whole list of papers
+    var d = el.matches('details') ? el : el.querySelector('details.pkg-more');
+    if (d && !d.open) {{ d.open = true; moved = true; }}
+    if (moved) requestAnimationFrame(function () {{ el.scrollIntoView({{ block: 'start', behavior: reduce ? 'auto' : 'smooth' }}); }});
+  }}
+  toTarget(); window.addEventListener('hashchange', toTarget);
 
   /* ---------- scroll reveal (staggered within each group) ---------- */
   var sel = ['.chapter-title', '.epigraph', '.prose > p', '.portrait-frame', '.statement', '.about-links', '.journey', '.news li', '.stat',
