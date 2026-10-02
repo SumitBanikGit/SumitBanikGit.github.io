@@ -2038,13 +2038,17 @@ Standard Model at particle colliders.</p>
   var empty = document.querySelector('.pub-empty');
   var LIMIT = 8, topic = 'all', query = '', open = false;
   function applyPubs() {{
-    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '', keys = [];
+    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '', keys = [], arrived = 0;
     pubs.forEach(function (p) {{
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
                (!query || p.textContent.toLowerCase().indexOf(query) >= 0);
       if (ok) {{ matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/\u00a0/g, ' ').trim()); }}
       var vis = ok && (open || narrowed || shown < LIMIT);
       if (vis) shown++;
+      if (vis && p.hidden && booted && !reduce) {{         // a paper that comes back glides into place, a little after the one before
+        p.style.setProperty('--k', Math.min(arrived++, 10));
+        p.classList.remove('pub-in'); void p.offsetWidth; p.classList.add('pub-in');
+      }}
       p.hidden = !vis;
       if (vis) reveal(p);
     }});
@@ -2066,7 +2070,9 @@ Standard Model at particle colliders.</p>
   }});
   if (search) search.addEventListener('input', function () {{ query = search.value.trim().toLowerCase(); applyPubs(); }});
   if (more) more.addEventListener('click', function () {{ open = true; applyPubs(); }});
+  var booted = false;
   applyPubs();
+  booted = true;
 
   /* ---------- scroll reveal (staggered within each group) ---------- */
   var sel = ['.chapter-title', '.epigraph', '.prose > p', '.portrait-frame', '.statement', '.about-links', '.journey', '.news li', '.stat',

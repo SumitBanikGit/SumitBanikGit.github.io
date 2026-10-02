@@ -2186,3 +2186,8 @@ html[data-theme="dark"].intro-on .intro { background: #0e1714; }
 .pkg-codebox .pkg-code { padding-right: 3.1rem; }
 .pkg-codebox .code-copy { position: absolute; top: .4rem; right: .4rem; width: 2rem; height: 2rem; background: var(--paper); }
 html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
+
+/* Publications: when a filter or a search brings papers back, they glide into place one after another */
+@keyframes pub-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.pub.pub-in { animation: pub-in .5s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k, 0) * 45ms); }
+@media (prefers-reduced-motion: reduce) { .pub.pub-in { animation: none; } }
