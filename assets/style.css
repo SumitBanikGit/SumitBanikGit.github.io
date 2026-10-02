@@ -2424,3 +2424,7 @@ details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle
 html[data-theme="dark"] .cite-copy.done { border-color: #7fb8a3; color: #7fb8a3; }
 .cite-raw { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; color: var(--grey); }
 .navbar nav.has-open { -webkit-mask-image: none; mask-image: none; }   /* an open panel is not faded with the menu's edges */
+
+/* The scroll cue of the home page fades away once the reader has started to scroll, so that it never sits on the text */
+.scroll-cue { transition: opacity .45s ease, visibility 0s 0s; }
+.scroll-cue.gone { opacity: 0 !important; visibility: hidden; transition: opacity .45s ease, visibility 0s .45s; }

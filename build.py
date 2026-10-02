@@ -2578,12 +2578,13 @@ Standard Model at particle colliders.</p>
     }};
     nav.addEventListener('scroll', edges, {{ passive: true }}); window.addEventListener('resize', edges); edges();
   }}
-  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer');
+  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer'), cue = document.querySelector('.scroll-cue');
   function update() {{
     var max = document.documentElement.scrollHeight - window.innerHeight;
     if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
     var atFoot = foot && foot.getBoundingClientRect().top < window.innerHeight;   // the footer has its own link up
     if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9 && !atFoot);
+    if (cue) cue.classList.toggle('gone', window.scrollY > 60);      // the scroll cue steps aside once the reader scrolls
   }}
   window.addEventListener('scroll', update, {{ passive: true }});
   window.addEventListener('resize', update);
