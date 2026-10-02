@@ -249,7 +249,7 @@
         else if (cmd === 'cdots') out.push({ k: 'g', s: '⋯' });
         return;
       }
-      out.push({ k: 'g', s: c }); i++;
+      out.push({ k: 'g', s: c === "'" ? '′' : c }); i++;   // a quote mark in maths is a prime, as in TeX
     }
     function seq() {
       var out = [];
@@ -277,8 +277,8 @@
       if (nd.k === 'g' || nd.k === 'big') {
         var big = nd.k === 'big', sz = big ? S * (nd.sum ? 1.45 : 1.85) : nd.s === '∝' ? S * 1.3 : S;
         var it = !big && st !== 'rm' && st !== 'bf' && ITALIC.test(nd.s);
-        var op = !script && !big && (nd.op || '=+−≠∝'.indexOf(nd.s) >= 0) && (prev === 'x' || nd.s === '→' || (nd.s === '=' && prev === 'start'));
-        var pad = '=→≠∝'.indexOf(nd.s) >= 0 ? 0.3 * S : nd.s === '·' ? 0.14 * S : 0.22 * S;
+        var op = !script && !big && (nd.op || '=+−≠∝≈<>≤≥'.indexOf(nd.s) >= 0) && (prev === 'x' || nd.s === '→' || (nd.s === '=' && prev === 'start'));
+        var pad = '=→≠∝≈<>≤≥'.indexOf(nd.s) >= 0 ? 0.3 * S : nd.s === '·' ? 0.14 * S : 0.22 * S;
         if (op) x += pad;
         var f = font(sz, SERIF, st === 'bf' ? 700 : 400, it), m = measure(ctx, nd.s, f, sz), y = 0;
         if (big) y = -0.27 * S + (m.a - m.d) / 2;     // centre the big operator on the maths axis

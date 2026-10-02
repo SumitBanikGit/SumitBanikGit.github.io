@@ -1152,7 +1152,7 @@ def render_funding():
     junior = [f for f in FUNDING if int(f[0]) < 2024]
     return ('<h3 class="sect">Postdoctoral fellowships and grants</h3>'
             '<div class="funds two">' + "".join(fund_card(*f) for f in senior) + '</div>'
-            '<h3 class="sect">Doctoral and master\'s fellowships</h3>'
+            '<h3 class="sect">Doctoral and master’s fellowships</h3>'
             '<div class="funds three">' + "".join(fund_card(*f) for f in junior) + '</div>')
 
 
@@ -1698,14 +1698,16 @@ def write_pages(html, n_articles, n_proc):
 
     # a friendly 404 page for mistyped addresses
     nf = (head.replace("<title>Sumit Banik | Theoretical Particle Physics</title>", "<title>Page not found | Sumit Banik</title>")
-          + '<body id="top" class="page-404">\n' + INTRO + page_hero("Not found", "Page not found",
+          + '<body id="top" class="page-404">\n' + INTRO + '<a class="skip" href="#main">Skip to content</a>\n\n' + page_hero("Not found", "Page not found",
             "The page you are looking for does not exist. Like a neutrino, it left the detector without a trace.")
           + navbar("") + '<main id="main" class="wrap">\n<section class="chapter"><p class="about-links">'
           '<a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n\n'
           + sections["contact"] + "\n\n" + tail)
     nf = re.sub(r'<link rel="canonical" href="[^"]*">\n?', "", nf)   # count a missing page under its own address
     nf = nf.replace("</body>", stats_tag() + "</body>", 1)
-    Path("404.html").write_text(relink(nf, "404.html"), encoding="utf-8")
+    nf = relink(nf, "404.html")
+    nf = re.sub(r'(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|/|#)', r"\1/", nf)   # served at any depth, so every address starts at the root
+    Path("404.html").write_text(nf.replace('href="/index.html"', 'href="/"'), encoding="utf-8")
 
     # sitemap for search engines
     urls = "".join(f"<url><loc>{P['url'] + ('' if f == 'index.html' else f)}</loc></url>" for f, *_ in PAGES)
@@ -1747,7 +1749,7 @@ def main():
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_invited=n_invited,
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
-        software=render_software(), fav_v=_ver("assets/favicon.svg"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
+        software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
@@ -1774,6 +1776,7 @@ TEMPLATE = """<!doctype html>
 <meta property="og:url" content="{url}">
 <meta property="og:image" content="{url}assets/portrait.jpg">
 <meta name="twitter:card" content="summary">
+<link rel="icon" href="favicon.ico?v={ico_v}" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg?v={fav_v}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v={touch_v}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
