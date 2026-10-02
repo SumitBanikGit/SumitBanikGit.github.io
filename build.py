@@ -658,7 +658,10 @@ LIBRARY_ICON = (_p("M4 28H44", "thin") + _p("M14.9 3V28", "thin")
                 + "".join(f'<circle cx="14.9" cy="{y}" r="1.4" style="--k:{k}"/>' for k, y in enumerate((7.8, 15.6, 21.8))))
 SOFTWARE_ICONS = {
     "MBConicHulls": CONE,
-    "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z") + _p("M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15", "thin") + _dots([(24, 15)], 1.8),
+    "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z")       # the polytope, triangulated spoke by spoke on hover
+               + "".join(f'<path class="thin step" pathLength="1" style="--k:{k}" d="M24 15L{x} {y}"/>'
+                         for k, (x, y) in enumerate([(14, 4), (34, 4), (44, 15), (34, 26), (14, 26), (4, 15)]))
+               + '<circle cx="24" cy="15" r="1.8" style="--k:0"/>',
     "HyperPrecision": _p("M24 3A12 12 0 1 1 23.9 3Z") + _p("M24 8A7 7 0 1 1 23.9 8Z", "thin focus") + _p("M4 15H12M36 15H44", "thin") + _dots([(24, 15)], 2),
 }
 COURSE_ICONS = [

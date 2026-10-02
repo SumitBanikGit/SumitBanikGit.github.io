@@ -2284,3 +2284,9 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
 .js .news:not(.drawn)::before { transform: scaleY(0); }
 @media (prefers-reduced-motion: reduce) { .news::before { transition: none; } .js .news:not(.drawn)::before { transform: none; } }
 @media print { .news::before { transform: none; } }
+
+/* FeynGKZ (Research and Software): on hover its Newton polytope is triangulated, one spoke after another */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card:hover .ix path.step, .pkg-head:hover .ix path.step {
+    animation: redraw .4s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k) * 110ms + .2s); }
+}
