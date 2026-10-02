@@ -2215,3 +2215,20 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
 
 /* About on phones: the portrait sits centred above the statement rather than hugging the left edge */
 @media (max-width: 44rem) { .about-grid .portrait-frame { margin-left: auto; margin-right: auto; } }
+
+/* CV, computing: on hover each drawing does what its tools do. Particles fly out of the collision of an event
+   generator, a histogram fills bin by bin, a spectrum appears level by level from the lightest state, a boson
+   is exchanged between two vertices, and the loop momentum runs around the loop. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .tool:hover .ix path.flow {
+    stroke-dasharray: var(--da) var(--dg); stroke-dashoffset: calc(-1 * var(--run) * var(--dp)); animation: ix-flow .8s linear infinite; }
+  .tool:hover .ix path.bar, .tool:hover .ix path.lvl {
+    animation: redraw .45s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--k) * 85ms); }
+  .tool:hover .ix circle[style*="--k"] { transform-box: fill-box; transform-origin: center; animation: th-lit .8s ease both; }
+}
+
+/* Lines that flow on hover take no transition except while they are first drawn. A transition on their dash
+   offset held the flow still for the first 1.6 s of every hover, and on leaving it made the start of the line
+   go missing for a moment. Now the flow starts at once and the line is whole again at once. */
+.ix path.flow { transition: none; }
+.js .reveal.in .ix path.flow { transition: stroke-dashoffset 1.4s cubic-bezier(.2, .7, .2, 1) .25s; }

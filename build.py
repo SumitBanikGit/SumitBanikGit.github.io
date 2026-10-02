@@ -1195,13 +1195,19 @@ def render_positions(items):
     return "\n".join(out)
 
 
+# On hover (see style.css) each drawing does what its tools do: particles fly out of the collision of an event
+# generator, a histogram fills bin by bin, a spectrum appears level by level from the lightest state, a boson is
+# exchanged between two vertices, and the loop momentum runs around the loop.
 TOOL_ICONS = [
     ("Programming", _p("M16 7L8 15L16 23M32 7L40 15L32 23") + _p("M27 5L21 25", "thin")),
-    ("Event generation", _p("M24 15L7 6M24 15L41 4M24 15L44 19M24 15L31 28M24 15L5 24", "thin") + _dots([(24, 15)], 2.2)),
-    ("Analysis", _p("M4 27H44", "thin") + _p("M8 27V17M15 27V10M22 27V5M29 27V11M36 27V18M43 27V23")),
-    ("Model building", _p("M8 25H20M8 17H20M8 7H20M28 22H40M28 12H40M28 4H40")),
-    ("Diagrams", _p("M4 4L15 15L4 26M44 4L33 15L44 26", "thin") + _p("M15 15Q17 11 19 15T23 15T27 15T31 15T33 15") + _dots([(15, 15), (33, 15)], 1.7)),
-    ("Loop integrals", _p("M3 15H14M34 15H45", "thin") + _p("M24 5A10 10 0 1 1 23.9 5Z") + _dots([(14, 15), (34, 15)], 1.7)),
+    ("Event generation", _pf("M24 15L7 6", 19.24, "thin") + _pf("M24 15L41 4", 20.25, "thin") + _pf("M24 15L44 19", 20.4, "thin") + _pf("M24 15L31 28", 14.76, "thin") + _pf("M24 15L5 24", 21.02, "thin")
+     + '<circle cx="24" cy="15" r="2.2" style="--k:0"/>'),
+    ("Analysis", _p("M4 27H44", "thin") + "".join(f'<path class="bar" pathLength="1" style="--k:{k}" d="M{x} 27V{y}"/>'
+                                                for k, (x, y) in enumerate([(8, 17), (15, 10), (22, 5), (29, 11), (36, 18), (43, 23)]))),
+    ("Model building", "".join(f'<path class="lvl" pathLength="1" style="--k:{k}" d="M{x} {y}H{x + 12}"/>'
+                               for k, (x, y) in enumerate([(8, 25), (28, 22), (8, 17), (28, 12), (8, 7), (28, 4)]))),
+    ("Diagrams", _p("M4 4L15 15L4 26M44 4L33 15L44 26", "thin") + _pf("M15 15Q17 11 19 15T23 15T27 15T31 15T33 15", 28.4) + _dots([(15, 15), (33, 15)], 1.7)),
+    ("Loop integrals", _p("M3 15H14M34 15H45", "thin") + _pf("M24 5A10 10 0 1 1 23.9 5Z", 62.83) + _dots([(14, 15), (34, 15)], 1.7)),
 ]
 
 
@@ -2095,6 +2101,7 @@ Standard Model at particle colliders.</p>
       var parent = el.parentElement, n = seen.get(parent) || 0;
       seen.set(parent, n + 1);
       el.style.setProperty('--d', (n % 6) * 70 + 'ms');
+      if (el.querySelector('.ix path.flow')) el.dataset.hold = '1800';   // let its flowing lines finish drawing
       el.classList.add('reveal');
     }});
     // Elements revealed with a clip mask have zero visible area while hidden, so the
