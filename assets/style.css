@@ -2253,3 +2253,13 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
 @keyframes ex-turn { 0% { transform: translateX(0); opacity: 1; } 70% { transform: translateX(9px); opacity: 1; }
                      84% { transform: translateX(11px); opacity: 0; } 86% { transform: translateX(-3px); opacity: 0; }
                      100% { transform: translateX(0); opacity: 1; } }
+
+/* Phones: the menu that scrolls sideways fades out softly at the edge that has more items beyond it,
+   in place of cutting a word in half */
+@media (max-width: 51rem) {
+  .navbar nav { --fl: 0px; --fr: 0px;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
+            mask-image: linear-gradient(90deg, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+  .navbar nav.fade-l { --fl: 1.8rem; }
+  .navbar nav.fade-r { --fr: 1.8rem; }
+}

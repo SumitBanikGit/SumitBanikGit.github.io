@@ -2266,6 +2266,14 @@ Standard Model at particle colliders.</p>
   if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
     nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
   }}
+  if (nav) {{                                       // a menu that scrolls sideways fades out at the edge with more beyond it
+    var edges = function () {{
+      var max = getComputedStyle(nav).overflowX === 'auto' ? nav.scrollWidth - nav.clientWidth : 0;
+      nav.classList.toggle('fade-l', max > 2 && nav.scrollLeft > 2);
+      nav.classList.toggle('fade-r', max > 2 && nav.scrollLeft < max - 2);
+    }};
+    nav.addEventListener('scroll', edges, {{ passive: true }}); window.addEventListener('resize', edges); edges();
+  }}
   var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer');
   function update() {{
     var max = document.documentElement.scrollHeight - window.innerHeight;
