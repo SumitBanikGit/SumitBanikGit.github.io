@@ -2212,3 +2212,6 @@ html[data-theme="dark"] .pkg-codebox .code-copy { background: var(--card); }
 @media (max-width: 52rem) {        /* on tablets and phones the rings reach above the stage, so it keeps clear of the note */
   .page-404 .page-hero .hero-stage { margin-top: calc(.9rem + var(--ro-out, 0px)); }
 }
+
+/* About on phones: the portrait sits centred above the statement rather than hugging the left edge */
+@media (max-width: 44rem) { .about-grid .portrait-frame { margin-left: auto; margin-right: auto; } }

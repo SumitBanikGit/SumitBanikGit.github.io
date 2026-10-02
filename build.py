@@ -650,11 +650,12 @@ PAPER_ICONS = {
     "2306.15722": _p("M4 15H8M11 15H15M18 15H22", "thin") + _pf("M22 15C24 12 25 12 27 10S30 8 32 6S36 4 44 3M22 15C24 18 25 18 27 20S30 22 32 24S36 26 44 27", 52.23)
                   + _dots([(22, 15)], 1.8),
 }
-# SLQ-RG: the three gauge couplings (as 1/α) against the log of the scale. At the leptoquark mass (the line)
-# every slope changes, since the new scalars add to all three beta functions. On hover the couplings run.
-LIBRARY_ICON = (_p("M4 28H44", "thin") + _p("M22 3V28", "thin")
-                + _pf("M4 6L22 10L44 18", 41.85) + _pf("M4 18L22 15.5L44 13.5", 40.26) + _pf("M4 26L22 20L44 14.5", 41.65)
-                + "".join(f'<circle cx="22" cy="{y}" r="1.4" style="--k:{k}"/>' for k, y in enumerate((10, 15.5, 20))))
+# SLQ-RG: the three gauge couplings (as 1/α) against the log of the scale, from the Z mass to 10^13.5 GeV, at one loop
+# with the coefficients of the paper. At the leptoquark mass (the line, all five at 125 TeV as in its Fig. 5) every
+# slope changes, 1/α2 nearly stops, and the three then meet near 10^13 GeV. On hover the couplings run.
+LIBRARY_ICON = (_p("M4 28H44", "thin") + _p("M14.9 3V28", "thin")
+                + _pf("M4 6L14.9 7.8L42 15.3", 39.17) + _pf("M4 17L14.9 15.6L42 15.4", 38.09) + _pf("M4 24.8L14.9 21.8L42 16", 39.02)
+                + "".join(f'<circle cx="14.9" cy="{y}" r="1.4" style="--k:{k}"/>' for k, y in enumerate((7.8, 15.6, 21.8))))
 SOFTWARE_ICONS = {
     "MBConicHulls": CONE,
     "FeynGKZ": _p("M14 4H34L44 15L34 26H14L4 15Z") + _p("M24 15L14 4M24 15L34 4M24 15L44 15M24 15L34 26M24 15L14 26M24 15L4 15", "thin") + _dots([(24, 15)], 1.8),
