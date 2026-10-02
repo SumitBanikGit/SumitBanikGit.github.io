@@ -3662,7 +3662,7 @@
     init: function (e) {
       var d = e.data || {};
       e.lanes = d.lanes || []; e.rel = d.releases || []; e.now = d.now || 2026.8;
-      e.y0 = 2020.5; e.y1 = e.now + 0.35; e.c0 = 0; e.cur = -2;
+      e.y0 = 2020.5; e.y1 = e.now + 0.35; e.c0 = 0; e.cur = -2; e.hov = -1;
     },
     layout: function (e) {
       var ctx = e.ctx, n = Math.max(1, e.lanes.length);
@@ -3684,7 +3684,9 @@
     frame: function (e, t) {
       var ctx = e.ctx, R = e.reduce, T = 9.5, C = 14, X = e.X;
       if (!e.X || !e.lanes.length) return;
+      if (e.hov >= 0 && e.cHold !== undefined) e.c0 = t - e.cHold;                  // time stands still while a release is shown
       var c = R ? 99 : (t - e.c0) % C, yc = R ? e.y1 : e.y0 + (e.y1 - e.y0) * clamp01(c / T), done = R || c > T;
+      e.cHold = c; e.yc = yc;
       var cols = ['brassD', 'pine', 'crimson', 'slate'], ay = e.bot + 8;
       line(ctx, e.L, ay, X(e.y1), ay, ink('green', 0.35), 1);                      // the years
       ctx.font = font(9, SANS, 500); ctx.textAlign = 'center'; ctx.fillStyle = ink('slate', 0.85);
@@ -3706,6 +3708,7 @@
         var x = X(r.d), y = e.top + e.lh * (r.l + 0.5), a = R ? 1 : clamp01((yc - r.d) / 0.18), col = cols[r.l] || 'slate';
         var on = !done && k === last;
         dot(ctx, x, y, 4.2 * a, ink('paper', 1)); ring(ctx, x, y, 4.2 * a, ink(col, 1), 1.5);
+        if (k === e.hov) ring(ctx, x, y, 8.5, ink(col, 0.75), 1.2);
         if (k === e.rel.length - 1 || r.l === e.lanes.length - 1) dot(ctx, x, y, 2 * a, ink(col, 1));
         if (r.v) {
           ctx.save(); ctx.globalAlpha *= a; ctx.font = font(10, SANS, 600); ctx.textAlign = 'center'; ctx.fillStyle = ink(col, 1);
@@ -3718,16 +3721,29 @@
         ctx.fillStyle = g; ctx.fillRect(xc - 10, ay - 10, 20, 20); dot(ctx, xc, ay, 2.4, ink('brassD', 1));
       }
       if (done) caps(ctx, 'NOW', X(e.now), ay + 16, ink('pine', 0.9), 7.5, 'center');
-      var show = done ? -1 : last;                                                   // the latest release so far names itself
+      var show = e.hov >= 0 ? e.hov : done ? -1 : last;                              // the release pointed at, or the latest so far
       if (show !== e.cur) {
         e.cur = show;
         if (show < 0) { e.caption(null); e.hint(null); }
         else { e.caption(e.rel[show].c); e.hint(e.rel[show].h); }
       }
     },
-    click: function (e) {                              // jump to the next release
+    move: function (e, p) {                            // a release under the pointer names itself
+      var best = -1, bd = 11;
+      if (p && e.X) e.rel.forEach(function (r, k) {
+        if (e.yc !== undefined && e.yc < r.d) return;   // only the releases already on the lanes
+        var dd = Math.hypot(e.X(r.d) - p.x, e.top + e.lh * (r.l + 0.5) - p.y);
+        if (dd < bd) { bd = dd; best = k; }
+      });
+      if (best === e.hov) return;
+      e.hov = best;
+      if (e.stage) e.stage.style.cursor = best >= 0 ? 'default' : '';
+    },
+    click: function (e, x, y) {                        // a tap on a release names it, a tap elsewhere jumps to the next
       var T = 9.5, C = 14;
       if (!e.rel.length || !e.X) return;
+      SCENES.releases.move(e, { x: x, y: y });
+      if (e.hov >= 0) return;
       var c = (e.t - e.c0) % C, yc = e.y0 + (e.y1 - e.y0) * clamp01(c / T), next = null;
       for (var i = 0; i < e.rel.length; i++) if (e.rel[i].d > yc + 0.02) { next = e.rel[i].d; break; }
       var target = next === null ? 0.01 : (next - e.y0) / (e.y1 - e.y0) * T + 0.25;
