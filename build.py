@@ -258,7 +258,8 @@ DOMAINS = [
      "Extended scalar sectors such as the 2HDM, the N2HDM and Higgs triplets confronted with LHC data, the di-photon excesses near 95 and 152 GeV, and correlations with EDMs.",
      "2HDM · Higgs triplets · LHC excesses"),
     ("Computational tools",
-     "Open-source <i>Mathematica</i> packages for precision calculations: MBConicHulls, FeynGKZ and HyperPrecision.",
+     "Open-source <i>Mathematica</i> packages for precision calculations: <a href=\"software.html#mbconichulls\">MBConicHulls</a>, "
+     "<a href=\"software.html#feyngkz\">FeynGKZ</a> and <a href=\"software.html#hyperprecision\">HyperPrecision</a>.",
      "Mathematica · Computer algebra · High precision"),
     ("Effective field theory",
      "The Standard Model effective field theory, two-loop anomalous dimensions of baryon-number-violating operators, and renormalization group evolution.",
