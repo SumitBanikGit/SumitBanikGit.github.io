@@ -2651,3 +2651,6 @@ html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { backgroun
 }
 .pkg-also li a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: .18em; }
 .pkg-also li a:hover { color: var(--accent); text-decoration-color: currentColor; }
+/* Contact: the contact card for an address book */
+.reach-vcf { margin: .7rem 0 0; font-size: .9rem; }
+.reach-vcf .muted { font-size: .85em; }

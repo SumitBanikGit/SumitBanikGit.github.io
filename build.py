@@ -2036,6 +2036,17 @@ def copy_mail(email):
             '<span class="sr-only" role="status" aria-live="polite"></span>' + COPY_MAIL_JS)
 
 
+def write_vcard():
+    """A contact card (vCard 3.0) for the address book, linked from the Contact page."""
+    P = PROFILE
+    first, last = P["name"].split(" ", 1)
+    lines = ["BEGIN:VCARD", "VERSION:3.0", f"N:{last};{first};;;", f"FN:{P['name']}",
+             "ORG:SLAC National Accelerator Laboratory;Fundamental Physics Directorate", "TITLE:Postdoctoral Researcher",
+             f"EMAIL;TYPE=INTERNET,WORK:{P['email']}", f"URL:{P['url']}",
+             "ADR;TYPE=WORK:;;2575 Sand Hill Road;Menlo Park;CA;94025;United States", "END:VCARD"]
+    Path("assets/sumit-banik.vcf").write_text("\r\n".join(lines) + "\r\n", encoding="utf-8", newline="")
+
+
 def render_reach():
     P = PROFILE
     profiles = [("ORCID", f"https://orcid.org/{P['orcid']}", "i_orcid"), ("INSPIRE", P["inspire"], "i_inspire"),
@@ -2054,6 +2065,7 @@ def render_reach():
     <div class="kicker">Address</div>
     <p class="reach-addr">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory<br>2575 Sand Hill Road<br>Menlo Park, CA 94025<br>United States</p>
     {LOCAL_TIME}
+    <p class="reach-vcf"><a href="assets/sumit-banik.vcf" download>Add to your contacts <span class="muted">(vCard)</span></a></p>
   </article>
   <article class="reach-card">{_ix(REACH_ICONS["Profiles"])}
     <div class="kicker">Profiles</div>
@@ -2325,6 +2337,7 @@ def main():
         n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
         updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(), search_v=search_v,
     )
+    write_vcard()
     write_pages(html, n_articles, n_proc)
     check_links()
 

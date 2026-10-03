@@ -1,0 +1,10 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Banik;Sumit;;;
+FN:Sumit Banik
+ORG:SLAC National Accelerator Laboratory;Fundamental Physics Directorate
+TITLE:Postdoctoral Researcher
+EMAIL;TYPE=INTERNET,WORK:banik@stanford.edu
+URL:https://sumitbanikgit.github.io/
+ADR;TYPE=WORK:;;2575 Sand Hill Road;Menlo Park;CA;94025;United States
+END:VCARD
