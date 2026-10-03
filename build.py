@@ -768,7 +768,7 @@ def _pub_more(p):
                 f'{key.group(1) if key else "BibTeX"}</a><span class="sr-only" role="status" aria-live="polite"></span></div>')
     rel = _related(p)
     rel_html = ("" if not rel else '<div class="pub-rel"><span class="k">Related papers</span><ul>' + "".join(
-        f'<li><a href="#{_pub_id(r)}">{r["title"]}</a> <span class="muted">{r["year"]}</span></li>' for r in rel) + '</ul></div>')
+        f'<li style="--k:{k}"><a href="#{_pub_id(r)}">{r["title"]}</a> <span class="muted">{r["year"]}</span></li>' for k, r in enumerate(rel)) + '</ul></div>')
     return (f'<div class="pub-abs"><p class="abstract"><span class="k">Abstract</span>{_tex_html(d["abstract"])}</p>'
             f'<div class="pub-facts">{facts_html}</div>{rel_html}{cite}</div>')
 

@@ -2642,3 +2642,10 @@ html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { backgroun
 /* CV, Computing: each tool links to its home page */
 .tool li a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .2em; transition: color .2s; }
 .tool li a:hover { color: var(--accent); text-decoration-color: currentColor; }
+@media (prefers-reduced-motion: no-preference) {   /* the related papers come in one after another as a paper opens */
+  details.pub-open[open] .pub-rel li { animation: rel-in .4s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(.3s + var(--k, 0) * 80ms); }
+  details.pub-open[open] .pub-rel li::before { animation: rel-dash .5s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(.35s + var(--k, 0) * 80ms);
+                                               transform-origin: left center; }
+  @keyframes rel-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+  @keyframes rel-dash { from { transform: scaleX(0); } to { transform: none; } }
+}
