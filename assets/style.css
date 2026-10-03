@@ -2596,3 +2596,7 @@ html[data-theme="dark"] .ss-list li[aria-selected="true"] a { background: var(--
 .pub-sort button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 html[data-theme="dark"] .pub-sort button[aria-pressed="true"] { background: var(--gold); color: #0e1714; }
 .pub-facts .muted { font-size: .8em; }
+/* Software: how to cite a package, the papers of its releases with their BibTeX in one click */
+.pkg-cite .cite-copy { margin-top: .55rem; }
+.pkg-cite li a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: .18em; }
+.pkg-cite li a:hover { color: var(--accent); text-decoration-color: currentColor; }

@@ -770,12 +770,12 @@ CITE_JS = """<script>
   var ok = navigator.clipboard && window.isSecureContext;
   Array.prototype.forEach.call(bs, function (b) {
     if (!ok) { b.remove(); return; }
-    var label = b.querySelector('.cc-l'), said = b.parentNode.querySelector('[role=status]'), timer;
+    var label = b.querySelector('.cc-l'), said = b.parentNode.querySelector('[role=status]'), timer, orig = label.textContent;
     b.addEventListener('click', function () {
       navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
         b.classList.add('done'); label.textContent = 'BibTeX copied'; if (said) said.textContent = 'BibTeX copied';
         clearTimeout(timer);
-        timer = setTimeout(function () { b.classList.remove('done'); label.textContent = 'Copy BibTeX'; if (said) said.textContent = ''; }, 2200);
+        timer = setTimeout(function () { b.classList.remove('done'); label.textContent = orig; if (said) said.textContent = ''; }, 2200);
       }).catch(function () {});
     });
   });
@@ -1668,7 +1668,29 @@ def _code_copy(code):
             '<span class="cm-tip" aria-hidden="true">Copied</span></button><span class="sr-only" role="status" aria-live="polite"></span>')
 
 
-def _pkg_facts(heads, files, repo, load):
+def _pkg_cite(papers):
+    """How to cite a package: the papers of its releases (a version each) or of the library, each linked to its entry on
+    the Publications page, with their BibTeX entries from INSPIRE copied in one click."""
+    import html as _html
+    items, bibs = [], []
+    for arx, version in papers:
+        q = _paper(arx)
+        bib = PUB_DETAILS.get(q.get("inspire", ""), {}).get("bibtex", "")
+        if bib.startswith("@"):
+            bibs.append(bib)
+        items.append(f'<li><a href="publications.html#{_pub_id(q)}">{q["ref"]}</a>'
+                     + (f' <span class="muted">{version}</span>' if version else "") + '</li>')
+    if not bibs:
+        return ""
+    label = "Copy BibTeX" if len(bibs) == 1 else f"Copy the {NUMBER_WORDS[len(bibs)]} BibTeX entries"
+    return (f'<div class="pkg-fact pkg-cite"><div class="kicker">Cite</div><ul>{"".join(items)}</ul>'
+            f'<button class="cite-copy" type="button" data-copy="{_html.escape(chr(10).join(bibs), quote=True)}">'
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/>'
+            f'<rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">{label}</span></button>'
+            '<span class="sr-only" role="status" aria-live="polite"></span></div>')
+
+
+def _pkg_facts(heads, files, repo, load, cite=""):
     import html as _html
     clone = f"git clone {repo}.git"
     code = clone + (f"\n{load}" if load else "")
@@ -1679,7 +1701,7 @@ def _pkg_facts(heads, files, repo, load):
     blocks = "".join(f'<div class="pkg-fact"><div class="kicker">{h}</div><ul>{body}</ul></div>' for h, body in heads)
     files_html = "".join(f"<li><code>{f}</code></li>" for f in files)
     return (f'<div class="pkg-facts">{blocks}<div class="pkg-fact"><div class="kicker">Files</div><ul class="pkg-files">{files_html}</ul></div>'
-            f'{get}</div>')
+            f'{get}{cite}</div>')
 
 
 NUMBER_WORDS = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"]
@@ -1722,7 +1744,8 @@ def render_packages():
             f'<span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span><span class="tag soft">{latest}</span>',
             pk["what"],
             _pkg_links(pk["name"], pk["repo"], pk["paper"]) + render_releases(pk["releases"])
-            + _pkg_facts(heads, pk["files"], pk["repo"], pk["load"]),
+            + _pkg_facts(heads, pk["files"], pk["repo"], pk["load"],
+                         _pkg_cite([(r[3], r[0] if len(pk["releases"]) > 1 else "") for r in pk["releases"] if not r[3].startswith("http")])),
             "Show details"))
     n_rel = sum(len(pk["releases"]) for pk in PACKAGES)
     return ('<section class="chapter" id="packages">\n<h2 class="chapter-title">Packages</h2>\n'
@@ -1738,8 +1761,9 @@ def render_library():
             '<p class="prose">Results that come with a paper, collected so that others can use them.</p>\n'
             + _pkg_card(lb["slug"], _ix(LIBRARY_ICON), lb["name"], lb["tagline"],
                         f'<span class="tag grey">Mathematica</span><span class="tag grey">GPL-3.0</span><span class="tag pheno">{lb["when"]}</span>',
-                        lb["what"], _pkg_links(lb["name"], lb["repo"], lb["paper"]) + _pkg_facts(heads, lb["files"], lb["repo"], ""),
-                        "Show details") + '\n</section>')
+                        lb["what"], _pkg_links(lb["name"], lb["repo"], lb["paper"])
+                        + _pkg_facts(heads, lb["files"], lb["repo"], "", _pkg_cite([(lb["paper"], "")])),
+                        "Show details") + '\n' + CITE_JS + '\n</section>')
 
 
 def software_jsonld():
