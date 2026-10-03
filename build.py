@@ -3138,6 +3138,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
         if (cities && inEarly) {{ tearly.classList.add('instant'); tearly.open = true; setTimeout(function () {{ tearly.classList.remove('instant'); }}, 800); }}
       }}
       tchip.hidden = !cities;
+      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('talkcity-shown', {{ detail: {{ cities: cities }} }}));   // the map rings them
       if (cities) {{
         tchip.querySelector('.dc-n').textContent = cities.length > 1 ? cities.slice(0, -1).join(', ') + ' and ' + cities[cities.length - 1] : cities[0];
         tchip.querySelector('.tf-n').textContent = '· ' + n + (n === 1 ? ' talk' : ' talks');

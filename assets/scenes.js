@@ -2908,7 +2908,8 @@
       e.grat = d.grat && window.Path2D ? new Path2D(d.grat) : null;
       talks.forEach(function (tk, i) { tk.at = 0.35 + i * step; tk.k = i + 1; });   // one talk after another, at an even pace
       e.talks = talks; e.end = talks.length ? talks[talks.length - 1].at + 1.4 : 0; e.cycle = e.end + 4.5;
-      e.clock = 0; e.hoverCity = null; e.hoverKey = null;
+      e.clock = 0; e.hoverCity = null; e.hoverKey = null; e.sel = null;
+      document.addEventListener('talkcity-shown', function (ev) { e.sel = ev.detail && ev.detail.cities; });   // the list below shows these
     },
     layout: function (e) {                             // the map is drawn once per size
       var v = e.view, s = Math.min(e.w / v[2], e.h / v[3]), L = layer(e.w, e.h, e.dpr), c = L.ctx;
@@ -2993,6 +2994,12 @@
         else { ctx.fillStyle = ink('paper', 0.95); ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = ink('green', 0.9); ctx.stroke(); }
       });
 
+      if (e.sel) e.sel.forEach(function (name, k) {     // the cities whose talks the list below shows: a brass ring that breathes
+        var sm = cities[name]; if (!sm) return;
+        var sr = 1.7 + 1.15 * Math.sqrt(sm.n) + 6.5 + (e.reduce ? 0 : 1.6 * Math.sin(e.clock * 2.6 + k));
+        ctx.strokeStyle = ink('brassD', 0.9); ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(sm.x, sm.y, sr, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = ink('brassD', 0.25); ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(sm.x, sm.y, sr, 0, TAU); ctx.stroke();
+      });
       if (e.hoverCity && cities[e.hoverCity]) {        // the city under the pointer
         var hm = cities[e.hoverCity], hr = 1.7 + 1.15 * Math.sqrt(hm.n) + 4.5;
         ctx.strokeStyle = ink('brassD', 0.95); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(hm.x, hm.y, hr, 0, TAU); ctx.stroke();
