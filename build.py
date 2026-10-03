@@ -269,6 +269,21 @@ DOMAINS = [
      "Leptoquarks · New scalars · LHC signatures"),
 ]
 
+# The research domain of each paper (by arXiv number, or INSPIRE number where there is none), so that each
+# domain card on the Research page opens its own papers on the Publications page. Keys, in the order of DOMAINS:
+DOMAIN_KEYS = ["math", "fi", "higgs", "tools", "eft", "exotic"]
+PAPER_DOMAINS = {
+    "2512.19803": "fi math tools", "2605.30216": "tools math", "2512.07727": "fi math", "2510.08682": "eft exotic",
+    "3081108": "fi eft", "2412.00523": "higgs", "2404.14492": "higgs", "2411.18618": "higgs", "2402.00101": "higgs",
+    "2308.07953": "higgs", "2407.06267": "higgs", "2309.00409": "fi math tools", "2307.06800": "exotic eft",
+    "2306.15722": "higgs", "2303.11351": "higgs", "2212.11839": "fi math tools", "2211.01285": "tools fi math",
+    "2112.09679": "math fi", "2012.15108": "fi math tools", "2012.15646": "fi math", "2007.08360": "fi",
+    "1909.00962": "math", "3153391": "fi math tools", "2605.04233": "higgs", "2865718": "higgs",
+    "2407.20120": "fi math", "2809580": "fi math tools", "2402.04174": "fi math", "2312.01458": "higgs",
+    "2614373": "fi math",
+}
+
+
 # Papers highlighted under "Selected work" (arXiv id, one-line pitch).
 SELECTED = [
     ("pheno", "Two-loop anomalous dimensions for baryon-number-violating operators in SMEFT",
@@ -719,6 +734,21 @@ def _pub_id(p):
     return f'arxiv-{p["arxiv"]}' if p.get("arxiv") else f'inspire-{p["inspire"]}' if p.get("inspire") else _slug(p["title"])
 
 
+def _html_attr(text):
+    import html as _html
+    return _html.escape(text, quote=True)
+
+
+def _domain_slugs():
+    return {k: _slug(name) for k, (name, _t, _k) in zip(DOMAIN_KEYS, DOMAINS)}
+
+
+def _domains_of(p):
+    """The research domains of a paper, as the slugs of their names (every paper must have at least one)."""
+    keys = PAPER_DOMAINS[p.get("arxiv") or p.get("inspire")].split()
+    return [_domain_slugs()[k] for k in keys]
+
+
 def _pub_link(arx):
     return f'publications.html#{_pub_id(_paper(arx))}'
 
@@ -763,7 +793,7 @@ def pub_entry(n, p):
         head = (f'<details class="pub-open"><summary>{head}<span class="pub-toggle"><span class="t-show">Abstract and details</span>'
                 f'<span class="t-hide">Hide abstract</span>{PKG_CHEVRON}</span></summary>{more}</details>')
     return (
-        f'<div class="entry pub" id="{_pub_id(p)}" data-topic="{p["topic"]}">'
+        f'<div class="entry pub" id="{_pub_id(p)}" data-topic="{p["topic"]}" data-domains="{" ".join(_domains_of(p))}">'
         f'<div class="rail">[{n}]<br>{p["year"]}</div><div class="body">'
         + head +
         f'<div class="links">{" ".join(links)}</div>'
@@ -885,10 +915,20 @@ def _pick_icon(items, text):
 
 
 def render_domains():
-    return "\n".join(
-        f'<div class="theme d{i}"><svg class="th-icon" viewBox="0 0 48 30" aria-hidden="true">{DOMAIN_ICONS[i - 1]}</svg>'
-        f'<h4>{name}</h4><p>{text}</p><div class="keys">{keys}</div></div>'
-        for i, (name, text, keys) in enumerate(DOMAINS, 1))
+    """Each domain card opens what it is about: its papers on the Publications page, or for the tools the
+    Software page. The whole card is the link, and the names of the packages inside it link to their cards."""
+    out = []
+    for i, (key, (name, text, keys)) in enumerate(zip(DOMAIN_KEYS, DOMAINS), 1):
+        slug = _slug(name)
+        n = sum(slug in _domains_of(p) for p in PUBS)
+        if key == "tools":
+            href, go = "software.html", f"{NUMBER_WORDS[len(PACKAGES)].capitalize()} packages and a library"
+        else:
+            href, go = f"publications.html?domain={slug}#publications", f"{n} papers" if n != 1 else "One paper"
+        out.append(f'<div class="theme d{i}"><svg class="th-icon" viewBox="0 0 48 30" aria-hidden="true">{DOMAIN_ICONS[i - 1]}</svg>'
+                   f'<h4>{name}</h4><p>{text}</p><div class="keys">{keys}</div>'
+                   f'<a class="th-go" href="{href}" aria-label="{name}: {go}">{go} <span aria-hidden="true">→</span></a></div>')
+    return "\n".join(out)
 
 
 def render_journey():
@@ -2092,6 +2132,7 @@ def main():
         email=P["email"], orcid=P["orcid"], inspire=P["inspire"], scholar=P["scholar"],
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
+        domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)),
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
@@ -2140,6 +2181,13 @@ def search_index():
     for kind, items, frag in (("Position", EMPLOYMENT, "positions"), ("Education", EDUCATION, "education")):
         for e in items:
             add(kind, "", e["title"], f'{e["org"]} · {e["when"]}', f"cv.html#{frag}", f'{e["where"]} {e.get("meta", "")}')
+    for key, (name, text, keys) in zip(DOMAIN_KEYS, DOMAINS):
+        slug = _slug(name)
+        n = sum(slug in _domains_of(p) for p in PUBS)
+        if key == "tools":
+            add("Research domain", "", name, f"{NUMBER_WORDS[len(PACKAGES)].capitalize()} packages and a library · {keys}", "software.html", text)
+        else:
+            add("Research domain", "", name, f"{n} papers · {keys}", f"publications.html?domain={slug}#publications", text)
     seen = {e["u"] for e in out}                       # and the parts of each page, as the menu lists them
     names = {f: label for f, label, *_ in PAGES if label}
     names["#about"] = "Home"
@@ -2309,6 +2357,8 @@ Standard Model at particle colliders.</p>
   <button type="button" data-filter="pheno" aria-pressed="false">Phenomenology</button>
   <button type="button" data-filter="soft" aria-pressed="false">Software</button>
   <input class="pub-search" id="pub-search" name="q" type="search" placeholder="Search publications" aria-label="Search publications">
+  <span class="dom-chip" hidden data-names="{domain_names}"><span class="dc-l">Research domain</span><b class="dc-n"></b>
+  <button class="dc-x" type="button" aria-label="Show the papers of every domain" title="Show every domain">×</button></span>
 </div>
 <p class="pub-empty" hidden>No publications match your search.</p>
 {pubs}
@@ -2459,22 +2509,36 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   }}
 
   /* ---------- publications: topic filter, search, show more ---------- */
-  var buttons = document.querySelectorAll('.filters button');
+  var buttons = document.querySelectorAll('.filters button[data-filter]');   // the topics (not the cross of the domain)
   var pubs = Array.prototype.slice.call(document.querySelectorAll('.pub'));
   var heads = document.querySelectorAll('#publications .sect');
   var search = document.querySelector('.pub-search');
   var more = document.querySelector('.pub-more');
   var empty = document.querySelector('.pub-empty');
-  var LIMIT = 8, topic = 'all', query = '', open = false;
+  var LIMIT = 8, topic = 'all', query = '', open = false, domain = '';
+  var chip = document.querySelector('.dom-chip'), dnames = {{}};
+  try {{ dnames = JSON.parse(chip.dataset.names); }} catch (e) {{}}
+  var dparam = (location.search.match(/[?&]domain=([a-z-]+)/) || [])[1];
+  if (chip && dparam && dnames[dparam]) {{                 // from a domain card on the Research page
+    domain = dparam; chip.querySelector('.dc-n').textContent = dnames[dparam]; chip.hidden = false;
+    buttons.forEach(function (x) {{ if (x.dataset.filter === 'all') x.setAttribute('aria-pressed', 'false'); }});   // not all of them
+  }}
+  var clearDomain = function () {{
+    if (!domain) return;
+    domain = ''; chip.hidden = true;
+    if (topic === 'all') buttons.forEach(function (x) {{ x.setAttribute('aria-pressed', x.dataset.filter === 'all'); }});
+    if (history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+  }};
   function pubText(p) {{                              // what a search looks through: the card, not the abstract
     if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
       function (x) {{ return x.textContent; }}).join(' ').toLowerCase();
     return p.dataset.q;
   }}
   function applyPubs() {{
-    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '', keys = [], arrived = 0;
+    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '' || domain !== '', keys = [], arrived = 0;
     pubs.forEach(function (p) {{
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
+               (!domain || (p.dataset.domains || '').split(' ').indexOf(domain) >= 0) &&
                (!query || pubText(p).indexOf(query) >= 0);
       if (ok) {{ matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/\u00a0/g, ' ').trim()); }}
       var vis = ok && (open || narrowed || shown < LIMIT);
@@ -2498,12 +2562,14 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   buttons.forEach(function (b) {{
     b.addEventListener('click', function () {{
       topic = b.dataset.filter;
+      if (topic === 'all') clearDomain();             // "All" means every paper again
       buttons.forEach(function (x) {{ x.setAttribute('aria-pressed', x === b); }});
       applyPubs();
     }});
   }});
   if (search) search.addEventListener('input', function () {{ query = search.value.trim().toLowerCase(); applyPubs(); }});
   if (more) more.addEventListener('click', function () {{ open = true; applyPubs(); }});
+  if (chip) chip.querySelector('.dc-x').addEventListener('click', function () {{ clearDomain(); applyPubs(); }});
   var booted = false;
   applyPubs();
   booted = true;
@@ -2514,8 +2580,8 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     if (!el) return;
     var moved = false;
     if (el.hidden && el.matches('h3.sect[data-group], .pub')) {{          // the whole list of papers, unfiltered
-      if (topic !== 'all' || query) {{
-        topic = 'all'; query = ''; if (search) search.value = '';
+      if (topic !== 'all' || query || domain) {{
+        topic = 'all'; query = ''; if (search) search.value = ''; clearDomain();
         buttons.forEach(function (x) {{ x.setAttribute('aria-pressed', x.dataset.filter === 'all'); }});
       }}
       open = true; applyPubs(); moved = true;
@@ -2825,7 +2891,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     }};
     var ssGo = function (e) {{
       var u = new URL(e.u, location.href), page = function (p) {{ return p.replace(/\\/$/, '/index.html'); }};
-      if (page(u.pathname) !== page(location.pathname)) {{ location.href = u.href; return; }}
+      if (page(u.pathname) !== page(location.pathname) || (u.search && u.search !== location.search)) {{ location.href = u.href; return; }}
       ss.close();                                     // a part of this page: open it and bring it into view
       if (u.hash && u.hash !== location.hash) {{ location.hash = u.hash; return; }}
       var el = u.hash ? document.getElementById(decodeURIComponent(u.hash.slice(1))) : document.body;

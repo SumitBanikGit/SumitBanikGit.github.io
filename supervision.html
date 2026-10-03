@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6abfef6b">
+<link rel="stylesheet" href="assets/style.css?v=6ac0fcbd">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-supervision">
@@ -128,7 +128,7 @@
 </div>
 </footer>
 
-<dialog class="ss" aria-labelledby="ss-title" data-src="/assets/search.json?v=078e38af">
+<dialog class="ss" aria-labelledby="ss-title" data-src="/assets/search.json?v=3787b884">
  <div class="ss-box">
   <div class="ss-head">
    <svg class="ss-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>
@@ -159,22 +159,36 @@
   }
 
   /* ---------- publications: topic filter, search, show more ---------- */
-  var buttons = document.querySelectorAll('.filters button');
+  var buttons = document.querySelectorAll('.filters button[data-filter]');   // the topics (not the cross of the domain)
   var pubs = Array.prototype.slice.call(document.querySelectorAll('.pub'));
   var heads = document.querySelectorAll('#publications .sect');
   var search = document.querySelector('.pub-search');
   var more = document.querySelector('.pub-more');
   var empty = document.querySelector('.pub-empty');
-  var LIMIT = 8, topic = 'all', query = '', open = false;
+  var LIMIT = 8, topic = 'all', query = '', open = false, domain = '';
+  var chip = document.querySelector('.dom-chip'), dnames = {};
+  try { dnames = JSON.parse(chip.dataset.names); } catch (e) {}
+  var dparam = (location.search.match(/[?&]domain=([a-z-]+)/) || [])[1];
+  if (chip && dparam && dnames[dparam]) {                 // from a domain card on the Research page
+    domain = dparam; chip.querySelector('.dc-n').textContent = dnames[dparam]; chip.hidden = false;
+    buttons.forEach(function (x) { if (x.dataset.filter === 'all') x.setAttribute('aria-pressed', 'false'); });   // not all of them
+  }
+  var clearDomain = function () {
+    if (!domain) return;
+    domain = ''; chip.hidden = true;
+    if (topic === 'all') buttons.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.filter === 'all'); });
+    if (history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+  };
   function pubText(p) {                              // what a search looks through: the card, not the abstract
     if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
       function (x) { return x.textContent; }).join(' ').toLowerCase();
     return p.dataset.q;
   }
   function applyPubs() {
-    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '', keys = [], arrived = 0;
+    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '' || domain !== '', keys = [], arrived = 0;
     pubs.forEach(function (p) {
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
+               (!domain || (p.dataset.domains || '').split(' ').indexOf(domain) >= 0) &&
                (!query || pubText(p).indexOf(query) >= 0);
       if (ok) { matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/ /g, ' ').trim()); }
       var vis = ok && (open || narrowed || shown < LIMIT);
@@ -198,12 +212,14 @@
   buttons.forEach(function (b) {
     b.addEventListener('click', function () {
       topic = b.dataset.filter;
+      if (topic === 'all') clearDomain();             // "All" means every paper again
       buttons.forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
       applyPubs();
     });
   });
   if (search) search.addEventListener('input', function () { query = search.value.trim().toLowerCase(); applyPubs(); });
   if (more) more.addEventListener('click', function () { open = true; applyPubs(); });
+  if (chip) chip.querySelector('.dc-x').addEventListener('click', function () { clearDomain(); applyPubs(); });
   var booted = false;
   applyPubs();
   booted = true;
@@ -214,8 +230,8 @@
     if (!el) return;
     var moved = false;
     if (el.hidden && el.matches('h3.sect[data-group], .pub')) {          // the whole list of papers, unfiltered
-      if (topic !== 'all' || query) {
-        topic = 'all'; query = ''; if (search) search.value = '';
+      if (topic !== 'all' || query || domain) {
+        topic = 'all'; query = ''; if (search) search.value = ''; clearDomain();
         buttons.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.filter === 'all'); });
       }
       open = true; applyPubs(); moved = true;
@@ -525,7 +541,7 @@
     };
     var ssGo = function (e) {
       var u = new URL(e.u, location.href), page = function (p) { return p.replace(/\/$/, '/index.html'); };
-      if (page(u.pathname) !== page(location.pathname)) { location.href = u.href; return; }
+      if (page(u.pathname) !== page(location.pathname) || (u.search && u.search !== location.search)) { location.href = u.href; return; }
       ss.close();                                     // a part of this page: open it and bring it into view
       if (u.hash && u.hash !== location.hash) { location.hash = u.hash; return; }
       var el = u.hash ? document.getElementById(decodeURIComponent(u.hash.slice(1))) : document.body;
