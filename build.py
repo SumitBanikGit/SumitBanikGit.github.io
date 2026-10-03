@@ -2068,6 +2068,22 @@ def stats_tag():
             "})();</script>\n")
 
 
+def _heading_levels(page):
+    """Inner pages drop the section title that their header already shows, so their headings would skip levels
+    (a page title, then card titles three levels down). For screen readers the outline is told again without gaps,
+    with aria-level where a heading's place differs from its tag: each heading sits one level below the nearest
+    earlier heading of a smaller tag."""
+    stack = []
+    def fix(m):
+        level, attrs = int(m.group(1)), re.sub(r'\saria-level="\d"', "", m.group(2) or "")
+        while stack and stack[-1] >= level:
+            stack.pop()
+        stack.append(level)
+        place = len(stack)
+        return f'<h{level}{attrs}' + (f' aria-level="{place}"' if place != level else "") + '>'
+    return re.sub(r"<h([1-6])(\s[^>]*)?>", fix, page)
+
+
 def write_pages(html, n_articles, n_proc):
     import json
     import re
@@ -2180,7 +2196,7 @@ def write_pages(html, n_articles, n_proc):
         body = body.replace("</body>", stats_tag() + "</body>", 1)
         body = re.sub(r'<h3 class="sect"((?: data-[a-z]+="[^"]*")?)>(.*?)</h3>',
                       lambda m: f'<h3 class="sect" id="{_slug(m.group(2))}"{m.group(1)}>{m.group(2)}</h3>', body)   # for the menu's links
-        Path(file).write_text(relink(h + body, file), encoding="utf-8")
+        Path(file).write_text(_heading_levels(relink(h + body, file)), encoding="utf-8")
         written.append(file)
 
     # a friendly 404 page for mistyped addresses
