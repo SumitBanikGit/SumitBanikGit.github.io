@@ -3714,7 +3714,16 @@
   }
   SCENES.timeline = {
     touchHint: 'Tap for the next stage',
-    init: function (e) { e.st = (e.data && e.data.stages) || []; e.now = (e.data && e.data.now) || 2026.8; e.c0 = 0; e.cur = -2; },
+    init: function (e) {
+      e.st = (e.data && e.data.stages) || []; e.now = (e.data && e.data.now) || 2026.8; e.c0 = 0; e.cur = -2; e.hold = null; e.pick = -1;
+      document.addEventListener('scenepick', function (ev) {   // a CV entry below asks for its stage: the present waits there a while
+        var i = e.st.map(function (s) { return s.title + ' · ' + s.w; }).indexOf(ev.detail && ev.detail.name);
+        if (i < 0 || e.y0 === undefined) return;
+        var s = e.st[i], mid = (s.s + Math.min(s.e || e.now, e.now)) / 2;
+        e.hold = { c: 9.5 * (mid - e.y0) / (e.now - e.y0), until: (e.t || 0) + 4.5 }; e.pick = i; e.cur = -2;
+        if (e.redraw) e.redraw();
+      });
+    },
     layout: function (e) {
       var st = e.st, ctx = e.ctx;
       if (!st.length) return;
@@ -3744,7 +3753,9 @@
     frame: function (e, t) {
       var ctx = e.ctx, st = e.st, R = e.reduce, T = 9.5, C = 14;
       if (!st.length || !e.X) return;
-      var X = e.X, c = R ? 99 : (t - e.c0) % C, yc = R ? e.now : e.y0 + (e.now - e.y0) * clamp01(c / T), done = c > T || R;
+      var X = e.X, c = R ? 99 : (t - e.c0) % C;
+      if (!R && e.hold) { if (t < e.hold.until) c = e.hold.c; else { e.c0 = t - e.hold.c; e.hold = null; } }
+      var yc = R ? e.now : e.y0 + (e.now - e.y0) * clamp01(c / T), done = c > T || R;
       line(ctx, e.L, e.ay, X(e.now), e.ay, ink('green', 0.35), 1);                                   // the years
       ctx.font = font(9, SANS, 500); ctx.textAlign = 'center'; ctx.fillStyle = ink('slate', 0.85);
       for (var yr = e.y0; yr <= Math.floor(e.now); yr += 2) { line(ctx, X(yr), e.ay + 7, X(yr), e.ay + 11, ink('green', 0.4), 1); ctx.fillText(String(yr), X(yr), e.ay + 23); }
@@ -3796,7 +3807,7 @@
         ring(ctx, X(e.now), e.ay, 4 + pk * 12, ink('pine', 0.6 * (1 - pk)), 1.2);
         caps(ctx, 'NOW', X(e.now) + 6, e.ay + 23, ink('pine', 0.9), 7.5, 'left');
       }
-      var show = c > T && !R ? -1 : active;
+      var show = R && e.pick >= 0 ? e.pick : c > T && !R ? -1 : active;
       if (show !== e.cur) {
         e.cur = show;
         if (show < 0) { e.caption(null); e.hint(null); }

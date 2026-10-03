@@ -1562,8 +1562,10 @@ def render_positions(items):
             f'<article class="blk" id="{_cv_id(p)}"><div class="blk-logos">{logos}</div>'
             f'<div class="blk-body"><div class="blk-when">{p["when"]}</div>'
             f'<h4 class="blk-title">{p["title"]}</h4><div class="blk-org">{p["org"]}</div>'
-            f'{note}{meta}<div class="blk-where">{p["where"]}</div></div></article>')
-    return "\n".join(out)
+            f'{note}{meta}<div class="blk-where">{p["where"]}</div>'
+            f'<button class="on-board" type="button" data-pick="{p["title"]} · {p["when"]}" '
+            f'aria-label="Show {p["title"]}, {p["when"]}, on the timeline above">On the timeline <span aria-hidden="true">↑</span></button></div></article>')
+    return "\n".join(out) + (BOARD_JS if items is EDUCATION else "")   # once, after both lists
 
 
 # On hover (see style.css) each drawing does what its tools do: particles fly out of the collision of an event
