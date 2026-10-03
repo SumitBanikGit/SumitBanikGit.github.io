@@ -788,6 +788,17 @@ def _pub_id(p):
     return f'arxiv-{p["arxiv"]}' if p.get("arxiv") else f'inspire-{p["inspire"]}' if p.get("inspire") else _slug(p["title"])
 
 
+def render_coauthors(least=4):
+    """The co-authors of four papers or more, most frequent first: a click shows the papers written with them."""
+    from collections import Counter
+    count = Counter(a.strip() for p in PUBS for a in _plain(p["authors"]).split(",") if a.strip() and a.strip() != "S. Banik")
+    people = [(a, n) for a, n in count.most_common() if n >= least]
+    chips = "".join(f'<button type="button" data-q="{a.lower()}" data-name="{a}" aria-pressed="false">{a}<span class="ca-n">{n}</span></button>'
+                    for a, n in people)
+    return (f'<div class="coauthors" role="group" aria-label="Frequent co-authors"><span class="ca-l">Frequent co-authors</span>{chips}</div>'
+            if people else "")
+
+
 def _html_attr(text):
     import html as _html
     return _html.escape(text, quote=True)
@@ -994,10 +1005,13 @@ def render_journey():
                        for f, alt in logos)                    # each logo on a white disc of its own (a wordmark sits smaller)
         now = ' now' if i == last else ''
         badge = '<span class="j-now">Now</span>' if i == last else ''
+        mine = {f for f, _ in logos}                     # the CV entry of this stop: the first with one of its logos
+        cv = next((e for e in EMPLOYMENT + EDUCATION if mine & {f for f, _ in e["logos"]}), None)
+        go = (f'<a class="stop-go" href="cv.html#{_cv_id(cv)}" aria-label="{city}, {_plain(role)}, in the CV"></a>' if cv else "")
         out.append(
             f'<li class="stop{now}" style="--i:{i}"><div class="stop-node n{len(logos)}">{imgs}</div>'
             f'<div class="stop-year">{year}{badge}</div><div class="stop-city">{city}</div>'
-            f'<div class="stop-role">{role}</div><div class="stop-inst">{inst}</div></li>')
+            f'<div class="stop-role">{role}</div><div class="stop-inst">{inst}</div>{go}</li>')
     return "\n".join(out)
 
 
@@ -1497,6 +1511,11 @@ def _logo(f, alt, lazy=True):
             + ('loading="lazy">' if lazy else 'decoding="async">'))
 
 
+def _cv_id(e):
+    """The anchor of a position or a degree in the CV, from its title and city."""
+    return _slug(f'{e["title"]} {e["where"].split(",")[0]}')
+
+
 def render_positions(items):
     out = []
     for p in items:
@@ -1507,7 +1526,7 @@ def render_positions(items):
             meta += '<dl class="blk-facts">' + "".join(
                 f'<div><dt>{k}</dt><dd>{v}</dd></div>' for k, v in p["facts"]) + '</dl>'
         out.append(
-            f'<article class="blk"><div class="blk-logos">{logos}</div>'
+            f'<article class="blk" id="{_cv_id(p)}"><div class="blk-logos">{logos}</div>'
             f'<div class="blk-body"><div class="blk-when">{p["when"]}</div>'
             f'<h4 class="blk-title">{p["title"]}</h4><div class="blk-org">{p["org"]}</div>'
             f'{note}{meta}<div class="blk-where">{p["where"]}</div></div></article>')
@@ -2213,7 +2232,7 @@ def main():
         email=P["email"], orcid=P["orcid"], inspire=P["inspire"], scholar=P["scholar"],
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
-        domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)),
+        domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)), coauthors=render_coauthors(),
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
@@ -2441,6 +2460,7 @@ Standard Model at particle colliders.</p>
   <span class="dom-chip" hidden data-names="{domain_names}"><span class="dc-l">Research domain</span><b class="dc-n"></b>
   <button class="dc-x" type="button" aria-label="Show the papers of every domain" title="Show every domain">×</button></span>
 </div>
+{coauthors}
 <div class="pub-tools"><span class="pub-count" role="status" aria-live="polite"></span>
 <span class="pub-sort" role="group" aria-label="Order of the papers"><button type="button" data-sort="new" aria-pressed="true">Newest first</button><button type="button" data-sort="cited" aria-pressed="false">Most cited first</button></span>
 <button class="cite-copy bib-all" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button></div>
@@ -2635,7 +2655,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   }});
   function pubText(p) {{                              // what a search looks through: the card, not the abstract
     if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
-      function (x) {{ return x.textContent; }}).join(' ').toLowerCase();
+      function (x) {{ return x.textContent; }}).join(' ').replace(/\\s+/g, ' ').toLowerCase();   // (names are held together by no-break spaces)
     return p.dataset.q;
   }}
   function applyPubs() {{
@@ -2674,7 +2694,18 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       applyPubs();
     }});
   }});
-  if (search) search.addEventListener('input', function () {{ query = search.value.trim().toLowerCase(); applyPubs(); }});
+  var cas = document.querySelectorAll('.coauthors button');   // a co-author: the papers written with them, in the search box
+  var caSync = function () {{
+    Array.prototype.forEach.call(cas, function (b) {{ b.setAttribute('aria-pressed', query && query === b.dataset.q ? 'true' : 'false'); }});
+  }};
+  Array.prototype.forEach.call(cas, function (b) {{
+    b.addEventListener('click', function () {{
+      var on = query !== b.dataset.q;
+      query = on ? b.dataset.q : ''; if (search) search.value = on ? b.dataset.name : '';
+      caSync(); applyPubs();
+    }});
+  }});
+  if (search) search.addEventListener('input', function () {{ query = search.value.replace(/\\s+/g, ' ').trim().toLowerCase(); caSync(); applyPubs(); }});
   if (more) more.addEventListener('click', function () {{ open = true; applyPubs(); }});
   var sorts = document.querySelectorAll('.pub-sort button');
   Array.prototype.forEach.call(sorts, function (b) {{

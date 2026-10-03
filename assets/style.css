@@ -2467,7 +2467,7 @@ a.stat:hover .l, a.stat:focus-visible .l { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .soft-link .sl-go span, .news-link .nl-go { transition: none; } }
 /* where a link from another page lands: a brass ring that glows once and fades, so the eye finds it */
 @media (prefers-reduced-motion: no-preference) {
-  .pub:target, .pkg:target, .fund:target, .talk-card:target, #talks .entry:target, .course:target, .student:target {
+  .pub:target, .pkg:target, .fund:target, .talk-card:target, #talks .entry:target, .course:target, .student:target, .blk:target {
     animation: landed 2.4s cubic-bezier(.3, .6, .3, 1) .55s;
   }
 }
@@ -2609,4 +2609,33 @@ html[data-theme="dark"] .pub-sort button[aria-pressed="true"] { background: var(
 /* Software, on phones: the line about each package may take two lines (room kept for both, so nothing jumps) */
 @media (max-width: 40rem) {
   [data-scene="toolchain"] .scene-hint { white-space: normal; text-wrap: balance; min-height: 2.9em; line-height: 1.45; }
+}
+
+/* Publications: the frequent co-authors, a click shows the papers written with them */
+.coauthors { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .4rem; margin: .85rem 0 0; }
+.coauthors .ca-l { font-family: var(--sans); font-size: .58rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+                   color: var(--grey); margin-right: .3rem; }
+.coauthors button { display: inline-flex; align-items: center; gap: .4rem; font-family: var(--serif); font-size: .82rem; color: var(--ink);
+                    background: transparent; border: 1px solid var(--hair); border-radius: 999px; padding: .18rem .35rem .18rem .7rem;
+                    cursor: pointer; transition: background .2s, border-color .2s, color .2s; }
+.coauthors button:hover { border-color: var(--gold); }
+.coauthors .ca-n { font-family: var(--sans); font-size: .6rem; font-weight: 600; min-width: 1.25rem; padding: .12rem .3rem; border-radius: 999px;
+                   background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--accent); text-align: center; }
+.coauthors button[aria-pressed="true"] { background: #1c352f; border-color: #1c352f; color: #f3ead6; }
+.coauthors button[aria-pressed="true"] .ca-n { background: rgba(220, 197, 143, .25); color: #f3ead6; }
+.coauthors button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+html[data-theme="dark"] .coauthors button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #0e1714; }
+html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { background: rgba(14, 23, 20, .2); color: #0e1714; }
+
+/* Home, academic journey: each stop opens its entry in the CV */
+.stop-go::before { content: ""; position: absolute; inset: -.4rem -.3rem; z-index: 1; border-radius: 6px; }
+.stop-go:focus-visible { outline: none; }
+.stop:has(.stop-go:focus-visible) { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 6px; }
+.stop:has(.stop-go):hover .stop-city { color: var(--accent); }
+.stop-city { transition: color .2s; }
+@media (max-width: 40rem) {                 /* on phones the co-authors keep to one line that scrolls sideways */
+  .coauthors { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: .15rem;
+               -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+  .coauthors::-webkit-scrollbar { display: none; }
+  .coauthors button, .coauthors .ca-l { flex: none; white-space: nowrap; }
 }
