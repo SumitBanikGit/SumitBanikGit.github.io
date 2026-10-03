@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6ac0fcbd">
+<link rel="stylesheet" href="assets/style.css?v=6ac1077a">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
@@ -247,18 +247,38 @@
     if (topic === 'all') buttons.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.filter === 'all'); });
     if (history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
   };
+  /* the BibTeX of every paper in the list as it is filtered, in one click */
+  var bibAll = document.querySelector('.bib-all'), pubCount = document.querySelector('.pub-count'), bibList = [], bibTimer;
+  if (bibAll && !(navigator.clipboard && window.isSecureContext)) { bibAll.remove(); bibAll = null; }
+  var bibLabel = function () {
+    if (!bibAll || bibAll.classList.contains('done')) return;
+    var n = bibList.length;
+    bibAll.hidden = !n;
+    bibAll.querySelector('.cc-l').textContent = n === pubs.length ? 'Copy all ' + n + ' BibTeX entries'
+      : n === 1 ? 'Copy its BibTeX' : 'Copy these ' + n + ' BibTeX entries';
+  };
+  if (bibAll) bibAll.addEventListener('click', function () {
+    var list = bibList.map(function (p) { var c = p.querySelector('.cite-copy'); return c ? c.getAttribute('data-copy') : ''; }).filter(Boolean);
+    if (!list.length) return;
+    navigator.clipboard.writeText(list.join('\n\n') + '\n').then(function () {
+      bibAll.classList.add('done');
+      bibAll.querySelector('.cc-l').textContent = list.length === 1 ? 'BibTeX copied' : list.length + ' entries copied';
+      clearTimeout(bibTimer);
+      bibTimer = setTimeout(function () { bibAll.classList.remove('done'); bibLabel(); }, 2400);
+    }).catch(function () {});
+  });
   function pubText(p) {                              // what a search looks through: the card, not the abstract
     if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
       function (x) { return x.textContent; }).join(' ').toLowerCase();
     return p.dataset.q;
   }
   function applyPubs() {
-    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '' || domain !== '', keys = [], arrived = 0;
+    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '' || domain !== '', keys = [], arrived = 0, matched = [];
     pubs.forEach(function (p) {
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
                (!domain || (p.dataset.domains || '').split(' ').indexOf(domain) >= 0) &&
                (!query || pubText(p).indexOf(query) >= 0);
-      if (ok) { matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/ /g, ' ').trim()); }
+      if (ok) { matches++; matched.push(p); var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/ /g, ' ').trim()); }
       var vis = ok && (open || narrowed || shown < LIMIT);
       if (vis) shown++;
       if (vis && p.hidden && booted && !reduce) {         // a paper that comes back glides into place, a little after the one before
@@ -274,6 +294,9 @@
       h.hidden = !any;
     });
     if (more) more.hidden = open || narrowed || matches <= LIMIT;
+    bibList = matched; bibLabel();
+    if (pubCount) pubCount.textContent = !pubs.length ? '' : (matches === pubs.length ? 'All ' + matches + ' papers'
+      : matches === 1 ? 'One paper of ' + pubs.length : matches + ' papers of ' + pubs.length);
     if (empty) empty.hidden = matches > 0;
     if (window.CustomEvent) document.dispatchEvent(new CustomEvent('pubfilter', { detail: { narrowed: narrowed, titles: keys } }));
   }
@@ -309,7 +332,7 @@
       list.classList.add('instant'); list.open = true; moved = true;
       setTimeout(function () { list.classList.remove('instant'); }, 800);
     }
-    var d = el.matches('details') ? el : el.querySelector('details.pkg-more, details.pub-open');
+    var d = el.matches('details') ? el : el.matches('.pkg, .pub') ? el.querySelector('details.pkg-more, details.pub-open') : null;   // not a whole section
     if (d && !d.open) { d.open = true; moved = true; }
     if (moved) requestAnimationFrame(function () { el.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' }); });
   }

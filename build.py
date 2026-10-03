@@ -672,6 +672,52 @@ def _tex_html(text):
     return re.sub(r"\s+", " ", "".join(out)).strip()
 
 
+_RELATED_STOP = set("""about above after again against also among analysis approach based been being between both case cases certain
+class compute computed computing consider contribution contributions corresponding derive derived different discuss each either example
+examples first found framework from further general given have having here however illustrate important including into known large lead
+like main make many method methods more most much obtain obtained other order over paper particular possible present presented problem
+provide recent recently related respectively result results same several show shown simple since some such than that their them then
+there these they this those three through thus under used using various very well were what when where which while with within work
+would will our can article""".split())
+_RELATED = {}
+
+
+def _related(p):
+    """The papers closest to this one, at most three: by the words of their titles and abstracts (each word weighted
+    by how rare it is among the papers, the title counting twice), then the research domains and co-authors they share."""
+    import math
+    from collections import Counter
+    if not _RELATED:
+        words = {}
+        for q in PUBS:
+            t = _plain(q["title"])
+            text = f'{t} {t} {_plain(_tex_html(PUB_DETAILS.get(q.get("inspire", ""), {}).get("abstract", "")))}'
+            words[_pub_id(q)] = [w for w in re.findall(r"[a-z][a-z0-9-]{3,}", text.lower()) if w not in _RELATED_STOP]
+        n = len(words)
+        df = Counter(w for ws in words.values() for w in set(ws))
+        vec = {}
+        for k, ws in words.items():
+            v = {w: c / len(ws) * math.log(n / df[w]) for w, c in Counter(ws).items() if df[w] < n}
+            norm = math.sqrt(sum(x * x for x in v.values())) or 1
+            vec[k] = {w: x / norm for w, x in v.items()}
+        def coauthors(q):
+            return {a.strip() for a in _plain(q["authors"]).split(",")} - {"S. Banik"}
+        for q in PUBS:
+            k, scored = _pub_id(q), []
+            for r in PUBS:
+                k2 = _pub_id(r)
+                if k2 == k:
+                    continue
+                cos = sum(x * vec[k2].get(w, 0) for w, x in vec[k].items())
+                if cos < .08:                        # a shared domain alone does not make two papers related
+                    continue
+                score = cos + .08 * len(set(_domains_of(q)) & set(_domains_of(r))) + .04 * min(3, len(coauthors(q) & coauthors(r)))
+                scored.append((score, r["year"], r))
+            scored.sort(key=lambda x: (-x[0], -x[1]))
+            _RELATED[k] = [r for _s, _y, r in scored[:3]]
+    return _RELATED.get(_pub_id(p), [])
+
+
 def _pub_more(p):
     """What opens under a publication: its abstract, length, preprint numbers and arXiv category."""
     d = PUB_DETAILS.get(p.get("inspire", ""), {})
@@ -705,13 +751,16 @@ def _pub_more(p):
                 '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button>'
                 f'<a class="cite-raw" href="https://inspirehep.net/api/literature/{p["inspire"]}?format=bibtex">'
                 f'{key.group(1) if key else "BibTeX"}</a><span class="sr-only" role="status" aria-live="polite"></span></div>')
+    rel = _related(p)
+    rel_html = ("" if not rel else '<div class="pub-rel"><span class="k">Related papers</span><ul>' + "".join(
+        f'<li><a href="#{_pub_id(r)}">{r["title"]}</a> <span class="muted">{r["year"]}</span></li>' for r in rel) + '</ul></div>')
     return (f'<div class="pub-abs"><p class="abstract"><span class="k">Abstract</span>{_tex_html(d["abstract"])}</p>'
-            f'<div class="pub-facts">{facts_html}</div>{cite}</div>')
+            f'<div class="pub-facts">{facts_html}</div>{rel_html}{cite}</div>')
 
 
 CITE_JS = """<script>
 (function () {                              // copy a paper's BibTeX with one click, and say so
-  var bs = document.querySelectorAll('.cite-copy');
+  var bs = document.querySelectorAll('.cite-copy:not(.bib-all)');   // (the one for the whole list is in the page script)
   if (!bs.length) return;
   var ok = navigator.clipboard && window.isSecureContext;
   Array.prototype.forEach.call(bs, function (b) {
@@ -1647,7 +1696,7 @@ PKG_OPEN_JS = """<script>
 (function () {                              // a link to a package opens it
   function show() {
     var id = decodeURIComponent((location.hash || '').slice(1)), el = id && document.getElementById(id);
-    var d = el && el.querySelector && el.querySelector('details.pkg-more');
+    var d = el && el.matches && el.matches('.pkg') && el.querySelector('details.pkg-more');   // a package, not the whole list
     if (d) d.open = true;
   }
   show(); window.addEventListener('hashchange', show);
@@ -2360,6 +2409,8 @@ Standard Model at particle colliders.</p>
   <span class="dom-chip" hidden data-names="{domain_names}"><span class="dc-l">Research domain</span><b class="dc-n"></b>
   <button class="dc-x" type="button" aria-label="Show the papers of every domain" title="Show every domain">×</button></span>
 </div>
+<div class="pub-tools"><span class="pub-count" role="status" aria-live="polite"></span>
+<button class="cite-copy bib-all" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button></div>
 <p class="pub-empty" hidden>No publications match your search.</p>
 {pubs}
 <button class="pub-more" type="button">Show all {n_total} publications</button>
@@ -2529,18 +2580,38 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     if (topic === 'all') buttons.forEach(function (x) {{ x.setAttribute('aria-pressed', x.dataset.filter === 'all'); }});
     if (history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
   }};
+  /* the BibTeX of every paper in the list as it is filtered, in one click */
+  var bibAll = document.querySelector('.bib-all'), pubCount = document.querySelector('.pub-count'), bibList = [], bibTimer;
+  if (bibAll && !(navigator.clipboard && window.isSecureContext)) {{ bibAll.remove(); bibAll = null; }}
+  var bibLabel = function () {{
+    if (!bibAll || bibAll.classList.contains('done')) return;
+    var n = bibList.length;
+    bibAll.hidden = !n;
+    bibAll.querySelector('.cc-l').textContent = n === pubs.length ? 'Copy all ' + n + ' BibTeX entries'
+      : n === 1 ? 'Copy its BibTeX' : 'Copy these ' + n + ' BibTeX entries';
+  }};
+  if (bibAll) bibAll.addEventListener('click', function () {{
+    var list = bibList.map(function (p) {{ var c = p.querySelector('.cite-copy'); return c ? c.getAttribute('data-copy') : ''; }}).filter(Boolean);
+    if (!list.length) return;
+    navigator.clipboard.writeText(list.join('\\n\\n') + '\\n').then(function () {{
+      bibAll.classList.add('done');
+      bibAll.querySelector('.cc-l').textContent = list.length === 1 ? 'BibTeX copied' : list.length + ' entries copied';
+      clearTimeout(bibTimer);
+      bibTimer = setTimeout(function () {{ bibAll.classList.remove('done'); bibLabel(); }}, 2400);
+    }}).catch(function () {{}});
+  }});
   function pubText(p) {{                              // what a search looks through: the card, not the abstract
     if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
       function (x) {{ return x.textContent; }}).join(' ').toLowerCase();
     return p.dataset.q;
   }}
   function applyPubs() {{
-    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '' || domain !== '', keys = [], arrived = 0;
+    var shown = 0, matches = 0, narrowed = topic !== 'all' || query !== '' || domain !== '', keys = [], arrived = 0, matched = [];
     pubs.forEach(function (p) {{
       var ok = (topic === 'all' || p.dataset.topic.split(' ').indexOf(topic) >= 0) &&
                (!domain || (p.dataset.domains || '').split(' ').indexOf(domain) >= 0) &&
                (!query || pubText(p).indexOf(query) >= 0);
-      if (ok) {{ matches++; var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/\u00a0/g, ' ').trim()); }}
+      if (ok) {{ matches++; matched.push(p); var tt = p.querySelector('.title'); if (tt) keys.push(tt.textContent.replace(/\u00a0/g, ' ').trim()); }}
       var vis = ok && (open || narrowed || shown < LIMIT);
       if (vis) shown++;
       if (vis && p.hidden && booted && !reduce) {{         // a paper that comes back glides into place, a little after the one before
@@ -2556,6 +2627,9 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       h.hidden = !any;
     }});
     if (more) more.hidden = open || narrowed || matches <= LIMIT;
+    bibList = matched; bibLabel();
+    if (pubCount) pubCount.textContent = !pubs.length ? '' : (matches === pubs.length ? 'All ' + matches + ' papers'
+      : matches === 1 ? 'One paper of ' + pubs.length : matches + ' papers of ' + pubs.length);
     if (empty) empty.hidden = matches > 0;
     if (window.CustomEvent) document.dispatchEvent(new CustomEvent('pubfilter', {{ detail: {{ narrowed: narrowed, titles: keys }} }}));
   }}
@@ -2591,7 +2665,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       list.classList.add('instant'); list.open = true; moved = true;
       setTimeout(function () {{ list.classList.remove('instant'); }}, 800);
     }}
-    var d = el.matches('details') ? el : el.querySelector('details.pkg-more, details.pub-open');
+    var d = el.matches('details') ? el : el.matches('.pkg, .pub') ? el.querySelector('details.pkg-more, details.pub-open') : null;   // not a whole section
     if (d && !d.open) {{ d.open = true; moved = true; }}
     if (moved) requestAnimationFrame(function () {{ el.scrollIntoView({{ block: 'start', behavior: reduce ? 'auto' : 'smooth' }}); }});
   }}

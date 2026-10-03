@@ -2571,3 +2571,17 @@ html[data-theme="dark"] .ss-list li[aria-selected="true"] a { background: var(--
 @media (prefers-reduced-motion: no-preference) {
   .dom-chip:not([hidden]) { animation: ss-rise .35s cubic-bezier(.2, .7, .2, 1) .2s both; }
 }
+
+/* Publications: the papers closest to an opened one (by their words, domains and co-authors), one click away */
+.pub-rel { margin-top: .85rem; }
+.pub-rel ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .28rem; }
+.pub-rel li { position: relative; padding-left: 1rem; font-size: .9rem; line-height: 1.45; }
+.pub-rel li::before { content: ""; position: absolute; left: .1rem; top: .62em; width: .42rem; height: 1px; background: var(--gold); }
+.pub-rel a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: .18em; }
+.pub-rel a:hover { color: var(--accent); text-decoration-color: currentColor; }
+.pub-rel .muted { font-family: var(--sans); font-size: .72rem; letter-spacing: .04em; }
+@media (max-width: 40rem) { .pub-rel li { font-size: .86rem; } }
+/* Publications: how many papers the list holds as it is filtered, and their BibTeX in one click */
+.pub-tools { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; margin: .9rem 0 .3rem; }
+.pub-count { font-family: var(--sans); font-size: .64rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--grey); }
+.bib-all[hidden] { display: none; }
