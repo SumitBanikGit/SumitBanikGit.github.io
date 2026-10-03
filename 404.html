@@ -49,8 +49,49 @@
 </div>
 <button class="ss-btn corner" type="button" aria-label="Search the site" title="Search the site (press /)"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></button><button class="theme-toggle corner" type="button" aria-pressed="false" aria-label="Dark mode" title="Switch to dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"><g class="tt-sun"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></g><path class="tt-moon" d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/></svg></button>
 <main id="main" class="wrap">
-<section class="chapter"><p class="about-links"><a href="/">Go to the home page <span aria-hidden="true">→</span></a></p></section>
-
+<section class="chapter nf-help"><p class="nf-guess" hidden>Perhaps you were looking for <a class="nf-page" href="/">the home page</a>.</p><p class="nf-find" hidden><button class="button nf-search" type="button">Search the site for “<span class="nf-q"></span>”</button></p><p class="about-links"><a href="/">Go to the home page <span aria-hidden="true">→</span></a></p></section>
+<script>
+(function () {                              // a mistyped address: guess the page from its words, and offer to search for them
+  var words = decodeURIComponent(location.pathname).toLowerCase().replace(/\.html?$/, '')
+    .split(/[^a-z0-9\u00e0-\u00ff]+/).filter(function (w) { return w.length > 2; });
+  if (!words.length) return;
+  var pages = [['the home page', '/', 'home index about'], ['Research', '/research.html', 'research tour domains'],
+    ['Publications', '/publications.html', 'publications publication papers paper articles pubs thesis'],
+    ['Software', '/software.html', 'software code packages package library mbconichulls feyngkz hyperprecision slq'],
+    ['Talks', '/talks.html', 'talks talk seminars seminar slides'], ['Funding', '/funding.html', 'funding grants fellowships fellowship'],
+    ['Teaching', '/teaching.html', 'teaching courses course'], ['Supervision', '/supervision.html', 'supervision students student'],
+    ['the CV', '/cv.html', 'cv resume curriculum vitae'], ['Contact', '/contact.html', 'contact email mail address']];
+  function edits(a, b) {                     // how many letters to change to turn one word into the other
+    var d = [], i, j;
+    for (i = 0; i <= a.length; i++) d[i] = [i];
+    for (j = 0; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+  }
+  var best = null, bestScore = 99;
+  words.forEach(function (w) {
+    pages.forEach(function (pg) {
+      pg[2].split(' ').forEach(function (k) {
+        var sc = k.indexOf(w) === 0 && w.length >= 4 ? 0 : edits(w, k);
+        if (sc < bestScore && sc <= Math.max(1, Math.floor(k.length / 4))) { bestScore = sc; best = pg; }
+      });
+    });
+  });
+  var guess = document.querySelector('.nf-guess'), find = document.querySelector('.nf-find');
+  if (best && guess) {
+    var a = guess.querySelector('.nf-page'); a.textContent = best[0]; a.setAttribute('href', best[1]); guess.hidden = false;
+  }
+  var q = words.join(' ');
+  if (find && document.querySelector('.ss-btn')) {
+    find.querySelector('.nf-q').textContent = q; find.hidden = false;
+    find.querySelector('button').addEventListener('click', function () {
+      var input = document.querySelector('.ss-input'); if (input) input.value = q;
+      document.querySelector('.navbar .ss-btn').click();
+    });
+  }
+})();
+</script>
 <section class="chapter" id="contact">
 <h2 class="chapter-title">Contact</h2>
 <div class="contact-card">
