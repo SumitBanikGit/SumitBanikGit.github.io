@@ -1952,9 +1952,12 @@ def write_pages(html, n_articles, n_proc):
                   '<svg viewBox="0 0 24 24" aria-hidden="true"><g class="tt-sun"><circle cx="12" cy="12" r="4.2"/>'
                   '<path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.4 5.4l1.5 1.5M17.1 17.1l1.5 1.5M5.4 18.6l1.5-1.5M17.1 6.9l1.5-1.5"/></g>'
                   '<path class="tt-moon" d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/></svg></button>')
+        find = ('<button class="ss-btn" type="button" aria-label="Search the site" title="Search the site (press /)">'
+                '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></button>')
         return (f'<div class="navbar">\n  <div class="wrap nav-inner">\n'
                 f'    <a class="brand" href="index.html">{P["name"]}</a>\n'
-                f'    <nav aria-label="Pages">{links}</nav>\n    {toggle}\n  </div>\n</div>\n'
+                f'    <nav aria-label="Pages">{links}</nav>\n    <div class="nav-tools">{find}{toggle}</div>\n  </div>\n</div>\n'
+                + find.replace('class="ss-btn"', 'class="ss-btn corner"', 1)
                 + toggle.replace('class="theme-toggle"', 'class="theme-toggle corner"', 1) + '\n')
 
     def letters(text):
@@ -2078,6 +2081,12 @@ def main():
             "Feynman integrals, Mellin-Barnes and hypergeometric methods, Higgs physics "
             "and physics beyond the Standard Model.")
 
+    import hashlib
+    index = json.dumps(search_index(), ensure_ascii=False, separators=(",", ":"))
+    if not Path("assets/search.json").exists() or Path("assets/search.json").read_text(encoding="utf-8") != index:
+        Path("assets/search.json").write_text(index, encoding="utf-8")
+    search_v = hashlib.md5(index.encode("utf-8")).hexdigest()[:8]
+
     html = TEMPLATE.format(
         desc=desc, url=P["url"], jsonld=jsonld(), portrait=portrait,
         email=P["email"], orcid=P["orcid"], inspire=P["inspire"], scholar=P["scholar"],
@@ -2090,10 +2099,57 @@ def main():
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
         n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
-        updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(),
+        updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(), search_v=search_v,
     )
     write_pages(html, n_articles, n_proc)
     check_links()
+
+
+def search_index():
+    """Everything the search box (press / on any page) looks through, each with the place on the site it opens:
+    title, a line under it, the kind and year, and longer text (abstracts and descriptions) searched but not shown."""
+    out = []
+    def add(kind, year, title, sub, url, body=""):
+        e = {"k": kind, "y": str(year or ""), "t": _plain(title).strip(), "s": " ".join(_plain(sub).split()), "u": "/" + url}
+        if re.search(r"<(i|sub|sup|span)\b", title):           # a title with maths in it is shown as on the page
+            e["h"] = re.sub(r"<(?!/?(i|sub|sup|span)\b)[^>]+>", "", title).strip()
+        if body:
+            e["b"] = " ".join(_plain(body).split())
+        out.append(e)
+    for f, label, title, sub, _secs in PAGES:
+        if label:
+            add("Page", "", title, sub, f)
+    kinds = {"article": "Paper", "proceedings": "Proceedings", "thesis": "Thesis"}
+    for p in PUBS:
+        det = PUB_DETAILS.get(p.get("inspire", ""), {})
+        topics = " ".join(TOPIC_LABEL[t] for t in p["topic"].split())
+        add(kinds[p["kind"]], p["year"], p["title"], f'{p["authors"]} · {p["ref"]}', f"publications.html#{_pub_id(p)}",
+            " ".join(x for x in (_tex_html(det.get("abstract", "")), p.get("arxiv", ""), p.get("venue", ""), topics) if x))
+    for tid, (y, ev, city, title, note, invited) in zip(_talk_ids(), TALKS):
+        add("Invited talk" if invited else "Talk", y, f"“{title}”", f"{ev} · {city}", f"talks.html#{tid}", note)
+    for pk in PACKAGES:
+        add("Software", "", pk["name"], pk["tagline"], f'software.html#{pk["slug"]}',
+            pk["what"] + " Mathematica " + " ".join(f"{v} {what}" for v, _w, what, *_ in pk["releases"]))
+    add("Library", "", LIBRARY["name"], LIBRARY["tagline"], f'software.html#{LIBRARY["slug"]}', LIBRARY["what"])
+    for y, course, role, inst, desc in TEACHING:
+        add("Teaching", y, course, f"{role} · {inst}", f"teaching.html#{_slug(course)}", desc)
+    for y, name, lvl, inst, thesis in SUPERVISION:
+        add("Supervision", y, name, f"{lvl} · {inst}", f"supervision.html#{_slug(name)}", thesis)
+    for y, name, agency, country, *_rest in FUNDING:
+        add("Funding", y, name, f"{agency} · {country}", f"funding.html#{_slug(name)}")
+    for kind, items, frag in (("Position", EMPLOYMENT, "positions"), ("Education", EDUCATION, "education")):
+        for e in items:
+            add(kind, "", e["title"], f'{e["org"]} · {e["when"]}', f"cv.html#{frag}", f'{e["where"]} {e.get("meta", "")}')
+    seen = {e["u"] for e in out}                       # and the parts of each page, as the menu lists them
+    names = {f: label for f, label, *_ in PAGES if label}
+    names["#about"] = "Home"
+    for key, items in nav_drops().items():
+        for t, h, n in items:
+            if h.startswith("mailto:") or "/" + h in seen:
+                continue
+            seen.add("/" + h)
+            add("File" if h.endswith(".pdf") else "Section", "", t, n or names.get(key, ""), h)
+    return out
 
 
 def check_links():
@@ -2372,6 +2428,22 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
 </div>
 </footer>
 
+<dialog class="ss" aria-labelledby="ss-title" data-src="/assets/search.json?v={search_v}">
+ <div class="ss-box">
+  <div class="ss-head">
+   <svg class="ss-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>
+   <label class="sr-only" for="ss-q" id="ss-title">Search the site</label>
+   <input class="ss-input" id="ss-q" name="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="go"
+          placeholder="Papers, talks, software, people" role="combobox" aria-expanded="false" aria-controls="ss-list" aria-autocomplete="list">
+   <button class="ss-close" type="button" aria-label="Close the search">Esc</button>
+  </div>
+  <div class="ss-hints"><span class="ss-try">Try</span><button type="button">Mellin-Barnes</button><button type="button">GKZ</button><button type="button">95 GeV</button><button type="button">leptoquarks</button><button type="button">SMEFT</button><button type="button">Zürich</button></div>
+  <ul class="ss-list" id="ss-list" role="listbox" aria-label="Results"></ul>
+  <div class="ss-foot"><span class="ss-status" role="status" aria-live="polite"></span>
+   <span class="ss-keys"><span><kbd>↑</kbd><kbd>↓</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>/</kbd> from any page</span></span></div>
+ </div>
+</dialog>
+
 <div class="progress" aria-hidden="true"></div>
 <a class="to-top" href="#top" aria-label="Back to top"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg></a>
 
@@ -2612,9 +2684,14 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       vt.finished.then(function () {{ root.classList.remove('theme-vt'); }}, function () {{ root.classList.remove('theme-vt'); }});
     }});
   }});
-  var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar');
-  if (corner && navbar) {{                           // the corner switch steps aside as the menu bar with its own switch reaches it
-    var place = function () {{ corner.classList.toggle('away', navbar.getBoundingClientRect().top <= corner.offsetTop + corner.offsetHeight + 8); }};
+  var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar'),
+      cornerFind = document.querySelector('.ss-btn.corner');
+  if (corner && navbar) {{                           // the corner switches step aside as the menu bar with its own reaches them
+    var place = function () {{
+      var away = navbar.getBoundingClientRect().top <= corner.offsetTop + corner.offsetHeight + 8;
+      corner.classList.toggle('away', away);
+      if (cornerFind) cornerFind.classList.toggle('away', away);
+    }};
     window.addEventListener('scroll', place, {{ passive: true }}); window.addEventListener('resize', place); place();
   }}
   var dq = window.matchMedia('(prefers-color-scheme: dark)'), follow = function (ev) {{
@@ -2674,6 +2751,124 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   window.addEventListener('scroll', update, {{ passive: true }});
   window.addEventListener('resize', update);
   update();
+
+  /* ---------- search the whole site: "/" (or Ctrl K) on any page, or the magnifier in the menu bar ---------- */
+  var ss = document.querySelector('dialog.ss');
+  if (ss && ss.showModal && window.fetch) {{
+    var ssq = ss.querySelector('.ss-input'), ssl = ss.querySelector('.ss-list'), sst = ss.querySelector('.ss-status'),
+        ssh = ss.querySelector('.ss-hints'), ssIndex = null, ssAct = -1, ssHits = [];
+    var fold = function (x) {{                       // Zurich finds Zürich, and Mellin Barnes finds Mellin-Barnes
+      return (x || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[-\\u2010\\u2011_]/g, ' ');
+    }};
+    var ssLoad = function () {{
+      if (ssIndex) return Promise.resolve(ssIndex);
+      return fetch(ss.dataset.src).then(function (r) {{ return r.json(); }}).then(function (d) {{
+        d.forEach(function (e) {{ e.ft = fold(e.t); e.fs = fold(e.s + ' ' + e.k + ' ' + e.y); e.fb = fold(e.b); }});
+        return (ssIndex = d);
+      }});
+    }};
+    var atWord = function (txt, at) {{ return at === 0 || !/[a-z0-9]/.test(txt.charAt(at - 1)); }};
+    var ssScore = function (e, words) {{                // every word must be found: in the title counts most, then the line under it, then the text
+      var total = 0;
+      for (var i = 0; i < words.length; i++) {{
+        var w = words[i], at, sc = 0;
+        if ((at = e.ft.indexOf(w)) >= 0) sc = atWord(e.ft, at) ? 8 : 5;
+        else if ((at = e.fs.indexOf(w)) >= 0) sc = atWord(e.fs, at) ? 4 : 2;
+        else if (e.fb.indexOf(w) >= 0) sc = 1;
+        if (!sc) return 0;
+        total += sc;
+      }}
+      var ph = words.join(' ');                         // the words together, as written, count extra
+      if (words.length > 1) total += e.ft.indexOf(ph) >= 0 ? 6 : e.fs.indexOf(ph) >= 0 ? 3 : e.fb.indexOf(ph) >= 0 ? 2 : 0;
+      return total + (e.k === 'Page' ? 1 : 0);
+    }};
+    var ssLine = function (e, words) {{                 // found only in an abstract: show the words around it
+      var tries = words.length > 1 ? [words.join(' ')].concat(words) : words;
+      for (var i = 0; i < tries.length; i++) {{
+        if (e.ft.indexOf(tries[i]) >= 0 || e.fs.indexOf(tries[i]) >= 0) {{ if (i === 0 && tries.length > 1) return e.s; continue; }}
+        var at = e.fb.indexOf(tries[i]);
+        if (at < 0) continue;
+        var a = at > 60 ? e.b.indexOf(' ', at - 60) + 1 : 0, z = e.b.indexOf(' ', Math.min(e.b.length, at + 90));
+        return (a > 0 ? '…' : '') + e.b.slice(a, z < 0 ? e.b.length : z) + (z < 0 ? '' : '…');
+      }}
+      return e.s;
+    }};
+    var ssMark = function (i, scroll) {{
+      ssAct = i;
+      Array.prototype.forEach.call(ssl.children, function (li, k) {{ li.setAttribute('aria-selected', k === i ? 'true' : 'false'); }});
+      if (i >= 0) {{ ssq.setAttribute('aria-activedescendant', 'ss-o' + i); if (scroll) ssl.children[i].scrollIntoView({{ block: 'nearest' }}); }}
+      else ssq.removeAttribute('aria-activedescendant');
+    }};
+    var ssShow = function () {{
+      var words = fold(ssq.value).split(/[\\s,]+/).filter(Boolean);
+      ssHits = !words.length ? [] : ssIndex.map(function (e) {{ return [ssScore(e, words), e]; }})
+        .filter(function (x) {{ return x[0] > 0; }})
+        .sort(function (a, b) {{ return b[0] - a[0] || (+b[1].y || 0) - (+a[1].y || 0); }})
+        .slice(0, 12).map(function (x) {{ return x[1]; }});
+      ssl.textContent = '';
+      ssHits.forEach(function (e, i) {{
+        var li = document.createElement('li'), a = document.createElement('a');
+        li.id = 'ss-o' + i; li.setAttribute('role', 'option'); li.style.setProperty('--k', i);
+        a.href = e.u; a.tabIndex = -1;
+        [['ss-k', e.k + (e.y ? ' · ' + e.y : '')], ['ss-t', e.t, e.h], ['ss-s', ssLine(e, words)]].forEach(function (p) {{
+          var sp = document.createElement('span'); sp.className = p[0];
+          if (p[2]) sp.innerHTML = p[2]; else sp.textContent = p[1];   // the index is the site's own, written by build.py
+          a.appendChild(sp);
+        }});
+        li.appendChild(a); ssl.appendChild(li);
+      }});
+      ssh.hidden = words.length > 0;
+      sst.textContent = !words.length ? '' : ssHits.length ? ssHits.length + (ssHits.length === 1 ? ' result' : (ssHits.length === 12 ? ' best results' : ' results'))
+                                                           : 'Nothing found. Try fewer or shorter words.';
+      ssq.setAttribute('aria-expanded', ssHits.length ? 'true' : 'false');
+      ssMark(ssHits.length ? 0 : -1, true);
+    }};
+    var ssGo = function (e) {{
+      var u = new URL(e.u, location.href), page = function (p) {{ return p.replace(/\\/$/, '/index.html'); }};
+      if (page(u.pathname) !== page(location.pathname)) {{ location.href = u.href; return; }}
+      ss.close();                                     // a part of this page: open it and bring it into view
+      if (u.hash && u.hash !== location.hash) {{ location.hash = u.hash; return; }}
+      var el = u.hash ? document.getElementById(decodeURIComponent(u.hash.slice(1))) : document.body;
+      toTarget();
+      if (el) el.scrollIntoView({{ block: 'start', behavior: reduce ? 'auto' : 'smooth' }});
+    }};
+    var ssOpen = function () {{
+      if (ss.open) return;
+      ss.showModal(); ssq.focus(); ssq.select();
+      ssLoad().then(ssShow).catch(function () {{ sst.textContent = 'The search could not load. Please try again.'; }});
+    }};
+    Array.prototype.forEach.call(document.querySelectorAll('.ss-btn'), function (b) {{ b.addEventListener('click', ssOpen); }});
+    document.addEventListener('keydown', function (ev) {{
+      var t = ev.target, typing = t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName));
+      if ((ev.key === '/' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey) || ((ev.metaKey || ev.ctrlKey) && /^k$/i.test(ev.key))) {{
+        ev.preventDefault(); ssOpen();
+      }}
+    }});
+    ssq.addEventListener('input', function () {{ if (ssIndex) ssShow(); }});
+    ssq.addEventListener('keydown', function (ev) {{
+      if ((ev.key === 'ArrowDown' || ev.key === 'ArrowUp') && ssHits.length) {{
+        ev.preventDefault();
+        ssMark((ssAct + (ev.key === 'ArrowDown' ? 1 : ssHits.length - 1)) % ssHits.length, true);
+      }} else if (ev.key === 'Enter') {{
+        ev.preventDefault();
+        if (ssAct >= 0) ssGo(ssHits[ssAct]);
+      }}
+    }});
+    ssl.addEventListener('click', function (ev) {{
+      var a = ev.target.closest('a'); if (!a || ev.metaKey || ev.ctrlKey || ev.shiftKey) return;
+      ev.preventDefault(); ssGo(ssHits[Array.prototype.indexOf.call(ssl.children, a.parentNode)]);
+    }});
+    ssl.addEventListener('mousemove', function (ev) {{
+      var li = ev.target.closest('li'), i = li ? Array.prototype.indexOf.call(ssl.children, li) : -1;
+      if (i >= 0 && i !== ssAct) ssMark(i, false);
+    }});
+    ssh.addEventListener('click', function (ev) {{
+      var b = ev.target.closest('button'); if (!b) return;
+      ssq.value = b.textContent; ssq.focus(); if (ssIndex) ssShow();
+    }});
+    ss.querySelector('.ss-close').addEventListener('click', function () {{ ss.close(); }});
+    ss.addEventListener('click', function (ev) {{ if (ev.target === ss) ss.close(); }});   // a click outside the box
+  }}
 
   /* ---------- journey map: a dot travels the route once the arcs are drawn ---------- */
   var jm = document.querySelector('.journey-map'), trav = jm && jm.querySelector('.jm-traveler');
