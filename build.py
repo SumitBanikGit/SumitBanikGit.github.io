@@ -1212,12 +1212,9 @@ def tour_scene_data():
     """References for the paper tour on the Research page, taken from PUBS, and the digits
     for the high-precision vignette."""
     refs = {}
-    for p in PUBS:
+    for p in PUBS:                                # each caption opens its paper, with the abstract, on the Publications page
         key = p.get("arxiv") or p.get("doi") or (f"inspire:{p['inspire']}" if p.get("inspire") else p["title"])
-        url = (f"https://arxiv.org/abs/{p['arxiv']}" if p.get("arxiv") else
-               f"https://doi.org/{p['doi']}" if p.get("doi") else
-               f"https://inspirehep.net/literature/{p['inspire']}" if p.get("inspire") else "")
-        refs[key] = dict(r=_plain(p["ref"]), u=url)
+        refs[key] = dict(r=_plain(p["ref"]), u=f"publications.html#{_pub_id(p)}")
     return dict(refs=refs, hp=_precision_digits())
 
 

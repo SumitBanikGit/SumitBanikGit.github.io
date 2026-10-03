@@ -2690,7 +2690,8 @@
     },
     label: function (e, i) {                        // the caption names the paper and links to it
       var V = e.vs[i].V, ref = e.refs[V.paper] || {};
-      e.caption(ref.u ? '<a href="' + ref.u + '" tabindex="-1" rel="noopener" target="_blank">' + V.cap + '</a>' : V.cap);
+      e.caption(ref.u ? '<a href="' + ref.u + '" tabindex="-1"' + (/^https?:/.test(ref.u) ? ' rel="noopener" target="_blank"' : '')
+                + ' title="The paper, with its abstract">' + V.cap + '</a>' : V.cap);
       e.hint(V.ref || ref.r || '');
     },
     begin: function (e, i, t) {
