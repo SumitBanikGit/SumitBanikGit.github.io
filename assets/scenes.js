@@ -3489,7 +3489,19 @@
   }
   SCENES.chalkboard = {
     touchHint: 'Tap for the next equation',
-    init: function (e) { e.idx = 0; e.t0 = 0.6; e.cur = null; e.cut = null; },
+    init: function (e) {
+      e.idx = 0; e.t0 = 0.6; e.cur = null; e.cut = null; e.next = null;
+      document.addEventListener('chalkcourse', function (ev) {   // a course card below asks for one of its own on the board
+        var name = (ev.detail && ev.detail.course) || '', mine = [];
+        EQUATIONS.forEach(function (q, i) { if (name.indexOf(q.course) === 0) mine.push(i); });
+        if (!mine.length) return;
+        var k = mine.filter(function (i) { return i > e.idx; })[0];
+        e.next = k === undefined ? mine[0] : k;
+        if (e.next === e.idx && mine.length > 1) e.next = mine[(mine.indexOf(e.idx) + 1) % mine.length];
+        SCENES.chalkboard.click(e);
+        if (e.redraw) e.redraw();
+      });
+    },
     layout: function (e) {
       e.bx = e.x + 8; e.by = e.y + 4; e.bw = e.w - 16; e.bh = e.h - 20;
       e.board = board(e); e.residue = layer(e.bw, e.bh, e.dpr); e.cur = null;
@@ -3533,12 +3545,12 @@
         r.globalAlpha = 0.02; r.drawImage(q.c, 0, 0, e.bw, e.bh);
         r.restore();
         boxStroke(r, q, boxK, 0, 0, 0.04);
-        e.idx = (e.idx + 1) % EQUATIONS.length; e.cur = null; e.cut = null; e.t0 = t + 0.35;
+        e.idx = e.next !== null ? e.next : (e.idx + 1) % EQUATIONS.length; e.next = null; e.cur = null; e.cut = null; e.t0 = t + 0.35;
       }
     },
     click: function (e) {                              // wipe the board and write the next one
       var q = e.cur;
-      if (e.reduce) { e.idx = (e.idx + 1) % EQUATIONS.length; e.cur = null; return; }   // straight to the next one
+      if (e.reduce) { e.idx = e.next !== null ? e.next : (e.idx + 1) % EQUATIONS.length; e.next = null; e.cur = null; return; }   // straight to the next one
       if (!q) return;
       var tau = e.t - e.t0, tErase = q.Tw + 4.6;
       if (tau < 0 || tau >= tErase) return;

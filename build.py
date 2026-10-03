@@ -1492,12 +1492,33 @@ def render_funding():
             '<div class="funds three">' + "".join(fund_card(*f) for f in junior) + '</div>')
 
 
+# The courses that have equations and figures on the chalkboard at the top of the Teaching page (EQUATIONS in scenes.js).
+BOARD_COURSES = ("Quantum Field Theory", "Flavour Physics", "Introductory Physics")
+
+
 def render_teaching():
+    def board(course):
+        return ('' if not course.startswith(BOARD_COURSES) else
+                f'<button class="on-board" type="button" data-course="{course}" aria-label="Show {course} on the chalkboard above">'
+                'On the board <span aria-hidden="true">↑</span></button>')
     return '<div class="courses">' + "".join(
         f'<article class="course" id="{_slug(course)}">{_pick_icon(COURSE_ICONS, course)}<div class="kicker">{y} <span class="sep">·</span> {inst}</div>'
         f'<h4 class="course-title">{course}</h4><div class="course-role">{role}</div>'
-        f'<p>{desc}</p></article>'
-        for y, course, role, inst, desc in TEACHING) + '</div>'
+        f'<p>{desc}</p>{board(course)}</article>'
+        for y, course, role, inst, desc in TEACHING) + '</div>' + BOARD_JS
+
+
+BOARD_JS = """<script>
+(function () {                              // a course asks the chalkboard at the top for one of its equations
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  Array.prototype.forEach.call(document.querySelectorAll('.on-board'), function (b) {
+    b.addEventListener('click', function () {
+      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('chalkcourse', { detail: { course: b.dataset.course } }));
+      window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+})();
+</script>"""
 
 
 def render_supervision():
