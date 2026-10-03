@@ -2744,7 +2744,7 @@
      Publications and Talks
      ===================================================================== */
   SCENES.constellation = {
-    touchHint: 'Tap a star to see the paper',
+    touchHint: 'Tap a star, tap again to open it',
     init: function (e) {
       e.pubs = e.data.pubs || []; e.hover = -1; e.clock = 0; e.sx = -1e9; e.fade = 0;
       e.match = null; e.dim = e.pubs.map(function () { return 1; });
@@ -2897,7 +2897,14 @@
       var p = e.pubs[e.hover];
       if (!p) return;
       if (e.touch && e.tapped !== e.hover) { e.tapped = e.hover; return; }
-      if (p.u) window.open(p.u, '_blank', 'noopener');
+      if (!p.u) return;
+      if (p.u.charAt(0) === '#') {                      // the paper, opened, in the list below
+        if (window.location.hash !== p.u) { window.location.hash = p.u; return; }
+        var el = document.getElementById(p.u.slice(1)), d = el && el.querySelector('details');
+        if (d) d.open = true;
+        if (el) el.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+      }
+      else window.open(p.u, '_blank', 'noopener');
     }
   };
   SCENES.talkmap = {

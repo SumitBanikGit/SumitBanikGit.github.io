@@ -1163,11 +1163,8 @@ def pub_scene_data():
     """Papers in time order, with the field, the kind and a link for each."""
     pubs = []                                         # in time order: by year, and by arXiv number within a year
     for p in sorted(reversed(PUBS), key=lambda p: (int(p["year"]), p.get("arxiv") or "9999.99999")):
-        link = (f"https://arxiv.org/abs/{p['arxiv']}" if p.get("arxiv") else
-                f"https://doi.org/{p['doi']}" if p.get("doi") else
-                f"https://inspirehep.net/literature/{p['inspire']}" if p.get("inspire") else "")
-        pubs.append(dict(y=int(p["year"]), t="pheno" if p["topic"] == "pheno" else "fi",
-                         k=p["kind"], n=p["title"], u=link, p=_plain(p["title"]).strip()))
+        pubs.append(dict(y=int(p["year"]), t="pheno" if p["topic"] == "pheno" else "fi",   # a star opens its paper in the list below
+                         k=p["kind"], n=p["title"], u=f"#{_pub_id(p)}", p=_plain(p["title"]).strip()))
     return dict(pubs=pubs)
 
 
@@ -1291,7 +1288,7 @@ def page_scenes():
     return {
         "research.html": ("tour", "A tour of my papers", "Click or use the arrow keys for the next paper", tour_scene_data),
         "publications.html": ("constellation", f"{len(PUBS)} publications from {min(years)} to {max(years)}",
-                              "Hover over a star to see the paper", pub_scene_data),
+                              "Hover over a star, click to open the paper", pub_scene_data),
         "talks.html": ("talkmap", f"{len(TALKS)} talks in {len(cities)} cities since {first_talk}",
                        "Click a city for its talks. Hollow dots are online.", talk_scene_data),
         "funding.html": ("medals", f"{len(FUNDING)} fellowships and grants since {min(int(f[0]) for f in FUNDING)}",
