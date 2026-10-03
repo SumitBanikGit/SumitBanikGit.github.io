@@ -3090,7 +3090,15 @@
   }
   SCENES.medals = {
     touchHint: 'Tap for the next award',
-    init: function (e) { e.aw = (e.data && e.data.awards) || []; e.sel = -1; e.selAt = 0; e.nextSel = 5; },
+    init: function (e) {
+      e.aw = (e.data && e.data.awards) || []; e.sel = -1; e.selAt = 0; e.nextSel = 5;
+      document.addEventListener('scenepick', function (ev) {   // a card below asks for its award on the chart
+        var i = e.aw.map(function (a) { return a.n; }).indexOf(ev.detail && ev.detail.name);
+        if (i < 0) return;
+        e.sel = i; e.selAt = e.t || 0; e.nextSel = (e.t || 0) + 8; SCENES.medals.announce(e);
+        if (e.redraw) e.redraw();
+      });
+    },
     layout: function (e) {
       var A = e.aw, n = A.length;
       if (!n) return;
@@ -3580,7 +3588,15 @@
   }
   SCENES.mentoring = {
     touchHint: 'Tap for the next student',
-    init: function (e) { e.st = (e.data && e.data.students) || []; e.sel = 0; e.selAt = 0; e.nextSel = 6; },
+    init: function (e) {
+      e.st = (e.data && e.data.students) || []; e.sel = 0; e.selAt = 0; e.nextSel = 6;
+      document.addEventListener('scenepick', function (ev) {   // a card below asks for its student's project
+        var i = e.st.map(function (s) { return s.n; }).indexOf(ev.detail && ev.detail.name);
+        if (i < 0) return;
+        e.sel = i; e.selAt = e.t || 0; e.nextSel = (e.t || 0) + 9; SCENES.mentoring.announce(e);
+        if (e.redraw) e.redraw();
+      });
+    },
     layout: function (e) {
       var n = Math.max(1, e.st.length);
       e.pw = e.w / n; e.vh = e.h - 50; e.su = Math.min(e.pw / 150, e.vh / 105);

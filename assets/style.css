@@ -2655,10 +2655,10 @@ html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { backgroun
 .reach-vcf { margin: .7rem 0 0; font-size: .9rem; }
 .reach-vcf .muted { font-size: .85em; }
 /* Teaching: a course asks the chalkboard at the top for one of its equations */
-.course .on-board { margin-top: .8rem; align-self: flex-start; font-family: var(--sans); font-size: .62rem; font-weight: 600; letter-spacing: .12em;
+.on-board { margin-top: .8rem; align-self: flex-start; position: relative; z-index: 1; font-family: var(--sans); font-size: .62rem; font-weight: 600; letter-spacing: .12em;
                     text-transform: uppercase; color: var(--accent); background: transparent; border: 0; border-bottom: 1px solid var(--rule);
                     padding: 0 0 .1rem; cursor: pointer; }
-.course .on-board:hover, .course .on-board:focus-visible { border-bottom-color: currentColor; }
-.course .on-board span { display: inline-block; transition: transform .2s; }
-.course .on-board:hover span { transform: translateY(-2px); }
-@media (prefers-reduced-motion: reduce) { .course .on-board span { transition: none; } }
+.on-board:hover, .on-board:focus-visible { border-bottom-color: currentColor; }
+.on-board span { display: inline-block; transition: transform .2s; }
+.on-board:hover span { transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) { .on-board span { transition: none; } }

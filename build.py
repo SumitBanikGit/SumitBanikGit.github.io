@@ -1480,7 +1480,9 @@ def fund_card(year, name, agency, country, amount, dur, status):
             f'<h4 class="fund-name">{name}</h4><div class="fund-agency">{agency}</div>'
             f'<div class="fund-amount">{main}</div>'
             f'<div class="fund-meta">{approx} <span class="sep">·</span> {dur}</div>'
-            f'<div class="fund-tags">{tags}</div></article>')
+            f'<div class="fund-tags">{tags}</div>'
+            f'<button class="on-board" type="button" data-pick="{name}" aria-label="Show the {name} on the chart above">'
+            'On the chart <span aria-hidden="true">↑</span></button></article>')
 
 
 def render_funding():
@@ -1489,7 +1491,7 @@ def render_funding():
     return ('<h3 class="sect">Postdoctoral fellowships and grants</h3>'
             '<div class="funds two">' + "".join(fund_card(*f) for f in senior) + '</div>'
             '<h3 class="sect">Doctoral and master’s fellowships</h3>'
-            '<div class="funds three">' + "".join(fund_card(*f) for f in junior) + '</div>')
+            '<div class="funds three">' + "".join(fund_card(*f) for f in junior) + '</div>' + BOARD_JS)
 
 
 # The courses that have equations and figures on the chalkboard at the top of the Teaching page (EQUATIONS in scenes.js).
@@ -1509,11 +1511,12 @@ def render_teaching():
 
 
 BOARD_JS = """<script>
-(function () {                              // a course asks the chalkboard at the top for one of its equations
-  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+(function () {                              // a card asks the animation at the top for its own part: a course's equations,
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;   // a student's project, an award
   Array.prototype.forEach.call(document.querySelectorAll('.on-board'), function (b) {
     b.addEventListener('click', function () {
-      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('chalkcourse', { detail: { course: b.dataset.course } }));
+      if (window.CustomEvent) document.dispatchEvent(b.dataset.course ? new CustomEvent('chalkcourse', { detail: { course: b.dataset.course } })
+                                                                    : new CustomEvent('scenepick', { detail: { name: b.dataset.pick } }));
       window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
     });
   });
@@ -1525,8 +1528,10 @@ def render_supervision():
     return '<div class="students">' + "".join(
         f'<article class="student" id="{_slug(name)}">{_pick_icon(STUDENT_ICONS, thesis)}<div class="kicker">{y} <span class="sep">·</span> {lvl}</div>'
         f'<h4 class="student-name">{name}</h4><div class="student-inst">{inst}</div>'
-        f'<p class="student-thesis"><span>Thesis</span><i>{thesis}</i></p></article>'
-        for y, name, lvl, inst, thesis in SUPERVISION) + '</div>'
+        f'<p class="student-thesis"><span>Thesis</span><i>{thesis}</i></p>'
+        f'<button class="on-board" type="button" data-pick="{name}" aria-label="Show the project of {name} in the animation above">'
+        'In the animation <span aria-hidden="true">↑</span></button></article>'
+        for y, name, lvl, inst, thesis in SUPERVISION) + '</div>' + BOARD_JS
 
 
 def _logo(f, alt, lazy=True):
