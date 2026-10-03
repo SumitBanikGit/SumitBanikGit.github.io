@@ -2639,3 +2639,6 @@ html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { backgroun
   .coauthors::-webkit-scrollbar { display: none; }
   .coauthors button, .coauthors .ca-l { flex: none; white-space: nowrap; }
 }
+/* CV, Computing: each tool links to its home page */
+.tool li a { color: inherit; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .2em; transition: color .2s; }
+.tool li a:hover { color: var(--accent); text-decoration-color: currentColor; }

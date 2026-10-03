@@ -451,7 +451,7 @@ PACKAGES = [
                    ("v1.3", "Dec 2025", "Polygamma functions, with both conic hulls and triangulations", "2512.19803", "polygamma functions")],
          needs=[("MultivariateResidues.m", "https://arxiv.org/abs/1701.01040", "included in the repository"),
                 ("TOPCOM", "https://www.wm.uni-bayreuth.de/de/team/rambau_joerg/TOPCOM/", "")],
-         extras=("The example notebooks also use", [("FIESTA5", "https://bitbucket.org/feynmanIntegrals/fiesta/src"),
+         extras=("The example notebooks also use", [("FIESTA5", "https://gitlab.com/feynmanintegrals/fiesta"),
                  ("MB.m", "https://mbtools.hepforge.org/"), ("MBresolve.m", "https://mbtools.hepforge.org/"),
                  ("EvaluateMultiSums", "https://www3.risc.jku.at/research/combinat/software/EvaluateMultiSums/index.php")]),
          files=["MBConicHulls.wl", "Examples.nb", "Pentagon.nb", "Examples_PolyGamma.nb"], load=""),
@@ -536,6 +536,16 @@ TOOLKIT = [
     ("Diagrams &amp; amplitudes", ["FeynArts", "FeynCalc"]),
     ("Loop integrals &amp; reduction", ["FIESTA", "AMBRE", "MB", "Kira", "FIRE", "TOPCOM"]),
 ]
+
+# The home page of each tool in the CV's Computing section (checked to load, October 2026).
+TOOL_URLS = {
+    "MadGraph": "https://launchpad.net/mg5amcnlo", "Pythia": "https://pythia.org/", "Delphes": "https://delphes.github.io/",
+    "ROOT": "https://root.cern/", "MadAnalysis": "https://madanalysis.irmp.ucl.ac.be/", "FeynRules": "https://feynrules.irmp.ucl.ac.be/",
+    "SARAH": "https://sarah.hepforge.org/", "SPheno": "https://spheno.hepforge.org/", "FeynArts": "https://feynarts.de/",
+    "FeynCalc": "https://feyncalc.github.io/", "FIESTA": "https://gitlab.com/feynmanintegrals/fiesta", "AMBRE": "https://jgluza.us.edu.pl/ambre/",
+    "MB": "https://mbtools.hepforge.org/", "Kira": "https://kira.hepforge.org/", "FIRE": "https://gitlab.com/feynmanintegrals/fire",
+    "TOPCOM": "https://www.wm.uni-bayreuth.de/de/team/rambau_joerg/TOPCOM/",
+}
 
 LANGUAGES = [("English", "Professional"), ("Bengali", "Native"), ("Hindi", "Fluent"), ("German", "Beginner")]
 
@@ -1593,7 +1603,7 @@ def nav_drops():
 def render_toolkit():
     return "\n".join(
         f'<div class="tool">{_pick_icon(TOOL_ICONS, group)}<div class="kicker">{group}</div>'
-        f'<ul>{"".join(f"<li>{x}</li>" for x in items)}</ul></div>'
+        f'<ul>{"".join(f'<li><a href="{TOOL_URLS[x]}">{x}</a></li>' if x in TOOL_URLS else f"<li>{x}</li>" for x in items)}</ul></div>'
         for group, items in TOOLKIT)
 
 
