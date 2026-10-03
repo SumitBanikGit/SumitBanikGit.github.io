@@ -1272,7 +1272,7 @@ def page_scenes():
         "publications.html": ("constellation", f"{len(PUBS)} publications from {min(years)} to {max(years)}",
                               "Hover over a star to see the paper", pub_scene_data),
         "talks.html": ("talkmap", f"{len(TALKS)} talks in {len(cities)} cities since {first_talk}",
-                       "Hollow circles mark online talks", talk_scene_data),
+                       "Click a city for its talks. Hollow dots are online.", talk_scene_data),
         "funding.html": ("medals", f"{len(FUNDING)} fellowships and grants since {min(int(f[0]) for f in FUNDING)}",
                          "Click for the next award", funding_scene_data),
         "software.html": ("toolchain", "From Feynman integrals to numbers", "Click a package to open it", toolchain_scene_data),
@@ -1431,11 +1431,13 @@ def render_talks():
         note_html = f'<div class="tc-note">{note}</div>' if note else ""
         kind = _talk_kind(event)
         cards.append(
-            f'<article class="talk-card" id="{ids[k]}"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
+            f'<article class="talk-card" id="{ids[k]}" data-city="{city}"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
-    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" id="{ids[TALK_CARDS + i]}" style="--i:{i}">', 1)
+    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" id="{ids[TALK_CARDS + i]}" data-city="{c}" style="--i:{i}">', 1)
             for i, (y, ev, c, ti, no, _) in enumerate(TALKS[TALK_CARDS:])]
-    out = '<div class="talk-cards">' + "\n".join(cards) + '</div>'
+    chip = ('<p class="dom-chip talk-chip" hidden><span class="dc-l">Talks in</span><b class="dc-n"></b><span class="tf-n"></span>'
+            '<button class="dc-x" type="button" aria-label="Show the talks in every city" title="Show every city">×</button></p>')
+    out = chip + '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
         out += (f'\n<details class="more" id="earlier-talks"><summary>Show {len(rest)} earlier talks</summary>\n'
                 + "\n".join(rest) + "\n</details>")
@@ -3057,6 +3059,39 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     }});
     ss.querySelector('.ss-close').addEventListener('click', function () {{ ss.close(); }});
     ss.addEventListener('click', function (ev) {{ if (ev.target === ss) ss.close(); }});   // a click outside the box
+  }}
+
+  /* ---------- talks: a click on a city of the map shows its talks in the list below ---------- */
+  var tchip = document.querySelector('.talk-chip');
+  if (tchip) {{
+    var trows = document.querySelectorAll('#talks .talk-card, #talks .entry[data-city]'),
+        tcards = document.querySelector('#talks .talk-cards'), tearly = document.getElementById('earlier-talks');
+    var tshow = function (cities) {{
+      var n = 0, inCards = 0, inEarly = 0;
+      Array.prototype.forEach.call(trows, function (r) {{
+        var ok = !cities || cities.indexOf(r.dataset.city) >= 0;
+        r.classList.toggle('tf-out', !ok);
+        if (ok) {{ n++; if (tearly && tearly.contains(r)) inEarly++; else inCards++; }}
+      }});
+      if (tcards) tcards.classList.toggle('tf-out', !!cities && !inCards);
+      if (tearly) {{
+        var sum = tearly.querySelector('summary');
+        if (!sum.dataset.all) sum.dataset.all = sum.textContent;   // "Show 25 earlier talks", or as many as the city has
+        sum.textContent = cities ? 'Show ' + inEarly + (inEarly === 1 ? ' earlier talk' : ' earlier talks') : sum.dataset.all;
+        tearly.classList.toggle('tf-out', !!cities && !inEarly);
+        if (cities && inEarly) {{ tearly.classList.add('instant'); tearly.open = true; setTimeout(function () {{ tearly.classList.remove('instant'); }}, 800); }}
+      }}
+      tchip.hidden = !cities;
+      if (cities) {{
+        tchip.querySelector('.dc-n').textContent = cities.length > 1 ? cities.slice(0, -1).join(', ') + ' and ' + cities[cities.length - 1] : cities[0];
+        tchip.querySelector('.tf-n').textContent = '· ' + n + (n === 1 ? ' talk' : ' talks');
+      }}
+    }};
+    document.addEventListener('talkcity', function (ev) {{
+      tshow(ev.detail && ev.detail.cities);
+      tchip.scrollIntoView({{ block: 'start', behavior: reduce ? 'auto' : 'smooth' }});
+    }});
+    tchip.querySelector('.dc-x').addEventListener('click', function () {{ tshow(null); }});
   }}
 
   /* ---------- journey map: a dot travels the route once the arcs are drawn ---------- */

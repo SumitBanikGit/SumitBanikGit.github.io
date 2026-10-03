@@ -2900,6 +2900,7 @@
     }
   };
   SCENES.talkmap = {
+    touchHint: 'Tap a city for its talks',
     init: function (e) {
       var d = e.data, talks = d.talks || [], step = 0.5;
       e.view = d.view || [0, 0, 1200, 482];
@@ -3042,7 +3043,10 @@
         e.hint(!online ? 'In person' : !live ? 'Online' : live + ' in person, ' + online + ' online');
       } else { e.caption(null); e.hint(null); e.capYear = null; }
     },
-    click: function (e, x, y) { SCENES.talkmap.move(e, { x: x, y: y }); }   // on a touch screen, a tap names the city
+    click: function (e, x, y) {                        // a tap names the city (on a touch screen), and a click shows its talks
+      SCENES.talkmap.move(e, { x: x, y: y });
+      if (e.hoverKey && window.CustomEvent) document.dispatchEvent(new CustomEvent('talkcity', { detail: { cities: e.hoverKey.split('|') } }));
+    }
   };
 
   /* =====================================================================

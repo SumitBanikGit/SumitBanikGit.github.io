@@ -2600,3 +2600,13 @@ html[data-theme="dark"] .pub-sort button[aria-pressed="true"] { background: var(
 .pkg-cite .cite-copy { margin-top: .55rem; }
 .pkg-cite li a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: .18em; }
 .pkg-cite li a:hover { color: var(--accent); text-decoration-color: currentColor; }
+/* Talks: the talks of a city chosen on the map */
+.talk-chip { margin: 0 0 1rem; scroll-margin-top: 5.2rem; }
+.talk-chip .tf-n { color: var(--grey); }
+#talks .tf-out { display: none !important; }
+/* the hints under the page animations: a little tighter where the animation is narrowest (small laptop windows) */
+@media (min-width: 51.01rem) and (max-width: 54rem) { .scene-hint { letter-spacing: .11em; } .scene-hint::before { width: 1.1rem; } }
+/* Software, on phones: the line about each package may take two lines (room kept for both, so nothing jumps) */
+@media (max-width: 40rem) {
+  [data-scene="toolchain"] .scene-hint { white-space: normal; text-wrap: balance; min-height: 2.9em; line-height: 1.45; }
+}
