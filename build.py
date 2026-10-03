@@ -1696,6 +1696,18 @@ def _code_copy(code):
             '<span class="cm-tip" aria-hidden="true">Copied</span></button><span class="sr-only" role="status" aria-live="polite"></span>')
 
 
+def _pkg_mentions(name, cited):
+    """Other papers and proceedings whose abstract names the package (besides those to cite), linked to their entries."""
+    out = []
+    for q in PUBS:
+        if q.get("arxiv") in cited:
+            continue
+        text = PUB_DETAILS.get(q.get("inspire", ""), {}).get("abstract", "") + " " + _plain(q["title"])
+        if re.search(rf"\b{re.escape(name)}\b", text):
+            out.append(f'<li><a href="publications.html#{_pub_id(q)}">{q["title"]}</a> <span class="muted">{q["year"]}</span></li>')
+    return (f'<div class="pkg-fact pkg-also"><div class="kicker">Also described in</div><ul>{"".join(out)}</ul></div>' if out else "")
+
+
 def _pkg_cite(papers):
     """How to cite a package: the papers of its releases (a version each) or of the library, each linked to its entry on
     the Publications page, with their BibTeX entries from INSPIRE copied in one click."""
@@ -1773,7 +1785,8 @@ def render_packages():
             pk["what"],
             _pkg_links(pk["name"], pk["repo"], pk["paper"]) + render_releases(pk["releases"])
             + _pkg_facts(heads, pk["files"], pk["repo"], pk["load"],
-                         _pkg_cite([(r[3], r[0] if len(pk["releases"]) > 1 else "") for r in pk["releases"] if not r[3].startswith("http")])),
+                         _pkg_cite([(r[3], r[0] if len(pk["releases"]) > 1 else "") for r in pk["releases"] if not r[3].startswith("http")])
+                         + _pkg_mentions(pk["name"], {r[3] for r in pk["releases"]})),
             "Show details"))
     n_rel = sum(len(pk["releases"]) for pk in PACKAGES)
     return ('<section class="chapter" id="packages">\n<h2 class="chapter-title">Packages</h2>\n'

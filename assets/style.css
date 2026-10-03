@@ -2649,3 +2649,5 @@ html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { backgroun
   @keyframes rel-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
   @keyframes rel-dash { from { transform: scaleX(0); } to { transform: none; } }
 }
+.pkg-also li a { color: var(--ink); text-decoration-color: var(--rule); text-underline-offset: .18em; }
+.pkg-also li a:hover { color: var(--accent); text-decoration-color: currentColor; }
