@@ -2585,3 +2585,14 @@ html[data-theme="dark"] .ss-list li[aria-selected="true"] a { background: var(--
 .pub-tools { display: flex; align-items: center; justify-content: space-between; gap: .8rem; flex-wrap: wrap; margin: .9rem 0 .3rem; }
 .pub-count { font-family: var(--sans); font-size: .64rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--grey); }
 .bib-all[hidden] { display: none; }
+/* Publications: newest first, or most cited first (as INSPIRE counts), within each group */
+.pub-tools { justify-content: flex-start; }
+.pub-sort { display: inline-flex; gap: 2px; padding: 2px; margin-right: auto; border: 1px solid var(--rule); border-radius: 999px; }
+.pub-sort button { font-family: var(--sans); font-size: .6rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+                   line-height: 1; color: var(--grey); background: transparent; border: 0; border-radius: 999px; padding: .45rem .8rem;
+                   cursor: pointer; transition: background .2s, color .2s; }
+.pub-sort button:hover { color: var(--ink); }
+.pub-sort button[aria-pressed="true"] { background: #1c352f; color: #f3ead6; }
+.pub-sort button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+html[data-theme="dark"] .pub-sort button[aria-pressed="true"] { background: var(--gold); color: #0e1714; }
+.pub-facts .muted { font-size: .8em; }

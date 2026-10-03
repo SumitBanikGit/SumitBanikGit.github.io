@@ -740,6 +740,11 @@ def _pub_more(p):
         facts.append(("Preprint", " · ".join(d["reports"])))
     if p.get("arxiv") and d.get("cat"):
         facts.append(("arXiv", f'{p["arxiv"]} [{d["cat"]}]'))
+    if d.get("cited"):                             # how often it has been cited, as INSPIRE counted it when the data was read
+        when = date.fromisoformat(d["cited_on"]).strftime("%B %Y") if d.get("cited_on") else ""
+        facts.append(("Citations", f'<a href="https://inspirehep.net/literature?q=refersto%3Arecid%3A{p["inspire"]}" '
+                                   f'title="The papers that cite it, on INSPIRE">{d["cited"]}</a>'
+                                   + (f' <span class="muted">(INSPIRE, {when})</span>' if when else "")))
     facts_html = "".join(f'<div><span class="k">{k}</span>{v}</div>' for k, v in facts)
     cite = ""
     if d.get("bibtex", "").startswith("@"):        # the BibTeX entry, copied with one click (or read on INSPIRE)
@@ -842,7 +847,8 @@ def pub_entry(n, p):
         head = (f'<details class="pub-open"><summary>{head}<span class="pub-toggle"><span class="t-show">Abstract and details</span>'
                 f'<span class="t-hide">Hide abstract</span>{PKG_CHEVRON}</span></summary>{more}</details>')
     return (
-        f'<div class="entry pub" id="{_pub_id(p)}" data-topic="{p["topic"]}" data-domains="{" ".join(_domains_of(p))}">'
+        f'<div class="entry pub" id="{_pub_id(p)}" data-topic="{p["topic"]}" data-domains="{" ".join(_domains_of(p))}" '
+        f'data-n="{n}" data-cited="{PUB_DETAILS.get(p.get("inspire", ""), {}).get("cited", 0)}">'
         f'<div class="rail">[{n}]<br>{p["year"]}</div><div class="body">'
         + head +
         f'<div class="links">{" ".join(links)}</div>'
@@ -2410,6 +2416,7 @@ Standard Model at particle colliders.</p>
   <button class="dc-x" type="button" aria-label="Show the papers of every domain" title="Show every domain">×</button></span>
 </div>
 <div class="pub-tools"><span class="pub-count" role="status" aria-live="polite"></span>
+<span class="pub-sort" role="group" aria-label="Order of the papers"><button type="button" data-sort="new" aria-pressed="true">Newest first</button><button type="button" data-sort="cited" aria-pressed="false">Most cited first</button></span>
 <button class="cite-copy bib-all" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button></div>
 <p class="pub-empty" hidden>No publications match your search.</p>
 {pubs}
@@ -2643,6 +2650,24 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   }});
   if (search) search.addEventListener('input', function () {{ query = search.value.trim().toLowerCase(); applyPubs(); }});
   if (more) more.addEventListener('click', function () {{ open = true; applyPubs(); }});
+  var sorts = document.querySelectorAll('.pub-sort button');
+  Array.prototype.forEach.call(sorts, function (b) {{
+    b.addEventListener('click', function () {{                // newest first, or most cited first (INSPIRE), within each group
+      var by = b.dataset.sort;
+      Array.prototype.forEach.call(sorts, function (x) {{ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }});
+      Array.prototype.forEach.call(heads, function (h) {{
+        var group = [], el = h.nextElementSibling;
+        while (el && el.classList.contains('pub')) {{ group.push(el); el = el.nextElementSibling; }}
+        group.sort(function (x, y) {{
+          return by === 'cited' ? (+y.dataset.cited - +x.dataset.cited) || (+y.dataset.n - +x.dataset.n) : +y.dataset.n - +x.dataset.n;
+        }});
+        var at = h;
+        group.forEach(function (p) {{ at.after(p); at = p; }});
+      }});
+      pubs = Array.prototype.slice.call(document.querySelectorAll('.pub'));   // the first eight are now those at the top
+      applyPubs();
+    }});
+  }});
   if (chip) chip.querySelector('.dc-x').addEventListener('click', function () {{ clearDomain(); applyPubs(); }});
   var booted = false;
   applyPubs();

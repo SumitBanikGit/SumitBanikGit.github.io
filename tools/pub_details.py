@@ -1,6 +1,7 @@
 """Collect the details shown when a publication is opened on the Publications page: the abstract (from
 INSPIRE, preferring the arXiv version), the number of pages, figures and tables (as the authors give them in
-the arXiv comments, else the page count on INSPIRE), the preprint (report) numbers, the arXiv category and the BibTeX entry.
+the arXiv comments, else the page count on INSPIRE), the preprint (report) numbers, the arXiv category, the BibTeX entry and how often it has been cited on INSPIRE
+(with the date of that count).
 
 Run from the site folder:  python3 tools/pub_details.py
 It writes tools/pub_details.json, which build.py reads. Nothing on the site changes until the next build.
@@ -47,7 +48,7 @@ def main():
     data = {}
     for p in pubs:
         url = (f"https://inspirehep.net/api/literature/{p['inspire']}"
-               "?fields=abstracts,number_of_pages,report_numbers,arxiv_eprints")
+               "?fields=abstracts,number_of_pages,report_numbers,arxiv_eprints,citation_count,citation_count_without_self_citations")
         m = json.loads(get(url))["metadata"]
         abstracts = m.get("abstracts", [])
         pick = next((a for a in abstracts if a.get("source") == "arXiv"), abstracts[0] if abstracts else None)
@@ -58,7 +59,9 @@ def main():
         cat = a.get("cat") or next(iter((m.get("arxiv_eprints") or [{}])[0].get("categories", [])), "")
         bib = get(f"https://inspirehep.net/api/literature/{p['inspire']}?format=bibtex", "application/x-bibtex").strip()
         data[p["inspire"]] = dict(abstract=pick["value"] if pick else "", pages=m.get("number_of_pages"),
-                                  reports=reports, comment=a.get("comment", ""), cat=cat, bibtex=bib)
+                                  reports=reports, comment=a.get("comment", ""), cat=cat, bibtex=bib,
+                                  cited=m.get("citation_count", 0), cited_others=m.get("citation_count_without_self_citations", 0),
+                                  cited_on=time.strftime("%Y-%m-%d"))
         time.sleep(0.4)
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"wrote {OUT.name} with {len(data)} publications")
