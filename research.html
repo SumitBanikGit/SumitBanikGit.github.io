@@ -286,7 +286,9 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   var sorts = document.querySelectorAll('.pub-sort button');
   Array.prototype.forEach.call(sorts, function (b) {
     b.addEventListener('click', function () {                // newest first, or most cited first (INSPIRE), within each group
-      var by = b.dataset.sort;
+      var by = b.dataset.sort, before = [];
+      if (!reduce && window.Element && Element.prototype.animate)     // where each paper on screen was, to glide from there
+        pubs.forEach(function (p) { if (!p.hidden) before.push([p, p.getBoundingClientRect().top]); });
       Array.prototype.forEach.call(sorts, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
       Array.prototype.forEach.call(heads, function (h) {
         var group = [], el = h.nextElementSibling;
@@ -299,6 +301,14 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       });
       pubs = Array.prototype.slice.call(document.querySelectorAll('.pub'));   // the first eight are now those at the top
       applyPubs();
+      before.forEach(function (pb, k) {                      // each paper still shown moves from its old place to its new one
+        var p = pb[0]; if (p.hidden) return;
+        var dy = pb[1] - p.getBoundingClientRect().top;
+        if (Math.abs(dy) < 1) return;
+        p.animate([{ transform: 'translateY(' + Math.max(-900, Math.min(900, dy)) + 'px)', opacity: Math.abs(dy) > 900 ? 0 : 1 },
+                   { transform: 'none', opacity: 1 }],
+                  { duration: 620, delay: Math.min(k, 10) * 18, easing: 'cubic-bezier(.2, .7, .2, 1)', fill: 'backwards' });
+      });
     });
   });
   if (chip) chip.querySelector('.dc-x').addEventListener('click', function () { clearDomain(); applyPubs(); });
@@ -674,11 +684,16 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     var trows = document.querySelectorAll('#talks .talk-card, #talks .entry[data-city]'),
         tcards = document.querySelector('#talks .talk-cards'), tearly = document.getElementById('earlier-talks');
     var tshow = function (cities) {
-      var n = 0, inCards = 0, inEarly = 0;
+      var n = 0, inCards = 0, inEarly = 0, wasOpen = tearly && tearly.open;   // (rows of a list that opens now unfold by themselves)
       Array.prototype.forEach.call(trows, function (r) {
         var ok = !cities || cities.indexOf(r.dataset.city) >= 0;
         r.classList.toggle('tf-out', !ok);
-        if (ok) { n++; if (tearly && tearly.contains(r)) inEarly++; else inCards++; }
+        if (ok) {
+          n++; if (tearly && tearly.contains(r)) inEarly++; else inCards++;
+          if (cities && !reduce && r.animate && (wasOpen || !(tearly && tearly.contains(r))))   // they come in one after another
+            r.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
+                      { duration: 420, delay: Math.min(n - 1, 12) * 45, easing: 'cubic-bezier(.2, .7, .2, 1)', fill: 'backwards' });
+        }
       });
       if (tcards) tcards.classList.toggle('tf-out', !!cities && !inCards);
       if (tearly) {
