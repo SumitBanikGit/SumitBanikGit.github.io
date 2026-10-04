@@ -2842,3 +2842,18 @@ dialog.tour-list { width: min(38rem, calc(100vw - 1.5rem)); }
 .int-q:hover::after, .int-q:focus-visible::after { opacity: .8; }
 .int-q:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
 @media (hover: none) { .int-q::after { opacity: .55; } }
+/* CV: the fellowships and grants, one line each, opening their cards on the Funding page */
+.awards { margin-top: .6rem; border-top: 1px solid var(--hair); max-width: 46rem; }
+.award { display: grid; grid-template-columns: 3.4rem 1fr 1.2rem; align-items: baseline; gap: .8rem; padding: .7rem .5rem;
+         border-bottom: 1px solid var(--hair); color: inherit; text-decoration: none; border-radius: 4px; transition: background-color .2s; }
+.award:hover, .award:focus-visible { background: var(--lift-bg); }
+.award:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+.aw-y { font-family: var(--sans); font-size: .72rem; letter-spacing: .12em; color: var(--sec); font-variant-numeric: tabular-nums; }
+.aw-n { display: block; font-family: var(--display); font-weight: 700; font-size: 1.14rem; line-height: 1.25; color: var(--navy); }
+.aw-a { display: block; margin-top: .1rem; font-size: .9rem; color: var(--grey); }
+.aw-st { display: inline-block; margin-left: .4rem; vertical-align: .08em; font-family: var(--sans); font-size: .56rem; font-weight: 600;
+         letter-spacing: .12em; text-transform: uppercase; color: var(--grey); border: 1px solid var(--hair); border-radius: 3px; padding: .08rem .38rem; }
+.aw-go { color: var(--gold); transition: transform .25s; }
+.award:hover .aw-go, .award:focus-visible .aw-go { transform: translateX(4px); }
+@media (max-width: 34rem) { .award { grid-template-columns: 2.9rem 1fr 1rem; gap: .6rem; } }
+@media (prefers-reduced-motion: reduce) { .award .aw-go { transition: none; } }

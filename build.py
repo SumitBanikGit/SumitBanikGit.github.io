@@ -1906,6 +1906,18 @@ def _tour_list():
     return [defs[v] for v in order if v in defs]
 
 
+def render_cv_awards():
+    """The fellowships and grants in the CV, one line each: each opens its card, with the amount and the research
+    proposal, on the Funding page (so that the details stay in one place)."""
+    rows = []
+    for y, name, agency, country, _amount, _dur, status in FUNDING:
+        tag = f' <span class="aw-st">{status}</span>' if status else ""
+        rows.append(f'<a class="award" href="funding.html#{_slug(name)}"><span class="aw-y">{y}</span>'
+                    f'<span class="aw-b"><span class="aw-n">{name}</span><span class="aw-a">{agency} · {country}{tag}</span></span>'
+                    f'<span class="aw-go" aria-hidden="true">→</span></a>')
+    return "\n".join(rows)
+
+
 def tour_index():
     """Under the Research title: a button that lists every slide of the tour, to start the one chosen
     (the list is filled in by the tour itself, from its slides and their papers)."""
@@ -1940,6 +1952,7 @@ def nav_drops():
         "teaching.html": [(c, f"teaching.html#{_slug(c)}", f"{inst}, {y}") for y, c, _r, inst, _d in TEACHING],
         "supervision.html": [(n, f"supervision.html#{_slug(n)}", f"{lvl}, {y}") for y, n, lvl, _i, _t in SUPERVISION],
         "cv.html": [("Positions", "cv.html#positions", ""), ("Education", "cv.html#education", ""),
+                    ("Fellowships and grants", "cv.html#fellowships-and-grants", ""),
                     ("Research interests", "cv.html#research-interests", ""), ("Computing", "cv.html#computing", ""),
                     ("Refereeing", "cv.html#refereeing", ""), ("Download the CV (PDF)", "assets/cv/Sumit_Banik_CV.pdf", "")],
         "contact.html": [("Write to me", f"mailto:{PROFILE['email']}", PROFILE["email"]), ("Address and profiles", "contact.html#reach", "")],
@@ -2715,7 +2728,7 @@ def main():
         domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)), coauthors=render_coauthors(),
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), continuation=render_continuation(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
-        software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
+        software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), cv_awards=render_cv_awards(), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
@@ -3009,6 +3022,11 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
 <h3 class="sect">Education</h3>
 <div class="positions study">
 {education}
+</div>
+
+<h3 class="sect">Fellowships and grants</h3>
+<div class="awards">
+{cv_awards}
 </div>
 
 <h3 class="sect">Research interests</h3>
