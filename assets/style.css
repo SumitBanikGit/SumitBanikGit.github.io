@@ -2684,6 +2684,7 @@ dialog.keys-help { width: min(30rem, calc(100vw - 1.5rem)); }
 .bib-file[hidden] { display: none; }
 /* on touch screens the small text buttons get a larger area to tap, without moving anything */
 @media (pointer: coarse) {
-  .on-board, .links .perma, .bib-file { position: relative; }
+  .on-board, .links .perma, .bib-file, .dom-chip .dc-x { position: relative; }
   .on-board::after, .links .perma::after, .bib-file::after { content: ""; position: absolute; inset: -9px -6px; }
+  .dom-chip .dc-x::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }   /* the cross that clears a domain or a city */
 }
