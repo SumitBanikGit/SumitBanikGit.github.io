@@ -204,6 +204,8 @@ PUBS = [
 # Each item links to where the site says more about it.
 NEWS = [
     ("2026", "Invited virtual talk at <b>CERN</b>, FCC Precision Calculations Working Group.", "talk:FCC Precision Calculations"),
+    ("2026", "Multiple Mellin-Barnes integrals with polygamma functions, the paper of <b>MBConicHulls</b> 1.3, "
+             "published in <i>Physical Review D</i>.", "publications.html#arxiv-2512.19803"),
     ("2026", "<b>HyperPrecision</b> published in <i>Computer Physics Communications</i>.", "software.html#hyperprecision"),
     ("2026", "Two-loop anomalous dimensions of baryon-number-violating operators in SMEFT published in <i>JHEP</i>.",
      "publications.html#arxiv-2510.08682"),
