@@ -1344,12 +1344,12 @@ def page_scenes():
         "talks.html": ("talkmap", f"{len(TALKS)} talks in {len(cities)} cities since {first_talk}",
                        "Click a city for its talks. Hollow dots are online.", talk_scene_data),
         "funding.html": ("medals", f"{len(FUNDING)} fellowships and grants since {min(int(f[0]) for f in FUNDING)}",
-                         "Click for the next award", funding_scene_data),
+                         "Click or use the arrow keys for the next award", funding_scene_data),
         "software.html": ("toolchain", "From Feynman integrals to numbers", "Click a package to open it", toolchain_scene_data),
-        "teaching.html": ("chalkboard", "From the blackboard", "Click for the next equation", teaching_scene_data),
+        "teaching.html": ("chalkboard", "From the blackboard", "Click or use the arrow keys for the next equation", teaching_scene_data),
         "supervision.html": ("mentoring", f"{len(SUPERVISION)} students since {min(int(x[0]) for x in SUPERVISION)}",
-                             "Click for the next student", supervision_scene_data),
-        "cv.html": ("timeline", "From Kolkata to Stanford", "Click for the next stage", cv_scene_data),
+                             "Click or use the arrow keys for the next student", supervision_scene_data),
+        "cv.html": ("timeline", "From Kolkata to Stanford", "Click or use the arrow keys for the next stage", cv_scene_data),
         "contact.html": ("globe", "SLAC, Menlo Park, California", "Drag to turn the globe", globe_scene_data),
     }
 
@@ -3055,7 +3055,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   <dl class="kh-list">
    <div><dt><kbd>/</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Search the whole site</dd></div>
    <div><dt><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Choose and open a result</dd></div>
-   <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>The previous or next paper of the tour, on the Research page</dd></div>
+   <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Step through the animation at the top of a page: the papers of the tour, the awards, the equations on the board, the students or the stages of the CV</dd></div>
    <div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>The next or previous paper of the list, on the Publications page</dd></div>
    <div><dt><kbd>O</kbd></dt><dd>Open or fold the abstract of that paper</dd></div>
    <div><dt><kbd>Esc</kbd></dt><dd>Close a search, a menu or this list</dd></div>

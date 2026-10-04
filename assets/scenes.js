@@ -188,6 +188,14 @@
       window.addEventListener('pointerup', release);
       window.addEventListener('pointercancel', release);
     }
+    if (scene.step) document.addEventListener('keydown', function (ev) {   // the arrow keys step through it, while it is in view
+      if ((ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') || ev.altKey || ev.ctrlKey || ev.metaKey || ev.shiftKey) return;
+      var tg = ev.target, r = stage.getBoundingClientRect();
+      if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
+      if (!env.active || document.querySelector('dialog[open]') || r.bottom < 60 || r.top > window.innerHeight - 60) return;
+      env.hovered = false; scene.step(env, ev.key === 'ArrowRight' ? 1 : -1); start();
+      ev.preventDefault();
+    });
     window.addEventListener('resize', function () { size(); start(); });
     document.addEventListener('visibilitychange', function () { if (!document.hidden) start(); });
     if ('IntersectionObserver' in window) {
@@ -3271,9 +3279,11 @@
       e.caption(a.n);
       e.hint(a.s + ', ' + a.c + ' · ' + a.y + ' · ' + a.amt + (a.st ? ' · awarded, ' + a.st : ''));
     },
-    click: function (e) {
-      if (!e.aw.length) return;
-      e.sel = (e.sel + 1) % e.aw.length; e.selAt = e.t; e.nextSel = e.t + 5; this.announce(e);
+    click: function (e) { this.step(e, 1); },
+    step: function (e, d) {                          // the next award, or the one before
+      var n = e.aw.length;
+      if (!n) return;
+      e.sel = e.sel < 0 ? (d > 0 ? 0 : n - 1) : (e.sel + d + n) % n; e.selAt = e.t; e.nextSel = e.t + 5; this.announce(e);
     }
   };
 
@@ -3657,6 +3667,10 @@
         e.idx = e.next !== null ? e.next : (e.idx + 1) % EQUATIONS.length; e.next = null; e.cur = null; e.cut = null; e.t0 = t + 0.35;
       }
     },
+    step: function (e, d) {                          // the next equation, or the one before (the board is wiped first)
+      if (d < 0) e.next = (e.idx - 1 + EQUATIONS.length) % EQUATIONS.length;
+      this.click(e);
+    },
     click: function (e) {                              // wipe the board and write the next one
       var q = e.cur;
       if (e.reduce) { e.idx = e.next !== null ? e.next : (e.idx + 1) % EQUATIONS.length; e.next = null; e.cur = null; return; }   // straight to the next one
@@ -3776,7 +3790,12 @@
       e.caption(s.n + ', ' + s.l.replace('’', '’'));
       e.hint(s.i + ' · ' + s.y);
     },
-    click: function (e) { if (!e.st.length) return; e.sel = (e.sel + 1) % e.st.length; e.selAt = e.t; e.nextSel = e.t + 7; this.announce(e); }
+    click: function (e) { this.step(e, 1); },
+    step: function (e, d) {                          // the next student, or the one before
+      var n = e.st.length;
+      if (!n) return;
+      e.sel = (e.sel + d + n) % n; e.selAt = e.t; e.nextSel = e.t + 7; this.announce(e);
+    }
   };
 
   /* =====================================================================
@@ -3914,6 +3933,15 @@
         if (show < 0) { e.caption(null); e.hint(null); }
         else { e.caption(st[show].title + ', ' + st[show].o); e.hint(st[show].c + ' · ' + st[show].w); }
       }
+    },
+    step: function (e, d) {                          // the next stage, or back to the one before
+      var st = e.st, n = st.length, T = 9.5, C = 14;
+      if (!n) return;
+      if (e.reduce) { e.pick = e.pick < 0 ? (d > 0 ? 0 : n - 1) : (e.pick + d + n) % n; e.cur = -2; return; }
+      if (d > 0) { this.click(e); return; }
+      var c = (e.t - e.c0) % C, yc = e.y0 + (e.now - e.y0) * clamp01(c / T), prev = null;
+      for (var i = n - 1; i >= 0; i--) if (st[i].s < yc - 0.4) { prev = st[i].s; break; }
+      e.c0 = e.t - (prev === null ? 0.01 : (prev - e.y0) / (e.now - e.y0) * T + 0.3);
     },
     click: function (e) {                              // jump to the start of the next stage
       var st = e.st, T = 9.5, C = 14;
