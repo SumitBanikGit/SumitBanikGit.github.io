@@ -2706,6 +2706,7 @@
       return Math.abs(y - (e.y + e.h + 7)) < 9 && k >= 0 && k < n ? k : -1;
     },
     move: function (e, p) {                         // hovering a dot of the pager names its paper
+      e.hovering = !!p;                             // and while the pointer rests on the tour, the slide waits to be read
       var h = p ? this.dotAt(e, p.x, p.y) : -1;
       if (h === e.hov) return;
       e.hov = h;
@@ -2714,6 +2715,8 @@
     frame: function (e, t) {
       if (!e.lay) return;
       if (!e.begun) { this.begin(e, tourStart(e), t); e.begun = true; }
+      if (e.hovering && !e.reduce && e.lastT !== undefined) e.t0 += t - e.lastT;   // paused under the pointer
+      e.lastT = t;
       var v = e.vs[e.i], V = v.V, lt = e.reduce ? 60 : t - e.t0;
       if (!e.reduce && lt > V.dur) { this.begin(e, e.i + 1, t); v = e.vs[e.i]; V = v.V; lt = 0; }
       if (!v.laid) { if (V.layout) V.layout(v); v.laid = true; }
