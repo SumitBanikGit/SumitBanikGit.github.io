@@ -3713,9 +3713,11 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
 
   /* ---------- progress bar, back-to-top, current page in the menu ---------- */
   var nav = document.querySelector('.navbar nav'), here = nav && nav.querySelector('.here');
-  if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
-    nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
-  }}
+  requestAnimationFrame(function () {{               // after the first layout, so that reading the sizes forces none
+    if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {{
+      nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
+    }}
+  }});
   /* ---------- the menu's dropdowns on touch screens (iPad and phone): a tap opens one (the page itself
      comes first in it), a second tap on the same item goes to the page, a tap anywhere else closes it ---------- */
   var touchNav = window.matchMedia('(hover: none)'), bar0 = document.querySelector('.navbar');
@@ -3749,7 +3751,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       nav.classList.toggle('fade-l', max > 2 && nav.scrollLeft > 2);
       nav.classList.toggle('fade-r', max > 2 && nav.scrollLeft < max - 2);
     }};
-    nav.addEventListener('scroll', edges, {{ passive: true }}); window.addEventListener('resize', edges); edges();
+    nav.addEventListener('scroll', edges, {{ passive: true }}); window.addEventListener('resize', edges); requestAnimationFrame(edges);
   }}
   var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer'), cue = document.querySelector('.scroll-cue');
   function update() {{
@@ -3759,9 +3761,10 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9 && !atFoot);
     if (cue) cue.classList.toggle('gone', window.scrollY > 60);      // the scroll cue steps aside once the reader scrolls
   }}
-  window.addEventListener('scroll', update, {{ passive: true }});
-  window.addEventListener('resize', update);
-  update();
+  var upNext = false, later = function () {{ if (!upNext) {{ upNext = true; requestAnimationFrame(function () {{ upNext = false; update(); }}); }} }};
+  window.addEventListener('scroll', later, {{ passive: true }});   // once a frame at most, and never before the first layout
+  window.addEventListener('resize', later);
+  later();
 
   /* ---------- search the whole site: "/" (or Ctrl K) on any page, or the magnifier in the menu bar ---------- */
   var ss = document.querySelector('dialog.ss[data-src]');
