@@ -1931,9 +1931,14 @@ def jsonld():
         "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"},
                      {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}],
         "email": f"mailto:{P['email']}", "url": P["url"],
-        "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions",
-                       "Higgs physics", "beyond the Standard Model", "collider phenomenology",
-                       "effective field theory"],
+        "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "GKZ hypergeometric systems",
+                       "Higgs physics", "two-Higgs-doublet models", "Higgs triplets", "leptoquarks",
+                       "beyond the Standard Model", "collider phenomenology", "effective field theory", "SMEFT",
+                       "renormalization group", "computer algebra"],
+        "workLocation": {"@type": "Place", "name": "SLAC National Accelerator Laboratory",
+                         "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park",
+                                     "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}},
+        **({"image": P["url"] + P["portrait"]} if P.get("portrait") else {}),
         "sameAs": [f"https://orcid.org/{P['orcid']}", P["inspire"], P["github"], P["linkedin"]],
     }, ensure_ascii=False)
 
