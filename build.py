@@ -732,6 +732,19 @@ def _related(p):
     return _RELATED.get(_pub_id(p), [])
 
 
+def _ref_button(p):
+    """The paper as one line of text, for a CV, a slide or an email: authors, title, journal and arXiv number."""
+    import html as _html
+    parts = [_plain(p["authors"]).strip(), _plain(p["title"]).strip(), _plain(p["ref"]).strip()]
+    if p.get("arxiv"):
+        parts.append(f'arXiv:{p["arxiv"]}')
+    line = ", ".join(x for x in parts if x)
+    return (f'<button class="cite-copy ref-copy" type="button" data-done="Reference copied" data-copy="{_html.escape(line, quote=True)}" '
+            f'title="{_html.escape(line, quote=True)}">'
+            '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/>'
+            '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy reference</span></button>')
+
+
 def _pub_more(p):
     """What opens under a publication: its abstract, length, preprint numbers and arXiv category."""
     d = PUB_DETAILS.get(p.get("inspire", ""), {})
@@ -768,6 +781,7 @@ def _pub_more(p):
                 f'<button class="cite-copy" type="button" data-copy="{_html.escape(d["bibtex"], quote=True)}">'
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/>'
                 '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button>'
+                f'{_ref_button(p)}'
                 f'<a class="cite-raw" href="https://inspirehep.net/api/literature/{p["inspire"]}?format=bibtex">'
                 f'{key.group(1) if key else "BibTeX"}</a><span class="sr-only" role="status" aria-live="polite"></span></div>')
     rel = _related(p)
@@ -805,7 +819,8 @@ CITE_JS = """<script>
     var label = b.querySelector('.cc-l'), said = b.parentNode.querySelector('[role=status]'), timer, orig = label.textContent;
     b.addEventListener('click', function () {
       navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
-        b.classList.add('done'); label.textContent = 'BibTeX copied'; if (said) said.textContent = 'BibTeX copied';
+        var done = b.getAttribute('data-done') || 'BibTeX copied';
+        b.classList.add('done'); label.textContent = done; if (said) said.textContent = done;
         clearTimeout(timer);
         timer = setTimeout(function () { b.classList.remove('done'); label.textContent = orig; if (said) said.textContent = ''; }, 2200);
       }).catch(function () {});

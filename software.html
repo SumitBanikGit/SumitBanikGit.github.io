@@ -201,7 +201,8 @@
     var label = b.querySelector('.cc-l'), said = b.parentNode.querySelector('[role=status]'), timer, orig = label.textContent;
     b.addEventListener('click', function () {
       navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
-        b.classList.add('done'); label.textContent = 'BibTeX copied'; if (said) said.textContent = 'BibTeX copied';
+        var done = b.getAttribute('data-done') || 'BibTeX copied';
+        b.classList.add('done'); label.textContent = done; if (said) said.textContent = done;
         clearTimeout(timer);
         timer = setTimeout(function () { b.classList.remove('done'); label.textContent = orig; if (said) said.textContent = ''; }, 2200);
       }).catch(function () {});
