@@ -617,11 +617,27 @@
     domain = dparam; chip.querySelector('.dc-n').textContent = dnames[dparam]; chip.hidden = false;
     buttons.forEach(function (x) { if (x.dataset.filter === 'all') x.setAttribute('aria-pressed', 'false'); });   // not all of them
   }
+  var pq = {};                                       // a shared view of the list: ?topic=pheno&q=higgs (and ?domain=)
+  location.search.replace(/[?&]([a-z]+)=([^&]*)/g, function (m, k, v) { try { pq[k] = decodeURIComponent(v.replace(/\+/g, ' ')); } catch (e) {} });
+  if (pq.topic && pq.topic !== 'all' && document.querySelector('.filters button[data-filter="' + pq.topic.replace(/[^a-z]/g, '') + '"]')) {
+    topic = pq.topic;
+    buttons.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.filter === topic ? 'true' : 'false'); });
+  }
+  if (pq.q && search) { search.value = pq.q.slice(0, 80); query = search.value.replace(/\s+/g, ' ').trim().toLowerCase(); }
+  var syncURL = function () {                      // and the address follows the list, so that what is shown can be shared
+    if (!history.replaceState || !buttons.length) return;
+    var ps = [];
+    if (domain) ps.push('domain=' + domain);
+    if (topic !== 'all') ps.push('topic=' + topic);
+    if (query && search) ps.push('q=' + encodeURIComponent(search.value.trim()).replace(/%20/g, '+'));
+    var url = location.pathname + (ps.length ? '?' + ps.join('&') : '') + location.hash;
+    if (url !== location.pathname + location.search + location.hash) history.replaceState(null, '', url);
+  };
   var clearDomain = function () {
     if (!domain) return;
     domain = ''; chip.hidden = true;
     if (topic === 'all') buttons.forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.filter === 'all'); });
-    if (history.replaceState) history.replaceState(null, '', location.pathname + location.hash);
+    syncURL();
   };
   /* the BibTeX of every paper in the list as it is filtered, in one click */
   var bibAll = document.querySelector('.bib-all'), pubCount = document.querySelector('.pub-count'), bibList = [], bibTimer;
@@ -683,9 +699,10 @@
     if (openAll && openAll.getAttribute('aria-pressed') === 'true')   // "every abstract" holds for papers the filters bring back
       pubs.forEach(function (p) { var d = p.querySelector('details.pub-open'); if (d && !p.hidden) d.open = true; });
     if (pubCount) pubCount.textContent = !pubs.length ? '' : (matches === pubs.length ? 'All ' + matches + ' papers'
-      : matches === 1 ? 'One paper of ' + pubs.length : matches + ' papers of ' + pubs.length);
+      : matches === 1 ? 'One paper of ' + pubs.length : !matches ? 'No papers of ' + pubs.length : matches + ' papers of ' + pubs.length);
     if (empty) empty.hidden = matches > 0;
     if (window.CustomEvent) document.dispatchEvent(new CustomEvent('pubfilter', { detail: { narrowed: narrowed, titles: keys } }));
+    if (booted) syncURL();
   }
   buttons.forEach(function (b) {
     b.addEventListener('click', function () {
@@ -767,6 +784,7 @@
   });
   if (chip) chip.querySelector('.dc-x').addEventListener('click', function () { clearDomain(); applyPubs(); });
   var booted = false;
+  if (query) caSync();                              // a shared search for a co-author presses their name
   applyPubs();
   booted = true;
 
