@@ -2668,3 +2668,13 @@ html[data-theme="dark"] .coauthors button[aria-pressed="true"] .ca-n { backgroun
 .links .perma:hover, .links .perma:focus-visible { border-bottom-color: var(--accent); }
 .links .perma.done { color: #2e5c4e; border-bottom-color: #2e5c4e; }
 html[data-theme="dark"] .links .perma.done { color: #7fb8a3; border-bottom-color: #7fb8a3; }
+/* "?": the keyboard shortcuts, in the search box's style */
+dialog.keys-help { width: min(30rem, calc(100vw - 1.5rem)); }
+.kh-title { flex: 1; font-family: var(--display); font-weight: 700; font-size: 1.25rem; color: var(--navy); }
+.kh-list { margin: 0; padding: .8rem 1.15rem 1rem; display: grid; gap: .6rem; }
+.kh-list > div { display: grid; grid-template-columns: 9.5rem 1fr; gap: .8rem; align-items: baseline; }
+.kh-list dt { font-family: var(--sans); font-size: .7rem; color: var(--grey); }
+.kh-list dd { margin: 0; font-size: .92rem; color: var(--ink); }
+.kh-list kbd { font-family: var(--sans); font-size: .68rem; padding: .08rem .38rem; border: 1px solid var(--hair); border-bottom-width: 2px;
+               border-radius: 3px; background: var(--panel); color: var(--ink); }
+@media (max-width: 30rem) { .kh-list > div { grid-template-columns: 1fr; gap: .2rem; } }

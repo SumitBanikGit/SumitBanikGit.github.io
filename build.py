@@ -2735,7 +2735,20 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   <div class="ss-hints"><span class="ss-try">Try</span><button type="button">Mellin-Barnes</button><button type="button">GKZ</button><button type="button">95 GeV</button><button type="button">leptoquarks</button><button type="button">SMEFT</button><button type="button">Zürich</button></div>
   <ul class="ss-list" id="ss-list" role="listbox" aria-label="Results"></ul>
   <div class="ss-foot"><span class="ss-status" role="status" aria-live="polite"></span>
-   <span class="ss-keys"><span><kbd>↑</kbd><kbd>↓</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>/</kbd> from any page</span></span></div>
+   <span class="ss-keys"><span><kbd>↑</kbd><kbd>↓</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>?</kbd> all shortcuts</span></span></div>
+ </div>
+</dialog>
+
+<dialog class="ss keys-help" aria-labelledby="kh-title">
+ <div class="ss-box kh-box">
+  <div class="ss-head"><span class="kh-title" id="kh-title">Keyboard shortcuts</span><button class="ss-close kh-close" type="button" aria-label="Close">Esc</button></div>
+  <dl class="kh-list">
+   <div><dt><kbd>/</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Search the whole site</dd></div>
+   <div><dt><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Choose and open a result</dd></div>
+   <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>The previous or next paper of the tour, on the Research page</dd></div>
+   <div><dt><kbd>Esc</kbd></dt><dd>Close a search, a menu or this list</dd></div>
+   <div><dt><kbd>?</kbd></dt><dd>Show this list</dd></div>
+  </dl>
  </div>
 </dialog>
 
@@ -3246,6 +3259,15 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     }});
     ss.querySelector('.ss-close').addEventListener('click', function () {{ ss.close(); }});
     ss.addEventListener('click', function (ev) {{ if (ev.target === ss) ss.close(); }});   // a click outside the box
+  }}
+  var kh = document.querySelector('dialog.keys-help');                 // "?": the keyboard shortcuts
+  if (kh && kh.showModal) {{
+    document.addEventListener('keydown', function (ev) {{
+      var t = ev.target, typing = t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName));
+      if (ev.key === '?' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && !kh.open && !(ss && ss.open)) {{ ev.preventDefault(); kh.showModal(); }}
+    }});
+    kh.querySelector('.kh-close').addEventListener('click', function () {{ kh.close(); }});
+    kh.addEventListener('click', function (ev) {{ if (ev.target === kh) kh.close(); }});
   }}
 
   /* ---------- talks: a click on a city of the map shows its talks in the list below ---------- */
