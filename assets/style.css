@@ -2818,3 +2818,15 @@ dialog.tour-list { width: min(38rem, calc(100vw - 1.5rem)); }
 .ti-go:focus-visible { box-shadow: inset 0 0 0 1px var(--gold); }
 .tour-index li.now .ti-go { box-shadow: inset 3px 0 0 var(--gold); }
 .tour-index li.now .ti-n { color: var(--accent); font-weight: 600; }
+/* Section headings: a link that copies the address of the section, shown on hover */
+.sec-link { position: relative; display: inline-flex; vertical-align: -.12em; margin-left: .5rem; color: var(--gold); opacity: 0;
+            text-decoration: none; transition: opacity .2s ease; }
+.sec-link svg { width: .85rem; height: .85rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
+.sect:hover .sec-link, .sec-link.done { opacity: 1; }
+.sec-link:hover { color: var(--accent); }
+.sec-link::after { content: "Link copied"; position: absolute; left: calc(100% + .45rem); top: 50%; transform: translate(-4px, -50%);
+                   white-space: nowrap; font-family: var(--sans); font-size: .58rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+                   color: var(--accent); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+.sec-link.done::after { opacity: 1; transform: translate(0, -50%); }
+@media (hover: none) { .sec-link { display: none; } }
+@media print { .sec-link { display: none; } }

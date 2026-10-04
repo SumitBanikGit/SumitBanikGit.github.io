@@ -798,6 +798,29 @@ def _pub_more(p):
             f'<div class="pub-facts">{facts_html}</div>{rel_html}{cite}</div>')
 
 
+# Beside each section heading, on hover: a link that copies the address of that section (as GitHub does it,
+# hidden from screen readers and the tab order, since the address bar does the same)
+SEC_LINK_ICON = ('<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1.1 1.1"/>'
+                 '<path d="M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1.1-1.1"/></svg>')
+SEC_LINK_JS = """<script>
+(function () {                              // copy the address of a section, and say so
+  var ok = navigator.clipboard && window.isSecureContext;
+  Array.prototype.forEach.call(document.querySelectorAll('.sec-link'), function (a) {
+    var timer;
+    a.addEventListener('click', function (ev) {
+      var id = a.getAttribute('href').slice(1), url = location.origin + location.pathname + '#' + id;
+      if (!ok) return;                        // (then the link just goes to the section)
+      ev.preventDefault();
+      navigator.clipboard.writeText(url).then(function () {
+        if (history.replaceState) history.replaceState(null, '', '#' + id);
+        a.classList.add('done'); clearTimeout(timer); timer = setTimeout(function () { a.classList.remove('done'); }, 1800);
+      }).catch(function () { location.hash = id; });
+    });
+  });
+})();
+</script>"""
+
+
 PERMA_JS = """<script>
 (function () {                              // copy the address of one paper on this page, and say so
   var ok = navigator.clipboard && window.isSecureContext;
@@ -1472,7 +1495,7 @@ def render_continuation():
         '<p class="cont-read" aria-hidden="true"></p>\n'
         '<div class="cont-ctl"><label for="cont-n">Terms in each series</label>'
         '<input class="cont-range" id="cont-n" type="range" min="1" max="40" step="1" value="30">'
-        '<output class="cont-n" for="cont-n">30</output>'
+        '<output class="cont-n" for="cont-n" aria-live="off">30</output>'
         '<button class="cont-play" type="button">Play again</button></div>\n'
         '<ul class="cont-key">'
         f'<li class="k-r"><span class="sw" aria-hidden="true"></span><span>Closing to the right, on the poles of {g}(−<i>z</i>): '
@@ -2617,8 +2640,11 @@ def write_pages(html, n_articles, n_proc):
         if file in scenes:                                # the page scenes live in their own script
             body = body.replace("</body>", f'<script src="assets/scenes.js?v={_ver("assets/scenes.js")}" defer></script>\n</body>', 1)
         body = body.replace("</body>", stats_tag() + "</body>", 1)
-        body = re.sub(r'<h3 class="sect"((?: data-[a-z]+="[^"]*")?)>(.*?)</h3>',
-                      lambda m: f'<h3 class="sect" id="{_slug(m.group(2))}"{m.group(1)}>{m.group(2)}</h3>', body)   # for the menu's links
+        body = re.sub(r'<h3 class="sect"((?: data-[a-z]+="[^"]*")?)>(.*?)</h3>',   # an id for the menu's links, and a link to copy
+                      lambda m: f'<h3 class="sect" id="{_slug(m.group(2))}"{m.group(1)}>{m.group(2)}'
+                                f'<a class="sec-link" href="#{_slug(m.group(2))}" aria-hidden="true" tabindex="-1">{SEC_LINK_ICON}</a></h3>', body)
+        if "sec-link" in body:
+            body = body.replace("</body>", SEC_LINK_JS + "\n</body>", 1)
         Path(file).write_text(_heading_levels(relink(h + body, file)), encoding="utf-8")
         written.append(file)
 
