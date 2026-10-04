@@ -1872,6 +1872,15 @@ def _tour_slides():
     return len(re.findall(r"[A-Z][A-Z0-9]+", m.group(1))) if m else 0
 
 
+def _tour_list():
+    """The slides of the tour in their order, as scenes.js defines them: key, paper and caption."""
+    src = Path("assets/scenes.js").read_text(encoding="utf-8")
+    defs = {m.group(1): (m.group(2), m.group(3), m.group(4)) for m in re.finditer(
+        r"var (\w+) = (?:diagramVignette\()?\{\s*key: '([^']+)', paper: '([^']+)',[^\n]*?cap: '([^']+)'", src)}
+    order = re.findall(r"[A-Z][A-Z0-9]+", re.search(r"var TOUR = \[([^\]]*)\]", src).group(1))
+    return [defs[v] for v in order if v in defs]
+
+
 def tour_index():
     """Under the Research title: a button that lists every slide of the tour, to start the one chosen
     (the list is filled in by the tour itself, from its slides and their papers)."""
@@ -2734,6 +2743,10 @@ def search_index():
             add("Research domain", "", name, f"{NUMBER_WORDS[len(PACKAGES)].capitalize()} packages and a library · {keys}", "software.html", text)
         else:
             add("Research domain", "", name, f"{n} papers · {keys}", f"publications.html?domain={slug}#publications", text)
+    for k, (key, paper, cap) in enumerate(_tour_list(), 1):   # every slide of the tour, which it starts
+        q = next((x for x in PUBS if paper in (x.get("arxiv"), x.get("doi"), "inspire:" + x.get("inspire", ""))), None)
+        add("Animation", q["year"] if q else "", cap, f"Slide {k} of the tour" + (f' · {q["ref"]}' if q else ""),
+            f"research.html#tour-{key}", q["title"] if q else "")
     seen = {e["u"] for e in out}                       # and the parts of each page, as the menu lists them
     names = {f: label for f, label, *_ in PAGES if label}
     names["#about"] = "Home"

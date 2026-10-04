@@ -2704,7 +2704,7 @@
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
     var m = /^#tour-(.+)$/.exec(window.location.hash || ''), id = m && decodeURIComponent(m[1]);
-    for (var i = 0; id && i < e.vs.length; i++) if (e.vs[i].V.paper === id) return i;
+    for (var i = 0; id && i < e.vs.length; i++) if (e.vs[i].V.paper === id || e.vs[i].V.key === id) return i;   // by its paper, or its own name
     return 0;
   }
   SCENES.tour = {
