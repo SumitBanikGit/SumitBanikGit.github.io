@@ -1167,9 +1167,9 @@ def talk_scene_data():
     import re
     m, project = _map_projector()
     talks = []
-    for year, event, city, *_ in reversed(TALKS):
+    for year, event, city, _title, _note, invited in reversed(TALKS):
         x, y = project(*CITY_GEO[city])
-        talks.append(dict(y=int(year), c=city, x=x, v=y, o=int("online" in event.lower())))
+        talks.append(dict(y=int(year), c=city, x=x, v=y, o=int("online" in event.lower()), i=int(invited)))
     xs, ys = [t["x"] for t in talks], [t["v"] for t in talks]
     x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
     w, h = x1 - x0, y1 - y0
@@ -1488,13 +1488,16 @@ def render_talks():
         note_html = f'<div class="tc-note">{note}</div>' if note else ""
         kind = _talk_kind(event)
         cards.append(
-            f'<article class="talk-card" id="{ids[k]}" data-city="{city}"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
+            f'<article class="talk-card" id="{ids[k]}" data-city="{city}" data-inv="{int(invited)}"><div class="tc-top"><span>{_ix(TALK_ICONS[kind], "ix tc-ix")}{year}</span><span>{city}</span></div>'
             f'<h4 class="tc-title">“{title}”</h4><div class="tc-event">{event}</div>{note_html}</article>')
-    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" id="{ids[TALK_CARDS + i]}" data-city="{c}" style="--i:{i}">', 1)
-            for i, (y, ev, c, ti, no, _) in enumerate(TALKS[TALK_CARDS:])]
+    rest = [talk_row(y, ev, c, ti, no).replace('<div class="entry">', f'<div class="entry" id="{ids[TALK_CARDS + i]}" data-city="{c}" data-inv="{int(inv)}" style="--i:{i}">', 1)
+            for i, (y, ev, c, ti, no, inv) in enumerate(TALKS[TALK_CARDS:])]
     chip = ('<p class="dom-chip talk-chip" hidden><span class="dc-l">Talks in</span><b class="dc-n"></b><span class="tf-n"></span>'
             '<button class="dc-x" type="button" aria-label="Show the talks in every city" title="Show every city">×</button></p>')
-    out = chip + '<div class="talk-cards">' + "\n".join(cards) + '</div>'
+    invited = sum(t[5] for t in TALKS)
+    tools = (f'<p class="talk-tools"><button class="talk-inv" type="button" aria-pressed="false">Invited talks only'
+             f'<span class="ca-n">{invited}</span></button></p>')
+    out = tools + chip + '<div class="talk-cards">' + "\n".join(cards) + '</div>'
     if rest:
         out += (f'\n<details class="more" id="earlier-talks"><summary>Show {len(rest)} earlier talks</summary>\n'
                 + "\n".join(rest) + "\n</details>")
@@ -3406,31 +3409,35 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   if (tchip) {{
     var trows = document.querySelectorAll('#talks .talk-card, #talks .entry[data-city]'),
         tcards = document.querySelector('#talks .talk-cards'), tearly = document.getElementById('earlier-talks');
-    var tshow = function (cities) {{
+    var tcities = null, tinv = false, tinvBtn = document.querySelector('.talk-inv');
+    var tshow = function (cities) {{ tcities = cities || null; tapply(true); }};
+    var tapply = function (fromCity) {{
+      var cities = tcities, narrow = !!cities || tinv;
       var n = 0, inCards = 0, inEarly = 0, wasOpen = tearly && tearly.open;   // (rows of a list that opens now unfold by themselves)
       Array.prototype.forEach.call(trows, function (r) {{
-        var ok = !cities || cities.indexOf(r.dataset.city) >= 0;
+        var ok = (!cities || cities.indexOf(r.dataset.city) >= 0) && (!tinv || r.dataset.inv === '1');
         r.classList.toggle('tf-out', !ok);
         if (ok) {{
           n++; if (tearly && tearly.contains(r)) inEarly++; else inCards++;
-          if (cities && !reduce && r.animate && (wasOpen || !(tearly && tearly.contains(r))))   // they come in one after another
+          if (narrow && !reduce && r.animate && (wasOpen || !(tearly && tearly.contains(r))))   // they come in one after another
             r.animate([{{ opacity: 0, transform: 'translateY(8px)' }}, {{ opacity: 1, transform: 'none' }}],
                       {{ duration: 420, delay: Math.min(n - 1, 12) * 45, easing: 'cubic-bezier(.2, .7, .2, 1)', fill: 'backwards' }});
         }}
       }});
-      if (tcards) tcards.classList.toggle('tf-out', !!cities && !inCards);
+      if (tcards) tcards.classList.toggle('tf-out', narrow && !inCards);
       if (tearly) {{
         var sum = tearly.querySelector('summary');
         if (!sum.dataset.all) sum.dataset.all = sum.textContent;   // "Show 25 earlier talks", or as many as the city has
-        sum.textContent = cities ? 'Show ' + inEarly + (inEarly === 1 ? ' earlier talk' : ' earlier talks') : sum.dataset.all;
-        tearly.classList.toggle('tf-out', !!cities && !inEarly);
+        sum.textContent = narrow ? 'Show ' + inEarly + (inEarly === 1 ? ' earlier talk' : ' earlier talks') : sum.dataset.all;
+        tearly.classList.toggle('tf-out', narrow && !inEarly);
         if (cities && inEarly) {{ tearly.classList.add('instant'); tearly.open = true; setTimeout(function () {{ tearly.classList.remove('instant'); }}, 800); }}
       }}
       tchip.hidden = !cities;
-      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('talkcity-shown', {{ detail: {{ cities: cities }} }}));   // the map rings them
+      if (fromCity && window.CustomEvent) document.dispatchEvent(new CustomEvent('talkcity-shown', {{ detail: {{ cities: cities }} }}));   // the map rings them
       if (cities) {{
         tchip.querySelector('.dc-n').textContent = cities.length > 1 ? cities.slice(0, -1).join(', ') + ' and ' + cities[cities.length - 1] : cities[0];
-        tchip.querySelector('.tf-n').textContent = '· ' + n + (n === 1 ? ' talk' : ' talks');
+        tchip.querySelector('.tf-n').textContent = '· ' + (tinv ? (n ? n + (n === 1 ? ' invited talk' : ' invited talks') : 'no invited talks')
+                                                             : n + (n === 1 ? ' talk' : ' talks'));
       }}
     }};
     document.addEventListener('talkcity', function (ev) {{
@@ -3438,6 +3445,10 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       tchip.scrollIntoView({{ block: 'start', behavior: reduce ? 'auto' : 'smooth' }});
     }});
     tchip.querySelector('.dc-x').addEventListener('click', function () {{ tshow(null); }});
+    if (tinvBtn) tinvBtn.addEventListener('click', function () {{   // the invited talks only (with the city, if one is chosen)
+      tinv = !tinv; tinvBtn.setAttribute('aria-pressed', tinv ? 'true' : 'false'); tapply(false);
+      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('talkinvited', {{ detail: {{ on: tinv }} }}));   // the map dims the rest
+    }});
   }}
 
   /* ---------- journey map: a dot travels the route once the arcs are drawn ---------- */

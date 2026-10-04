@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6ac23bee">
+<link rel="stylesheet" href="assets/style.css?v=6ac244c0">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-teaching">
@@ -746,31 +746,35 @@
   if (tchip) {
     var trows = document.querySelectorAll('#talks .talk-card, #talks .entry[data-city]'),
         tcards = document.querySelector('#talks .talk-cards'), tearly = document.getElementById('earlier-talks');
-    var tshow = function (cities) {
+    var tcities = null, tinv = false, tinvBtn = document.querySelector('.talk-inv');
+    var tshow = function (cities) { tcities = cities || null; tapply(true); };
+    var tapply = function (fromCity) {
+      var cities = tcities, narrow = !!cities || tinv;
       var n = 0, inCards = 0, inEarly = 0, wasOpen = tearly && tearly.open;   // (rows of a list that opens now unfold by themselves)
       Array.prototype.forEach.call(trows, function (r) {
-        var ok = !cities || cities.indexOf(r.dataset.city) >= 0;
+        var ok = (!cities || cities.indexOf(r.dataset.city) >= 0) && (!tinv || r.dataset.inv === '1');
         r.classList.toggle('tf-out', !ok);
         if (ok) {
           n++; if (tearly && tearly.contains(r)) inEarly++; else inCards++;
-          if (cities && !reduce && r.animate && (wasOpen || !(tearly && tearly.contains(r))))   // they come in one after another
+          if (narrow && !reduce && r.animate && (wasOpen || !(tearly && tearly.contains(r))))   // they come in one after another
             r.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }],
                       { duration: 420, delay: Math.min(n - 1, 12) * 45, easing: 'cubic-bezier(.2, .7, .2, 1)', fill: 'backwards' });
         }
       });
-      if (tcards) tcards.classList.toggle('tf-out', !!cities && !inCards);
+      if (tcards) tcards.classList.toggle('tf-out', narrow && !inCards);
       if (tearly) {
         var sum = tearly.querySelector('summary');
         if (!sum.dataset.all) sum.dataset.all = sum.textContent;   // "Show 25 earlier talks", or as many as the city has
-        sum.textContent = cities ? 'Show ' + inEarly + (inEarly === 1 ? ' earlier talk' : ' earlier talks') : sum.dataset.all;
-        tearly.classList.toggle('tf-out', !!cities && !inEarly);
+        sum.textContent = narrow ? 'Show ' + inEarly + (inEarly === 1 ? ' earlier talk' : ' earlier talks') : sum.dataset.all;
+        tearly.classList.toggle('tf-out', narrow && !inEarly);
         if (cities && inEarly) { tearly.classList.add('instant'); tearly.open = true; setTimeout(function () { tearly.classList.remove('instant'); }, 800); }
       }
       tchip.hidden = !cities;
-      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('talkcity-shown', { detail: { cities: cities } }));   // the map rings them
+      if (fromCity && window.CustomEvent) document.dispatchEvent(new CustomEvent('talkcity-shown', { detail: { cities: cities } }));   // the map rings them
       if (cities) {
         tchip.querySelector('.dc-n').textContent = cities.length > 1 ? cities.slice(0, -1).join(', ') + ' and ' + cities[cities.length - 1] : cities[0];
-        tchip.querySelector('.tf-n').textContent = '· ' + n + (n === 1 ? ' talk' : ' talks');
+        tchip.querySelector('.tf-n').textContent = '· ' + (tinv ? (n ? n + (n === 1 ? ' invited talk' : ' invited talks') : 'no invited talks')
+                                                             : n + (n === 1 ? ' talk' : ' talks'));
       }
     };
     document.addEventListener('talkcity', function (ev) {
@@ -778,6 +782,10 @@
       tchip.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
     });
     tchip.querySelector('.dc-x').addEventListener('click', function () { tshow(null); });
+    if (tinvBtn) tinvBtn.addEventListener('click', function () {   // the invited talks only (with the city, if one is chosen)
+      tinv = !tinv; tinvBtn.setAttribute('aria-pressed', tinv ? 'true' : 'false'); tapply(false);
+      if (window.CustomEvent) document.dispatchEvent(new CustomEvent('talkinvited', { detail: { on: tinv } }));   // the map dims the rest
+    });
   }
 
   /* ---------- journey map: a dot travels the route once the arcs are drawn ---------- */
@@ -1082,7 +1090,7 @@
   }
 })();
 </script>
-<script src="assets/scenes.js?v=6ac1c2cd" defer></script>
+<script src="assets/scenes.js?v=6ac2474b" defer></script>
 <script>(function () {                      // visit statistics, on the live site only
   if (location.hostname !== 'sumitbanikgit.github.io') return;
   var s = document.createElement('script');

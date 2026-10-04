@@ -2731,3 +2731,16 @@ details.fund-more > summary:focus-visible { outline: 2px solid var(--gold); outl
                background: transparent; border: 0; border-bottom: 1px solid var(--rule); padding: 0 0 .05rem; cursor: pointer; }
 .pub-openall:hover, .pub-openall:focus-visible { border-bottom-color: var(--accent); }
 @media (pointer: coarse) { .pub-openall { position: relative; } .pub-openall::after { content: ""; position: absolute; inset: -9px -6px; } }
+/* Talks: the invited talks only, with the city chosen on the map if there is one */
+.talk-tools { margin: 0 0 .9rem; }
+.talk-inv { display: inline-flex; align-items: center; gap: .45rem; font-family: var(--sans); font-size: .62rem; font-weight: 600; letter-spacing: .12em;
+            text-transform: uppercase; color: var(--accent); background: transparent; border: 1px solid var(--rule); border-radius: 999px;
+            padding: .3rem .4rem .3rem .8rem; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+.talk-inv .ca-n { font-family: var(--sans); font-size: .6rem; font-weight: 600; min-width: 1.25rem; padding: .12rem .3rem; border-radius: 999px;
+                  background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--accent); text-align: center; letter-spacing: 0; }
+.talk-inv:hover { border-color: var(--gold); }
+.talk-inv[aria-pressed="true"] { background: #1c352f; border-color: #1c352f; color: #f3ead6; }
+.talk-inv[aria-pressed="true"] .ca-n { background: rgba(220, 197, 143, .25); color: #f3ead6; }
+html[data-theme="dark"] .talk-inv[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #0e1714; }
+html[data-theme="dark"] .talk-inv[aria-pressed="true"] .ca-n { background: rgba(14, 23, 20, .2); color: #0e1714; }
+.talk-inv:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }

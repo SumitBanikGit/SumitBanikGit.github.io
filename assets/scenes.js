@@ -2925,6 +2925,8 @@
       e.talks = talks; e.end = talks.length ? talks[talks.length - 1].at + 1.4 : 0; e.cycle = e.end + 4.5;
       e.clock = 0; e.hoverCity = null; e.hoverKey = null; e.sel = null;
       document.addEventListener('talkcity-shown', function (ev) { e.sel = ev.detail && ev.detail.cities; });   // the list below shows these
+      e.inv = false;
+      document.addEventListener('talkinvited', function (ev) { e.inv = !!(ev.detail && ev.detail.on); });   // only the invited talks are listed
     },
     layout: function (e) {                             // the map is drawn once per size
       var v = e.view, s = Math.min(e.w / v[2], e.h / v[3]), L = layer(e.w, e.h, e.dpr), c = L.ctx;
@@ -2990,8 +2992,8 @@
       talks.forEach(function (tk) {
         if (c < tk.at) return;
         var m = cities[tk.c];
-        if (!m) { m = cities[tk.c] = { n: 0, live: 0, x: ox + tk.x * s, y: oy + tk.v * s, yr: 0, at: 0 }; order.push(m); }
-        m.n++; if (!tk.o) m.live = 1; m.yr = tk.y; m.at = tk.at; newest = tk;
+        if (!m) { m = cities[tk.c] = { n: 0, live: 0, inv: 0, x: ox + tk.x * s, y: oy + tk.v * s, yr: 0, at: 0 }; order.push(m); }
+        m.n++; if (!tk.o) m.live = 1; if (tk.i) m.inv++; m.yr = tk.y; m.at = tk.at; newest = tk;
       });
       var curYear = last ? last.y : null;
       order.forEach(function (m) {
@@ -3004,9 +3006,11 @@
           ctx.strokeStyle = ink('brass', 0.7); ctx.lineWidth = 1;
           ctx.beginPath(); ctx.arc(m.x, m.y, r + 3, 0, TAU); ctx.stroke();
         }
+        if (e.inv && !m.inv) ctx.globalAlpha = fade * 0.25;   // while only the invited talks are listed, the other cities step back
         ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, TAU);
         if (m.live) { ctx.fillStyle = ink('green', 0.9); ctx.fill(); }
         else { ctx.fillStyle = ink('paper', 0.95); ctx.fill(); ctx.lineWidth = 1.2; ctx.strokeStyle = ink('green', 0.9); ctx.stroke(); }
+        ctx.globalAlpha = fade;
       });
 
       if (e.sel) e.sel.forEach(function (name, k) {     // the cities whose talks the list below shows: a brass ring that breathes
