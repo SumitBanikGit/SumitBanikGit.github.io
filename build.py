@@ -1872,6 +1872,17 @@ def _tour_slides():
     return len(re.findall(r"[A-Z][A-Z0-9]+", m.group(1))) if m else 0
 
 
+def tour_index():
+    """Under the Research title: a button that lists every slide of the tour, to start the one chosen
+    (the list is filled in by the tour itself, from its slides and their papers)."""
+    n = _tour_slides()
+    return (f'    <button class="tour-all" type="button" aria-haspopup="dialog">All slides of the tour<span class="ca-n">{n}</span></button>\n'
+            '    <dialog class="ss tour-list" aria-labelledby="tl-title"><div class="ss-box">'
+            '<div class="ss-head"><span class="kh-title" id="tl-title">The tour, slide by slide</span>'
+            '<button class="ss-close tl-close" type="button" aria-label="Close">Esc</button></div>'
+            '<ol class="tour-index"></ol></div></dialog>\n')
+
+
 def nav_drops():
     """What opens under each item of the menu: the parts of its page, with a line about some of them."""
     arts = sum(1 for p in PUBS if p["kind"] == "article")
@@ -2590,7 +2601,7 @@ def write_pages(html, n_articles, n_proc):
                 block = re.sub(r'<h2 class="chapter-title">.*?</h2>\n?', "", block, count=1, flags=re.S)
             parts.append(block)
         body = (f'<body id="top" class="page-{slug}">\n{INTRO}<a class="skip" href="#main">Skip to content</a>\n\n'
-                + (hero if file == "index.html" else page_hero(label, title, sub, file))
+                + (hero if file == "index.html" else page_hero(label, title, sub, file, tour_index() if file == "research.html" else ""))
                 + navbar(file)
                 + (ticker if file == "index.html" else "")
                 + '<main id="main" class="wrap">\n\n' + "\n\n".join(parts) + "\n\n" + tail)
@@ -3485,7 +3496,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   update();
 
   /* ---------- search the whole site: "/" (or Ctrl K) on any page, or the magnifier in the menu bar ---------- */
-  var ss = document.querySelector('dialog.ss');
+  var ss = document.querySelector('dialog.ss[data-src]');
   if (ss && ss.showModal && window.fetch) {{
     var ssq = ss.querySelector('.ss-input'), ssl = ss.querySelector('.ss-list'), sst = ss.querySelector('.ss-status'),
         ssh = ss.querySelector('.ss-hints'), ssIndex = null, ssAct = -1, ssHits = [], ssVocab = {{}}, ssAsTyped = false,
@@ -3641,7 +3652,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   if (kh && kh.showModal) {{
     document.addEventListener('keydown', function (ev) {{
       var t = ev.target, typing = t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName));
-      if (ev.key === '?' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && !kh.open && !(ss && ss.open)) {{ ev.preventDefault(); kh.showModal(); }}
+      if (ev.key === '?' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && !document.querySelector('dialog[open]')) {{ ev.preventDefault(); kh.showModal(); }}
     }});
     kh.querySelector('.kh-close').addEventListener('click', function () {{ kh.close(); }});
     kh.addEventListener('click', function (ev) {{ if (ev.target === kh) kh.close(); }});

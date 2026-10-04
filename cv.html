@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6ac25d7c">
+<link rel="stylesheet" href="assets/style.css?v=6ac2608f">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
@@ -671,7 +671,7 @@
   update();
 
   /* ---------- search the whole site: "/" (or Ctrl K) on any page, or the magnifier in the menu bar ---------- */
-  var ss = document.querySelector('dialog.ss');
+  var ss = document.querySelector('dialog.ss[data-src]');
   if (ss && ss.showModal && window.fetch) {
     var ssq = ss.querySelector('.ss-input'), ssl = ss.querySelector('.ss-list'), sst = ss.querySelector('.ss-status'),
         ssh = ss.querySelector('.ss-hints'), ssIndex = null, ssAct = -1, ssHits = [], ssVocab = {}, ssAsTyped = false,
@@ -827,7 +827,7 @@
   if (kh && kh.showModal) {
     document.addEventListener('keydown', function (ev) {
       var t = ev.target, typing = t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName));
-      if (ev.key === '?' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && !kh.open && !(ss && ss.open)) { ev.preventDefault(); kh.showModal(); }
+      if (ev.key === '?' && !typing && !ev.metaKey && !ev.ctrlKey && !ev.altKey && !document.querySelector('dialog[open]')) { ev.preventDefault(); kh.showModal(); }
     });
     kh.querySelector('.kh-close').addEventListener('click', function () { kh.close(); });
     kh.addEventListener('click', function (ev) { if (ev.target === kh) kh.close(); });
@@ -1182,7 +1182,7 @@
   }
 })();
 </script>
-<script src="assets/scenes.js?v=6ac256ea" defer></script>
+<script src="assets/scenes.js?v=6ac2605b" defer></script>
 <script>(function () {                      // visit statistics, on the live site only
   if (location.hostname !== 'sumitbanikgit.github.io') return;
   var s = document.createElement('script');

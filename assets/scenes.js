@@ -2672,12 +2672,38 @@
       var self = this;
       document.addEventListener('keydown', function (ev) {    // the arrow keys step through the papers
         if ((ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') || ev.altKey || ev.ctrlKey || ev.metaKey || !e.begun) return;
+        if (document.querySelector('dialog[open]')) return;
         var tg = ev.target, r = e.stage.getBoundingClientRect();
         if (tg && (tg.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName))) return;
         if (r.bottom < 60 || r.top > window.innerHeight - 60) return;
         self.begin(e, e.i + (ev.key === 'ArrowRight' ? 1 : -1), e.t);
         if (e.redraw) e.redraw();
       });
+      var all = document.querySelector('.tour-all'), dlg = document.querySelector('dialog.tour-list'),
+          list = dlg && dlg.querySelector('.tour-index');
+      if (all && dlg && list && dlg.showModal) {              // every slide in a list, each one starting its slide
+        e.vs.forEach(function (v, i) {
+          var V = v.V, ref = e.refs[V.paper] || {}, li = document.createElement('li'), b = document.createElement('button');
+          b.type = 'button'; b.className = 'ti-go';
+          [['ti-n', String(i + 1)], ['ti-c', V.cap], ['ti-r', V.ref || ref.r || '']].forEach(function (c) {
+            var sp = document.createElement('span'); sp.className = c[0]; sp.textContent = c[1]; b.appendChild(sp);
+          });
+          b.addEventListener('click', function () {
+            dlg.close(); self.begin(e, i, e.t); if (e.redraw) e.redraw();
+            var top = e.stage.getBoundingClientRect().top;
+            if (top < 0 || top > window.innerHeight * 0.6) window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+          });
+          li.appendChild(b); list.appendChild(li);
+        });
+        all.addEventListener('click', function () {
+          Array.prototype.forEach.call(list.children, function (li, i) { li.classList.toggle('now', i === e.i); });
+          dlg.showModal();
+          var now = list.children[e.i];
+          if (now) { now.scrollIntoView({ block: 'center' }); now.querySelector('button').focus({ preventScroll: true }); }
+        });
+        dlg.querySelector('.tl-close').addEventListener('click', function () { dlg.close(); });
+        dlg.addEventListener('click', function (ev) { if (ev.target === dlg) dlg.close(); });
+      } else if (all) all.hidden = true;
       window.addEventListener('hashchange', function () {   // a tour link on this very page
         if (!/^#tour-/.test(window.location.hash) || !e.begun) return;
         self.begin(e, tourStart(e), e.t);
