@@ -2793,3 +2793,7 @@ html[data-theme="dark"] .cont-key .k-f .sw { border-top-color: rgba(232, 226, 20
 .cont-key li { transition: opacity .2s ease; }
 .cont-key.focus li:not(.on) { opacity: .45; }
 @media print { .cont-ctl, .cont-read { display: none; } .cont-box { break-inside: avoid; } }
+/* Publications: the paper marked with the J and K keys */
+.entry.pub.kb { background: var(--lift-bg); box-shadow: inset 3px 0 0 var(--gold), var(--lift); border-bottom-color: transparent; position: relative; z-index: 1; }
+.entry.pub:focus { outline: none; }
+.entry.pub:focus-visible:not(.kb) { outline: 2px solid var(--gold); outline-offset: 2px; }

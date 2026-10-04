@@ -670,9 +670,15 @@ def _upright(html):
     return re.sub(r"</?i>", "", html)
 
 
+# Slips in the abstracts as INSPIRE and arXiv give them, put right on the site
+ABSTRACT_FIXES = {"geometrical objets": "geometrical objects"}     # 2402.04174
+
+
 def _tex_html(text):
     """An abstract with its TeX turned into HTML: maths between dollars, quotes, and plain hyphens."""
     import html as _html
+    for slip, fix in ABSTRACT_FIXES.items():
+        text = text.replace(slip, fix)
     parts = re.split(r"(\$[^$]*\$)", text.replace("\n", " "))
     out = []
     for k, part in enumerate(parts):
@@ -3039,6 +3045,8 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
    <div><dt><kbd>/</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Search the whole site</dd></div>
    <div><dt><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Choose and open a result</dd></div>
    <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>The previous or next paper of the tour, on the Research page</dd></div>
+   <div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>The next or previous paper of the list, on the Publications page</dd></div>
+   <div><dt><kbd>O</kbd></dt><dd>Open or fold the abstract of that paper</dd></div>
    <div><dt><kbd>Esc</kbd></dt><dd>Close a search, a menu or this list</dd></div>
    <div><dt><kbd>?</kbd></dt><dd>Show this list</dd></div>
   </dl>
@@ -3172,6 +3180,28 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     openAll.textContent = on ? 'Fold every abstract' : 'Open every abstract';
     pubs.forEach(function (p) {{ var d = p.querySelector('details.pub-open'); if (d && !p.hidden) d.open = on; }});
   }});
+  var kbAt = null;                                           // J and K step through the papers shown, O opens or folds the one marked
+  if (pubs.length) document.addEventListener('keydown', function (ev) {{
+    var t = ev.target, k = (ev.key || '').toLowerCase(), n;
+    if ((k !== 'j' && k !== 'k' && k !== 'o') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if ((t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) || document.querySelector('dialog[open]')) return;
+    var list = pubs.filter(function (p) {{ return !p.hidden; }}), i = list.indexOf(kbAt);
+    if (!list.length) return;
+    if (k === 'o') {{
+      var d = i >= 0 && kbAt.querySelector('details.pub-open');
+      if (d) {{ d.open = !d.open; ev.preventDefault(); }}
+      return;
+    }}
+    if (i < 0) {{ for (n = 0; n < list.length - 1 && list[n].getBoundingClientRect().bottom < 90; n++) {{}} }}   // from the first paper in view
+    else n = Math.max(0, Math.min(list.length - 1, i + (k === 'j' ? 1 : -1)));
+    if (kbAt) kbAt.classList.remove('kb');
+    kbAt = list[n]; kbAt.classList.add('kb');
+    if (!kbAt.hasAttribute('tabindex')) kbAt.setAttribute('tabindex', '-1');
+    kbAt.focus({{ preventScroll: true }});
+    kbAt.scrollIntoView({{ block: 'center', behavior: reduce ? 'auto' : 'smooth' }});
+    ev.preventDefault();
+  }});
+  document.addEventListener('pointerdown', function () {{ if (kbAt) {{ kbAt.classList.remove('kb'); kbAt = null; }} }});
   var sorts = document.querySelectorAll('.pub-sort button');
   Array.prototype.forEach.call(sorts, function (b) {{
     b.addEventListener('click', function () {{                // newest first, or most cited first (INSPIRE), within each group
