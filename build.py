@@ -773,6 +773,24 @@ def _pub_more(p):
             f'<div class="pub-facts">{facts_html}</div>{rel_html}{cite}</div>')
 
 
+PERMA_JS = """<script>
+(function () {                              // copy the address of one paper on this page, and say so
+  var ok = navigator.clipboard && window.isSecureContext;
+  Array.prototype.forEach.call(document.querySelectorAll('.perma'), function (b) {
+    var label = b.querySelector('.pl-l'), timer;
+    b.addEventListener('click', function () {
+      var url = location.origin + location.pathname + '#' + b.dataset.id;
+      if (!ok) { location.hash = b.dataset.id; return; }
+      navigator.clipboard.writeText(url).then(function () {
+        b.classList.add('done'); label.textContent = 'Link copied';
+        clearTimeout(timer); timer = setTimeout(function () { b.classList.remove('done'); label.textContent = 'Link'; }, 2000);
+      }).catch(function () { location.hash = b.dataset.id; });
+    });
+  });
+})();
+</script>"""
+
+
 CITE_JS = """<script>
 (function () {                              // copy a paper's BibTeX with one click, and say so
   var bs = document.querySelectorAll('.cite-copy:not(.bib-all)');   // (the one for the whole list is in the page script)
@@ -858,6 +876,8 @@ def pub_entry(n, p):
     if tour:
         links.append(f'<a href="research.html#tour-{tour}" title="See this work in the animated tour">Animation</a>')
     venue = f' <span class="sep">·</span> {p["venue"]}' if p.get("venue") else ""
+    links.append(f'<button class="perma" type="button" data-id="{_pub_id(p)}" title="Copy a link to this paper on this page">'
+                 '<span class="pl-l">Link</span></button>')       # a link to this very entry, to share
     tags = "".join(f'<span class="tag {t}">{TOPIC_LABEL[t]}</span>' for t in p["topic"].split())
     links.append(f'<span class="tags">{tags}</span>')
     more = _pub_more(p)
@@ -890,7 +910,7 @@ def render_pubs():
         for p in items:
             out.append(pub_entry(n, p))
             n -= 1
-    return "\n".join(out) + "\n" + CITE_JS
+    return "\n".join(out) + "\n" + CITE_JS + PERMA_JS
 
 
 def _p(d, cls=""):
@@ -2775,7 +2795,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     }}).catch(function () {{}});
   }});
   function pubText(p) {{                              // what a search looks through: the card, not the abstract
-    if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links'),
+    if (!p.dataset.q) p.dataset.q = Array.prototype.map.call(p.querySelectorAll('.title, .meta, .detail, .links a, .links .tag'),
       function (x) {{ return x.textContent; }}).join(' ').replace(/\\s+/g, ' ').toLowerCase();   // (names are held together by no-break spaces)
     return p.dataset.q;
   }}
