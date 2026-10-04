@@ -1314,30 +1314,66 @@
     }
   };
 
-  /* The sunset integral with three different masses, as in chiral perturbation theory, where
-     the masses are those of the pion, kaon and eta. Small pulses run along the three lines. */
-  var SUNSET = diagramVignette({
-    key: 'sunset', paper: '2512.07727', dur: 10, cap: 'Sunset integrals with three mass scales',
-    D: { n: { i: [0.1, 0.5], v1: [0.5, 0.5, 1], v2: [1.4, 0.5, 1], o: [1.8, 0.5] },
-         e: [{ a: 'i', b: 'v1', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] },
-             { a: 'v1', b: 'v2', t: 'p', bend: -0.36, c: 'brassD', lab: 'm_1', lo: [0, -10] },
-             { a: 'v1', b: 'v2', t: 'p', c: 'pine', lab: 'm_2', lo: [0, -8] },
-             { a: 'v1', b: 'v2', t: 'p', bend: 0.36, c: 'crimson', lab: 'm_3', lo: [0, 20] },
-             { a: 'v2', b: 'o', t: 'p', c: 'brassD', lab: 'p', lo: [0, -10] }], stagger: 0.5, edgeDur: 0.7 },
-    extra: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, k = R ? 1 : ease((t - 3.4) / 0.7);
-      if (k <= 0) return;
-      ctx.save(); ctx.globalAlpha *= k;
-      drawMath(ctx, 'H_{1,1,1}(m_1,m_2,m_3;\\,p^2)', v.x + 4, v.y + 16, 12, ink('green', 0.95), 'left');
-      caps(ctx, 'MASSES OF THE PION, KAON AND ETA', v.x + 4, v.y + v.h - 8, ink('slate', 0.85), 7.5);
+  /* Sunset integrals with up to three mass scales, as they arise in chiral perturbation theory: one mass,
+     then two (m and M, as for the pion and the nucleon in the two-flavour baryon sector), then three (the
+     pion, kaon and eta of three-flavour ChPT). By integration by parts every sunset reduces to four master
+     integrals (abstract of the paper), and the paper solves them as single and double hypergeometric series. */
+  var SUNSET_D = { n: { i: [0.1, 0.5], v1: [0.5, 0.5, 1], v2: [1.4, 0.5, 1], o: [1.8, 0.5] },
+    e: [{ a: 'i', b: 'v1', t: 'p', lab: 'p', lo: [0, -10] },
+        { a: 'v1', b: 'v2', t: 'p', bend: -0.36, lo: [0, -10] },
+        { a: 'v1', b: 'v2', t: 'p', lo: [0, -8] },
+        { a: 'v1', b: 'v2', t: 'p', bend: 0.36, lo: [0, 20] },
+        { a: 'v2', b: 'o', t: 'p', lab: 'p', lo: [0, -10] }] };
+  var SUNSET_ST = [                                  // the masses on the three lines, from the top one down
+    { at: 0, lab: ['m', 'm', 'm'], col: ['green', 'green', 'green'], cap: 'ONE MASS SCALE' },
+    { at: 4.3, lab: ['m', 'M', 'M'], col: ['brassD', 'pine', 'pine'], cap: 'TWO MASS SCALES · THE PION AND THE NUCLEON' },
+    { at: 7.9, lab: ['m_1', 'm_2', 'm_3'], col: ['brassD', 'pine', 'crimson'], cap: 'THREE MASS SCALES · THE PION, KAON AND ETA' }];
+  var SUNSET = {
+    key: 'sunset', paper: '2512.07727', dur: 13, cap: 'Sunset integrals with up to three mass scales',
+    layout: function (v) { diagramLayout(v, SUNSET_D); },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, F = v.F, si = R ? 2 : (t < SUNSET_ST[1].at ? 0 : t < SUNSET_ST[2].at ? 1 : 2);
+      var S1 = SUNSET_ST[si], S0 = SUNSET_ST[Math.max(0, si - 1)], sk = R || si === 0 ? 1 : ease((t - S1.at) / 0.7);
+      SUNSET_D.e.forEach(function (ed, i) {
+        var g = v.geo[i], k = R ? 1 : ease((t - 0.35 - i * 0.45) / 0.7);
+        if (k <= 0) return;
+        var lin = i >= 1 && i <= 3, q = pathAt(g, g.len * 0.5), o = ed.lo;
+        if (!lin) {
+          drawEdge(ctx, g, 'p', k, ink('brassD', 0.92), 1.3, t);
+          if (k > 0.8) drawMath(ctx, 'p', q[0] + o[0], q[1] + o[1], 13, ink('green', 0.95 * clamp01((k - 0.8) / 0.2)), 'center');
+          return;
+        }
+        [[S0, 1 - sk], [S1, sk]].forEach(function (P) {   // each line takes the colour and the mass of the stage, the old one fading
+          if (P[1] <= 0.01) return;
+          drawEdge(ctx, g, 'p', k, ink(P[0].col[i - 1], 0.92 * P[1]), 1.5, t);
+          if (k > 0.8) drawMath(ctx, P[0].lab[i - 1], q[0] + o[0], q[1] + o[1], 13, ink('green', 0.95 * P[1] * clamp01((k - 0.8) / 0.2)), 'center');
+        });
+      });
+      ['v1', 'v2'].forEach(function (id, j) {
+        if (R || t > 0.35 + (j ? 1.6 : 0.6)) dot(ctx, F.x + SUNSET_D.n[id][0] * F.s, F.y + SUNSET_D.n[id][1] * F.s, 2.3, ink('green', 0.95));
+      });
+      var k1 = R ? 1 : ease((t - 2.6) / 0.7), mk = R ? 1 : ease((t - 10.4) / 0.7);
+      if (k1 <= 0) return;
+      ctx.save(); ctx.globalAlpha *= k1 * (1 - mk);
+      drawMath(ctx, 'H_{a_1,a_2,a_3}(m_1,m_2,m_3;\\,p^2)', v.x + 4, v.y + 16, 12, ink('green', 0.95), 'left');
       ctx.restore();
+      if (mk > 0) {                                  // what every sunset reduces to, by integration by parts
+        ctx.save(); ctx.globalAlpha *= mk;
+        drawMath(ctx, 'H_{1,1,1},\\quad H_{2,1,1},\\quad H_{1,2,1},\\quad H_{1,1,2}', v.x + 4, v.y + 16, 12, ink('green', 0.95), 'left');
+        caps(ctx, 'THE FOUR MASTER INTEGRALS', v.x + 4, v.y + 32, ink('brassD', 0.95), 7.5);
+        ctx.restore();
+      }
+      [[S0, 1 - sk], [S1, sk]].forEach(function (P) {  // the stage, named below the diagram
+        if (P[1] <= 0.01) return;
+        ctx.save(); ctx.globalAlpha *= k1 * P[1]; caps(ctx, P[0].cap, v.x + 4, v.y + v.h - 8, ink('slate', 0.85), 7.5); ctx.restore();
+      });
       if (R) return;
       [1, 2, 3].forEach(function (i, j) {           // momentum flowing through the three lines
-        var g = v.geo[i], ph = ((t - 3.4) * 0.42 + j * 0.31) % 1, q = pathAt(g, g.len * ph);
-        dot(ctx, q[0], q[1], 2.4, ink(['brassD', 'pine', 'crimson'][j], 0.85 * k * Math.sin(Math.PI * ph)));
+        var g = v.geo[i], ph = ((t - 3.4) * 0.42 + j * 0.31) % 1, qq = pathAt(g, g.len * (ph < 0 ? ph + 1 : ph));
+        if (t > 3.4) dot(ctx, qq[0], qq[1], 2.4, ink(S1.col[j], 0.85 * k1 * Math.sin(Math.PI * ph)));
       });
     }
-  });
+  };
 
 
   /* Baryon number violation in the SMEFT. A heavy S1 leptoquark generates the four
