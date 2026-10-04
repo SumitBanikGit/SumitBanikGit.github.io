@@ -2848,6 +2848,26 @@
         }
       });
 
+      // the star under the pointer, joined to the papers closest to it in content (its "Related papers" below)
+      var hp = e.hover >= 0 ? d[e.hover] : null;
+      if (hp && hp.r && hp.r.length) {
+        var hq = e.pos[e.hover], hk = e.reduce ? 1 : ease((t - (e.hoverAt || 0)) / 0.45);
+        hp.r.forEach(function (j, m) {
+          var rq = e.pos[j];
+          if (!rq || sx < rq[0]) return;
+          var kk = e.reduce ? 1 : clamp01(hk * 1.5 - m * 0.25), mx = (hq[0] + rq[0]) / 2, my = Math.min(hq[1], rq[1]) - 10 - 0.08 * Math.abs(rq[0] - hq[0]);
+          if (kk <= 0) return;
+          var dk = Math.max(0.35, e.dim[j]);              // fainter towards a paper that the list's filter leaves out
+          ctx.strokeStyle = ink('brassD', 0.75 * dk); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(hq[0], hq[1]);
+          for (var s2 = 1; s2 <= 24; s2++) {             // a gentle arc, drawn out from the star
+            var w = kk * s2 / 24;
+            ctx.lineTo((1 - w) * (1 - w) * hq[0] + 2 * w * (1 - w) * mx + w * w * rq[0], (1 - w) * (1 - w) * hq[1] + 2 * w * (1 - w) * my + w * w * rq[1]);
+          }
+          ctx.stroke();
+          if (kk >= 1) { ctx.strokeStyle = ink('brassD', 0.65 * dk); ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(rq[0], rq[1], 6.5, 0, TAU); ctx.stroke(); }
+        });
+      }
+
       // the stars light up as the cursor passes
       d.forEach(function (p, i) {
         var q = e.pos[i], age = (sx - q[0]) / v;
@@ -2895,9 +2915,10 @@
         if (dd < bd && e.sx >= s[0]) { bd = dd; best = i; }
       });
       if (best === e.hover) return;
-      e.hover = best;
+      e.hover = best; e.hoverAt = e.t;
       e.stage.style.cursor = best >= 0 ? 'pointer' : '';
       e.caption(best >= 0 ? e.pubs[best].y + ' · ' + e.pubs[best].n : null);
+      e.hint(best >= 0 && (e.pubs[best].r || []).length ? 'Lines lead to the closest papers in content' : null);
     },
     click: function (e, x, y) {                       // on a touch screen, the first tap names the paper
       SCENES.constellation.move(e, { x: x, y: y });

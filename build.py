@@ -1202,11 +1202,15 @@ def talk_scene_data():
 
 
 def pub_scene_data():
-    """Papers in time order, with the field, the kind and a link for each."""
+    """Papers in time order, with the field, the kind and a link for each, and the papers closest to each in
+    content (the "Related papers" of the list, by their place in this order) for the lines drawn on hover."""
     pubs = []                                         # in time order: by year, and by arXiv number within a year
-    for p in sorted(reversed(PUBS), key=lambda p: (int(p["year"]), p.get("arxiv") or "9999.99999")):
+    order = sorted(reversed(PUBS), key=lambda p: (int(p["year"]), p.get("arxiv") or "9999.99999"))
+    place = {_pub_id(p): i for i, p in enumerate(order)}
+    for p in order:
         pubs.append(dict(y=int(p["year"]), t="pheno" if p["topic"] == "pheno" else "fi",   # a star opens its paper in the list below
-                         k=p["kind"], n=p["title"], u=f"#{_pub_id(p)}", p=_plain(p["title"]).strip()))
+                         k=p["kind"], n=p["title"], u=f"#{_pub_id(p)}", p=_plain(p["title"]).strip(),
+                         r=[place[_pub_id(q)] for q in _related(p)]))
     return dict(pubs=pubs)
 
 
