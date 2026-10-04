@@ -2688,3 +2688,30 @@ dialog.keys-help { width: min(30rem, calc(100vw - 1.5rem)); }
   .on-board::after, .links .perma::after, .bib-file::after { content: ""; position: absolute; inset: -9px -6px; }
   .dom-chip .dc-x::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }   /* the cross that clears a domain or a city */
 }
+
+/* Funding: the research proposal behind each postdoctoral fellowship, folded under its card */
+.funds { align-items: start; }                     /* an opened card grows alone */
+details.fund-more { margin-top: .85rem; }
+details.fund-more > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem;
+                              font-family: var(--sans); font-size: .62rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+                              color: var(--accent); }
+details.fund-more > summary::-webkit-details-marker { display: none; }
+details.fund-more > summary .chev { width: .8rem; height: .8rem; fill: none; stroke: currentColor; stroke-width: 1.6; transition: transform .25s; }
+details.fund-more[open] > summary .chev { transform: rotate(180deg); }
+details.fund-more > summary .t-hide, details.fund-more[open] > summary .t-show { display: none; }
+details.fund-more[open] > summary .t-hide { display: inline; }
+details.fund-more > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.fund-abs { margin: .7rem 0 .2rem; padding: .8rem .95rem; border-left: 2px solid rgba(168, 137, 79, .6);
+            background: color-mix(in srgb, var(--gold) 7%, transparent); border-radius: 0 4px 4px 0; }
+.fund-abs .k { display: block; margin-bottom: .25rem; font-family: var(--sans); font-size: .56rem; font-weight: 600; letter-spacing: .14em;
+               text-transform: uppercase; color: var(--grey); }
+.fund-abs .fund-ptitle { margin: 0 0 .75rem; font-family: var(--display); font-weight: 700; font-size: 1.12rem; line-height: 1.25; color: var(--navy); }
+.fund-abs p { margin: 0 0 .6rem; font-size: .9rem; line-height: 1.6; }
+.fund-wps { margin: 0 0 .6rem; padding-left: 1.2rem; font-size: .9rem; line-height: 1.6; }
+.fund-wps li { margin-bottom: .45rem; }
+.fund-wps .wp-n { font-style: italic; color: var(--navy); }
+@media (prefers-reduced-motion: no-preference) {
+  details.fund-more[open] > .fund-abs { animation: unfold .45s cubic-bezier(.2, .7, .2, 1) both; }
+}
+.funds .fund:has(details.fund-more[open]) { grid-column: 1 / -1; }   /* an opened card takes the whole row, to read in comfort */
+.fund-abs { max-width: 52rem; }

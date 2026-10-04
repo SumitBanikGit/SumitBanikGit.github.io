@@ -586,6 +586,10 @@ try:
     PUB_DETAILS = json.loads(Path("tools/pub_details.json").read_text(encoding="utf-8"))
 except (OSError, ValueError):
     PUB_DETAILS = {}
+try:                                              # the research proposal behind each postdoctoral fellowship or grant
+    FUND_PROPOSALS = json.loads(Path("tools/proposals.json").read_text(encoding="utf-8"))
+except (OSError, ValueError):
+    FUND_PROPOSALS = {}
 
 _TEX_SYM = {"alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon": "ε", "varepsilon": "ε", "zeta": "ζ",
             "eta": "η", "theta": "θ", "lambda": "λ", "mu": "μ", "nu": "ν", "xi": "ξ", "pi": "π", "rho": "ρ",
@@ -1482,6 +1486,22 @@ def render_talks():
     return out
 
 
+def _proposal_html(name):
+    """The research proposal of a fellowship, folded under its card: the title and the abstract, as in the application."""
+    pr = FUND_PROPOSALS.get(name)
+    if not pr:
+        return ""
+    body = ""
+    for part in pr["abstract"]:
+        if isinstance(part, dict):
+            body += '<ol class="fund-wps">' + "".join(f'<li><span class="wp-n">{n}.</span> {t}</li>' for n, t in part["list"]) + '</ol>'
+        else:
+            body += f'<p>{part}</p>'
+    return (f'<details class="fund-more"><summary><span class="t-show">Research proposal</span><span class="t-hide">Hide the proposal</span>'
+            f'{PKG_CHEVRON}</summary><div class="fund-abs"><span class="k">Title</span><p class="fund-ptitle">{pr["title"]}</p>'
+            f'<span class="k">Abstract</span>{body}</div></details>')
+
+
 def fund_card(year, name, agency, country, amount, dur, status):
     main, _, approx = amount.partition(" (")
     approx = approx.rstrip(")")
@@ -1497,7 +1517,7 @@ def fund_card(year, name, agency, country, amount, dur, status):
             f'<h4 class="fund-name">{name}</h4><div class="fund-agency">{agency}</div>'
             f'<div class="fund-amount">{main}</div>'
             f'<div class="fund-meta">{approx} <span class="sep">·</span> {dur}</div>'
-            f'<div class="fund-tags">{tags}</div>'
+            f'<div class="fund-tags">{tags}</div>{_proposal_html(name)}'
             f'<button class="on-board" type="button" data-pick="{name}" aria-label="Show the {name} on the chart above">'
             'On the chart <span aria-hidden="true">↑</span></button></article>')
 
@@ -2451,7 +2471,9 @@ def search_index():
     for y, name, lvl, inst, thesis in SUPERVISION:
         add("Supervision", y, name, f"{lvl} · {inst}", f"supervision.html#{_slug(name)}", thesis)
     for y, name, agency, country, *_rest in FUNDING:
-        add("Funding", y, name, f"{agency} · {country}", f"funding.html#{_slug(name)}")
+        pr = FUND_PROPOSALS.get(name, {})
+        text = " ".join(x if isinstance(x, str) else " ".join(f"{n}. {t}" for n, t in x["list"]) for x in pr.get("abstract", []))
+        add("Funding", y, name, f"{agency} · {country}", f"funding.html#{_slug(name)}", f'{pr.get("title", "")} {text}'.strip())
     for kind, items, frag in (("Position", EMPLOYMENT, "positions"), ("Education", EDUCATION, "education")):
         for e in items:
             add(kind, "", e["title"], f'{e["org"]} · {e["when"]}', f"cv.html#{frag}", f'{e["where"]} {e.get("meta", "")}')
