@@ -5,6 +5,8 @@ the arXiv comments, else the page count on INSPIRE), the preprint (report) numbe
 
 Run from the site folder:  python3 tools/pub_details.py
 It writes tools/pub_details.json, which build.py reads. Nothing on the site changes until the next build.
+It also says where a reference in build.py looks out of date: a journal volume, page or year, or a DOI, that
+INSPIRE has and the site does not (as when a paper listed as accepted has since come out).
 """
 import json
 import re
@@ -45,10 +47,11 @@ def arxiv_comments(ids):
 def main():
     pubs = [p for p in build.PUBS if p.get("inspire")]
     arx = arxiv_comments([p["arxiv"] for p in pubs if p.get("arxiv")])
-    data = {}
+    data, stale = {}, []
     for p in pubs:
         url = (f"https://inspirehep.net/api/literature/{p['inspire']}"
-               "?fields=abstracts,number_of_pages,report_numbers,arxiv_eprints,citation_count,citation_count_without_self_citations")
+               "?fields=abstracts,number_of_pages,report_numbers,arxiv_eprints,citation_count,citation_count_without_self_citations,"
+               "publication_info,dois")
         m = json.loads(get(url))["metadata"]
         abstracts = m.get("abstracts", [])
         pick = next((a for a in abstracts if a.get("source") == "arXiv"), abstracts[0] if abstracts else None)
@@ -62,7 +65,21 @@ def main():
                                   reports=reports, comment=a.get("comment", ""), cat=cat, bibtex=bib,
                                   cited=m.get("citation_count", 0), cited_others=m.get("citation_count_without_self_citations", 0),
                                   cited_on=time.strftime("%Y-%m-%d"))
+        ref = re.sub(r"<[^>]+>", "", p.get("ref", ""))
+        pub = next((x for x in m.get("publication_info", []) if x.get("journal_title") and x.get("material", "publication") == "publication"), None)
+        if pub:
+            for what, part in (("volume", pub.get("journal_volume")), ("page", pub.get("artid") or pub.get("page_start")),
+                               ("year", str(pub.get("year") or ""))):
+                if what == "year" and not re.search(r"\b(19|20)\d\d\b", ref.replace(part, "")):
+                    continue                  # (the PoS volumes and the review give no year, on purpose)
+                if part and part not in ref:
+                    stale.append(f"{p.get('arxiv') or p['inspire']}: INSPIRE gives the {what} {part}, the site says \"{ref}\"")
+        dois = [x["value"] for x in m.get("dois", []) if x.get("material", "publication") == "publication"]
+        if dois and not p.get("doi"):
+            stale.append(f"{p.get('arxiv') or p['inspire']}: INSPIRE has the DOI {dois[0]}, the site has none")
         time.sleep(0.4)
+    for line in stale:
+        print("check build.py:", line)
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"wrote {OUT.name} with {len(data)} publications")
 

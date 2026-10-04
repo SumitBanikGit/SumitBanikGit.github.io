@@ -52,8 +52,9 @@ PUBS = [
     dict(kind="article", year=2026, topic="fi",
          title="Sunset integrals with up to three mass scales in chiral perturbation theory: a comparative study of the Mellin-Barnes representation technique",
          authors="B. Ananthanarayan, S. Banik, V. Bernard, S. Friot, S. Ghosh, U.-G. Meißner",
-         ref="Eur. Phys. J. Spec. Top. <b>235</b> (2026)",
-         arxiv="2512.07727", inspire="3090403"),
+         ref="Eur. Phys. J. Spec. Top. <b>235</b>, 1833 (2026)",
+         arxiv="2512.07727", doi="10.1140/epjs/s11734-026-02137-w", inspire="3090403",
+         erratum="10.1140/epjs/s11734-026-02421-9"),
     dict(kind="article", year=2026, topic="pheno",
          title="Two-loop anomalous dimensions for baryon-number-violating operators in SMEFT",
          authors="S. Banik, A. Crivellin, L. Naterop, P. Stoffer",
@@ -65,7 +66,7 @@ PUBS = [
          ref="Eur. Phys. J. Spec. Top. <b>234</b>, 8005",
          doi="10.1140/epjs/s11734-025-02019-7", inspire="3081108"),
     dict(kind="article", year=2025, topic="pheno",
-         title="Correlating EDMs and <i>A</i> → <i>γγ</i> in the 2HDM in light of the diphoton excesses at 95 GeV and 152 GeV",
+         title="Correlating <i>A</i> → <i>γγ</i> with electric dipole moments in the two Higgs doublet model in light of the diphoton excesses at 95 GeV and 152 GeV",
          authors="S. Banik, G. Coloretti, A. Crivellin, H. E. Haber",
          ref="Phys. Rev. D <b>111</b>, 075021 (2025)",
          arxiv="2412.00523", doi="10.1103/PhysRevD.111.075021", inspire="2854614"),
@@ -883,6 +884,8 @@ def pub_entry(n, p):
         links.append(f'<a class="arx" href="https://arxiv.org/abs/{p["arxiv"]}">arXiv:{p["arxiv"]}</a>')
     if p.get("doi"):
         links.append(f'<a href="https://doi.org/{p["doi"]}">DOI</a>')
+    if p.get("erratum"):                       # a correction the journal published later
+        links.append(f'<a href="https://doi.org/{p["erratum"]}" title="The correction published by the journal">Correction</a>')
     if p.get("inspire"):
         links.append(f'<a href="https://inspirehep.net/literature/{p["inspire"]}">INSPIRE</a>')
     soft = _soft_of(p)
@@ -1509,7 +1512,7 @@ CONT_JS = r"""<script>
   function left(x, N) { return Math.sqrt(-x) * partial(1 / x, N); }  // closing to the left: the series in 1/x (x < 0 on the real line)
 
   var X0 = -4, X1 = 1, Y0 = -9, Y1 = 1.2, W = 0, H = 0, dpr = 1, P = { l: 34, r: 10, t: 12, b: 24 };
-  var N = reduce ? 30 : 1, hx = null, played = reduce, raf = null;
+  var N = reduce ? 30 : 1, hx = null, played = reduce, raf = null, focus = null;
   function PX(x) { return P.l + (x - X0) / (X1 - X0) * (W - P.l - P.r); }
   function PY(y) { return P.t + (Y1 - y) / (Y1 - Y0) * (H - P.t - P.b); }
   function XP(px) { return X0 + (px - P.l) / (W - P.l - P.r) * (X1 - X0); }
@@ -1554,11 +1557,13 @@ CONT_JS = r"""<script>
     label('x', r, b - 6 - 14, ink('s', 0.9), 'right', 12, true);
     ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = ink('b', 0.8); ctx.beginPath(); ctx.moveTo(m1, t); ctx.lineTo(m1, b); ctx.stroke(); ctx.restore();
     ctx.save(); ctx.beginPath(); ctx.rect(l, t - 2, r - l + 2, b - t + 2); ctx.clip();
-    curve(fn, X0, X1, ink('f', 0.14), 6); curve(fn, X0, X1, ink('f', 0.85), 1.3);   // the function
-    curve(function (x) { return right(x, N); }, X0, -1, ink('r', 0.4), 1.6);        // each series, strong where it converges
-    curve(function (x) { return left(x, N); }, -1, -0.01, ink('l', 0.4), 1.6);
-    curve(function (x) { return right(x, N); }, -1, X1, ink('r', 0.95), 1.9);
-    curve(function (x) { return left(x, N); }, X0, -1, ink('l', 0.95), 1.9);
+    function A(k, a) { return focus && focus !== k ? a * 0.22 : a; }               // a line of the key, pointed at, stands out
+    function L(k, w) { return focus === k ? w + 0.7 : w; }
+    curve(fn, X0, X1, ink('f', A('f', 0.14)), 6); curve(fn, X0, X1, ink('f', A('f', 0.85)), L('f', 1.3));   // the function
+    curve(function (x) { return right(x, N); }, X0, -1, ink('r', A('r', 0.4)), L('r', 1.6));        // each series, strong where it converges
+    curve(function (x) { return left(x, N); }, -1, -0.01, ink('l', A('l', 0.4)), L('l', 1.6));
+    curve(function (x) { return right(x, N); }, -1, X1, ink('r', A('r', 0.95)), L('r', 1.9));
+    curve(function (x) { return left(x, N); }, X0, -1, ink('l', A('l', 0.95)), L('l', 1.9));
     ctx.restore();
     ctx.strokeStyle = ink('f', 0.85); ctx.lineWidth = 1.2; ctx.fillStyle = ink('p', 1);   // the branch point at x = 1, an open circle
     ctx.beginPath(); ctx.arc(PX(1), PY(0), 3.4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
@@ -1614,6 +1619,12 @@ CONT_JS = r"""<script>
     var r = cv.getBoundingClientRect(), x = XP(ev.clientX - r.left);
     hx = x < X0 || x > X1 ? null : Math.round(x * 100) / 100; draw(); readout();
   }
+  var key = fig.querySelector('.cont-key');
+  Array.prototype.forEach.call(key ? key.children : [], function (li) {   // the key names its line in the plot
+    var k = li.className.slice(2, 3);
+    li.addEventListener('mouseenter', function () { focus = k; key.classList.add('focus'); li.classList.add('on'); draw(); });
+    li.addEventListener('mouseleave', function () { focus = null; key.classList.remove('focus'); li.classList.remove('on'); draw(); });
+  });
   cv.addEventListener('pointermove', at);
   cv.addEventListener('pointerdown', at);
   cv.addEventListener('pointerleave', function (ev) { if (ev.pointerType === 'mouse') { hx = null; draw(); readout(); } });

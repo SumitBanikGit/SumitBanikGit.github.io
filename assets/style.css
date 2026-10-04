@@ -2790,3 +2790,5 @@ html[data-theme="dark"] .cont-key .k-f .sw { border-top-color: rgba(232, 226, 20
 .cont-key .nw { white-space: nowrap; }
 .cont figcaption { margin-top: .9rem; font-size: .92rem; color: var(--grey); max-width: var(--prose); }
 @media (max-width: 40rem) { .cont-read { min-height: 2.7em; } .cont-box { height: 15.5rem; } }
+.cont-key li { transition: opacity .2s ease; }
+.cont-key.focus li:not(.on) { opacity: .45; }
