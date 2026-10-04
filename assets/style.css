@@ -2678,3 +2678,7 @@ dialog.keys-help { width: min(30rem, calc(100vw - 1.5rem)); }
 .kh-list kbd { font-family: var(--sans); font-size: .68rem; padding: .08rem .38rem; border: 1px solid var(--hair); border-bottom-width: 2px;
                border-radius: 3px; background: var(--panel); color: var(--ink); }
 @media (max-width: 30rem) { .kh-list > div { grid-template-columns: 1fr; gap: .2rem; } }
+.bib-file { font-family: var(--sans); font-size: .62rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+            background: transparent; border: 0; border-bottom: 1px solid var(--rule); padding: 0 0 .05rem; cursor: pointer; }
+.bib-file:hover, .bib-file:focus-visible { border-bottom-color: var(--accent); }
+.bib-file[hidden] { display: none; }

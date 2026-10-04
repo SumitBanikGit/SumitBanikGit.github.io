@@ -2604,7 +2604,8 @@ Standard Model at particle colliders.</p>
 {coauthors}
 <div class="pub-tools"><span class="pub-count" role="status" aria-live="polite"></span>
 <span class="pub-sort" role="group" aria-label="Order of the papers"><button type="button" data-sort="new" aria-pressed="true">Newest first</button><button type="button" data-sort="cited" aria-pressed="false">Most cited first</button></span>
-<button class="cite-copy bib-all" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button></div>
+<button class="cite-copy bib-all" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button>
+<button class="bib-file" type="button" title="The same entries as a .bib file">.bib file</button></div>
 <p class="pub-empty" hidden>No publications match your search.</p>
 {pubs}
 <button class="pub-more" type="button">Show all {n_total} publications</button>
@@ -2794,9 +2795,18 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     if (!bibAll || bibAll.classList.contains('done')) return;
     var n = bibList.length;
     bibAll.hidden = !n;
+    var bf = document.querySelector('.bib-file'); if (bf) bf.hidden = !n;
     bibAll.querySelector('.cc-l').textContent = n === pubs.length ? 'Copy all ' + n + ' BibTeX entries'
       : n === 1 ? 'Copy its BibTeX' : 'Copy these ' + n + ' BibTeX entries';
   }};
+  var bibFile = document.querySelector('.bib-file');                     // the same entries, saved as a file
+  if (bibFile) bibFile.addEventListener('click', function () {{
+    var list = bibList.map(function (p) {{ var c = p.querySelector('.cite-copy'); return c ? c.getAttribute('data-copy') : ''; }}).filter(Boolean);
+    if (!list.length || !window.Blob || !window.URL) return;
+    var url = URL.createObjectURL(new Blob([list.join('\\n\\n') + '\\n'], {{ type: 'application/x-bibtex' }})), a = document.createElement('a');
+    a.href = url; a.download = 'banik-publications.bib'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () {{ URL.revokeObjectURL(url); }}, 1000);
+  }});
   if (bibAll) bibAll.addEventListener('click', function () {{
     var list = bibList.map(function (p) {{ var c = p.querySelector('.cite-copy'); return c ? c.getAttribute('data-copy') : ''; }}).filter(Boolean);
     if (!list.length) return;
