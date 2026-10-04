@@ -2677,6 +2677,7 @@ Standard Model at particle colliders.</p>
 </div>
 {coauthors}
 <div class="pub-tools"><span class="pub-count" role="status" aria-live="polite"></span>
+<button class="pub-openall" type="button" aria-pressed="false">Open every abstract</button>
 <span class="pub-sort" role="group" aria-label="Order of the papers"><button type="button" data-sort="new" aria-pressed="true">Newest first</button><button type="button" data-sort="cited" aria-pressed="false">Most cited first</button></span>
 <button class="cite-copy bib-all" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect x="8.5" y="8.5" width="11" height="11" rx="2"/></svg><span class="cc-l">Copy BibTeX</span></button>
 <button class="bib-file" type="button" title="The same entries as a .bib file">.bib file</button></div>
@@ -2920,6 +2921,8 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     }});
     if (more) more.hidden = open || narrowed || matches <= LIMIT;
     bibList = matched; bibLabel();
+    if (openAll && openAll.getAttribute('aria-pressed') === 'true')   // "every abstract" holds for papers the filters bring back
+      pubs.forEach(function (p) {{ var d = p.querySelector('details.pub-open'); if (d && !p.hidden) d.open = true; }});
     if (pubCount) pubCount.textContent = !pubs.length ? '' : (matches === pubs.length ? 'All ' + matches + ' papers'
       : matches === 1 ? 'One paper of ' + pubs.length : matches + ' papers of ' + pubs.length);
     if (empty) empty.hidden = matches > 0;
@@ -2946,6 +2949,13 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   }});
   if (search) search.addEventListener('input', function () {{ query = search.value.replace(/\\s+/g, ' ').trim().toLowerCase(); caSync(); applyPubs(); }});
   if (more) more.addEventListener('click', function () {{ open = true; applyPubs(); }});
+  var openAll = document.querySelector('.pub-openall');      // every abstract of the list as it is filtered, open or folded at once
+  if (openAll) openAll.addEventListener('click', function () {{
+    var on = openAll.getAttribute('aria-pressed') !== 'true';
+    openAll.setAttribute('aria-pressed', on ? 'true' : 'false');
+    openAll.textContent = on ? 'Fold every abstract' : 'Open every abstract';
+    pubs.forEach(function (p) {{ var d = p.querySelector('details.pub-open'); if (d && !p.hidden) d.open = on; }});
+  }});
   var sorts = document.querySelectorAll('.pub-sort button');
   Array.prototype.forEach.call(sorts, function (b) {{
     b.addEventListener('click', function () {{                // newest first, or most cited first (INSPIRE), within each group
