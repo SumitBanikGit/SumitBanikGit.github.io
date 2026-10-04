@@ -2715,3 +2715,10 @@ details.fund-more > summary:focus-visible { outline: 2px solid var(--gold); outl
 }
 .funds .fund:has(details.fund-more[open]) { grid-column: 1 / -1; }   /* an opened card takes the whole row, to read in comfort */
 .fund-abs { max-width: 52rem; }
+/* search: a word with a typo is read as the nearest word of the site, and says so */
+.ss-fix { margin: 0; padding: .55rem 1.15rem 0; font-size: .82rem; color: var(--grey); }
+.ss-fix[hidden] { display: none; }
+.ss-fix .ss-fixed { color: var(--ink); font-style: italic; }
+.ss-fix .ss-orig { font: inherit; color: var(--accent); background: transparent; border: 0; padding: 0; cursor: pointer;
+                   text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .18em; }
+.ss-fix .ss-orig:hover { text-decoration-color: currentColor; }

@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="/assets/style.css?v=6ac220ea">
+<link rel="stylesheet" href="/assets/style.css?v=6ac22905">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sumit Banik", "givenName": "Sumit", "familyName": "Banik", "honorificSuffix": "PhD", "jobTitle": "Postdoctoral Researcher", "worksFor": [{"@type": "Organization", "name": "SLAC National Accelerator Laboratory"}, {"@type": "CollegeOrUniversity", "name": "Stanford University"}], "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"}, {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}], "email": "mailto:banik@stanford.edu", "url": "https://sumitbanikgit.github.io/", "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "GKZ hypergeometric systems", "Higgs physics", "two-Higgs-doublet models", "Higgs triplets", "leptoquarks", "beyond the Standard Model", "collider phenomenology", "effective field theory", "SMEFT", "renormalization group", "computer algebra"], "workLocation": {"@type": "Place", "name": "SLAC National Accelerator Laboratory", "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park", "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}}, "image": "https://sumitbanikgit.github.io/assets/portrait.jpg", "sameAs": ["https://orcid.org/0000-0002-5869-5293", "https://inspirehep.net/authors/1810309", "https://github.com/SumitBanikGit", "https://www.linkedin.com/in/waytosumitbanik"]}</script>
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
@@ -174,6 +174,7 @@
    <button class="ss-close" type="button" aria-label="Close the search">Esc</button>
   </div>
   <div class="ss-hints"><span class="ss-try">Try</span><button type="button">Mellin-Barnes</button><button type="button">GKZ</button><button type="button">95 GeV</button><button type="button">leptoquarks</button><button type="button">SMEFT</button><button type="button">Zürich</button></div>
+  <p class="ss-fix" hidden>Showing results for “<span class="ss-fixed"></span>”. <button type="button" class="ss-orig">Search for “<span></span>” instead</button></p>
   <ul class="ss-list" id="ss-list" role="listbox" aria-label="Results"></ul>
   <div class="ss-foot"><span class="ss-status" role="status" aria-live="polite"></span>
    <span class="ss-keys"><span><kbd>↑</kbd><kbd>↓</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>?</kbd> all shortcuts</span></span></div>
@@ -597,14 +598,46 @@
   var ss = document.querySelector('dialog.ss');
   if (ss && ss.showModal && window.fetch) {
     var ssq = ss.querySelector('.ss-input'), ssl = ss.querySelector('.ss-list'), sst = ss.querySelector('.ss-status'),
-        ssh = ss.querySelector('.ss-hints'), ssIndex = null, ssAct = -1, ssHits = [];
+        ssh = ss.querySelector('.ss-hints'), ssIndex = null, ssAct = -1, ssHits = [], ssVocab = {}, ssAsTyped = false,
+        ssFixNote = ss.querySelector('.ss-fix');
+    var ssEdits = function (a, b, most) {             // how many letters to change, give up beyond "most"
+      if (Math.abs(a.length - b.length) > most) return most + 1;
+      var prev = [], cur, i, j;
+      for (j = 0; j <= b.length; j++) prev[j] = j;
+      for (i = 1; i <= a.length; i++) {
+        cur = [i]; var low = i;
+        for (j = 1; j <= b.length; j++) {
+          cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+          if (cur[j] < low) low = cur[j];
+        }
+        if (low > most) return most + 1;
+        prev = cur;
+      }
+      return prev[b.length];
+    };
+    var ssFound = function (w) {
+      for (var i = 0; i < ssIndex.length; i++) { var e = ssIndex[i]; if (e.ft.indexOf(w) >= 0 || e.fs.indexOf(w) >= 0 || e.fb.indexOf(w) >= 0) return true; }
+      return false;
+    };
+    var ssFix = function (w) {                        // a word found nowhere: the nearest word of the site, if it is a typo away
+      if (w.length < 4 || ssFound(w)) return w;
+      var most = w.length >= 7 ? 2 : 1, best = w, bd = most + 1, bn = 0;
+      Object.keys(ssVocab).forEach(function (v) {
+        var d = ssEdits(w, v, most);
+        if (d < bd || (d === bd && d <= most && ssVocab[v] > bn)) { bd = d; best = v; bn = ssVocab[v]; }
+      });
+      return bd <= most ? best : w;
+    };
     var fold = function (x) {                       // Zurich finds Zürich, and Mellin Barnes finds Mellin-Barnes
       return (x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[-\u2010\u2011_]/g, ' ');
     };
     var ssLoad = function () {
       if (ssIndex) return Promise.resolve(ssIndex);
       return fetch(ss.dataset.src).then(function (r) { return r.json(); }).then(function (d) {
-        d.forEach(function (e) { e.ft = fold(e.t); e.fs = fold(e.s + ' ' + e.k + ' ' + e.y); e.fb = fold(e.b); });
+        d.forEach(function (e) {
+          e.ft = fold(e.t); e.fs = fold(e.s + ' ' + e.k + ' ' + e.y); e.fb = fold(e.b);
+          (e.ft + ' ' + e.fs + ' ' + e.fb).split(/[^a-z0-9]+/).forEach(function (w) { if (w.length > 3) ssVocab[w] = (ssVocab[w] || 0) + 1; });
+        });
         return (ssIndex = d);
       });
     };
@@ -641,7 +674,10 @@
       else ssq.removeAttribute('aria-activedescendant');
     };
     var ssShow = function () {
-      var words = fold(ssq.value).split(/[\s,]+/).filter(Boolean);
+      var typed = fold(ssq.value).split(/[\s,]+/).filter(Boolean), words = ssAsTyped ? typed : typed.map(ssFix);
+      var fixed = words.join(' ') !== typed.join(' ');
+      ssFixNote.hidden = !fixed;
+      if (fixed) { ssFixNote.querySelector('.ss-fixed').textContent = words.join(' '); ssFixNote.querySelector('.ss-orig span').textContent = ssq.value.trim(); }
       ssHits = !words.length ? [] : ssIndex.map(function (e) { return [ssScore(e, words), e]; })
         .filter(function (x) { return x[0] > 0; })
         .sort(function (a, b) { return b[0] - a[0] || (+b[1].y || 0) - (+a[1].y || 0); })
@@ -685,7 +721,8 @@
         ev.preventDefault(); ssOpen();
       }
     });
-    ssq.addEventListener('input', function () { if (ssIndex) ssShow(); });
+    ssq.addEventListener('input', function () { ssAsTyped = false; if (ssIndex) ssShow(); });
+    ss.querySelector('.ss-orig').addEventListener('click', function () { ssAsTyped = true; ssShow(); ssq.focus(); });
     ssq.addEventListener('keydown', function (ev) {
       if ((ev.key === 'ArrowDown' || ev.key === 'ArrowUp') && ssHits.length) {
         ev.preventDefault();
