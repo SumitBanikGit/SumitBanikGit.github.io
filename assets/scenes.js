@@ -131,7 +131,7 @@
       raf = null;
       if (!env.active || !visible || document.hidden) { last = 0; return; }
       env.dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60;
-      last = now; env.t += env.dt;
+      last = now; if (!env.hovered) env.t += env.dt;     // a scene that cycles on its own waits while the pointer rests on it
       draw();
       raf = requestAnimationFrame(tick);
     }
@@ -154,8 +154,12 @@
       if (ev.target.closest && ev.target.closest('a')) return;          // a link in the caption opens the paper
       if (dragged > 6) { dragged = 0; return; }
       var p = local(ev);
-      if (env.active && inside(p)) { scene.click(env, p.x, p.y); start(); }
+      if (env.active && inside(p)) { env.hovered = false; scene.click(env, p.x, p.y); start(); }   // a click means: go on
     });
+    if (scene.pauseOnHover && window.matchMedia && matchMedia('(hover: hover)').matches) {   // not on touch screens
+      stage.addEventListener('mouseenter', function () { env.hovered = true; });
+      stage.addEventListener('mouseleave', function () { env.hovered = false; });
+    }
     if (scene.move) {
       stage.addEventListener('mousemove', function (ev) {
         var p = local(ev);
@@ -3099,13 +3103,13 @@
     ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r); ctx.restore();
   }
   SCENES.medals = {
-    touchHint: 'Tap for the next award',
+    touchHint: 'Tap for the next award', pauseOnHover: true,
     init: function (e) {
       e.aw = (e.data && e.data.awards) || []; e.sel = -1; e.selAt = 0; e.nextSel = 5;
       document.addEventListener('scenepick', function (ev) {   // a card below asks for its award on the chart
         var i = e.aw.map(function (a) { return a.n; }).indexOf(ev.detail && ev.detail.name);
         if (i < 0) return;
-        e.sel = i; e.selAt = e.t || 0; e.nextSel = (e.t || 0) + 8; SCENES.medals.announce(e);
+        e.hovered = false; e.sel = i; e.selAt = e.t || 0; e.nextSel = (e.t || 0) + 8; SCENES.medals.announce(e);
         if (e.redraw) e.redraw();
       });
     },
@@ -3506,7 +3510,7 @@
     return L.c;
   }
   SCENES.chalkboard = {
-    touchHint: 'Tap for the next equation',
+    touchHint: 'Tap for the next equation', pauseOnHover: true,
     init: function (e) {
       e.idx = 0; e.t0 = 0.6; e.cur = null; e.cut = null; e.next = null;
       document.addEventListener('chalkcourse', function (ev) {   // a course card below asks for one of its own on the board
@@ -3516,7 +3520,7 @@
         var k = mine.filter(function (i) { return i > e.idx; })[0];
         e.next = k === undefined ? mine[0] : k;
         if (e.next === e.idx && mine.length > 1) e.next = mine[(mine.indexOf(e.idx) + 1) % mine.length];
-        SCENES.chalkboard.click(e);
+        e.hovered = false; SCENES.chalkboard.click(e);
         if (e.redraw) e.redraw();
       });
     },
@@ -3597,13 +3601,13 @@
     ctx.strokeStyle = color; ctx.lineWidth = lw; ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + (a1 - a0) * k); ctx.stroke();
   }
   SCENES.mentoring = {
-    touchHint: 'Tap for the next student',
+    touchHint: 'Tap for the next student', pauseOnHover: true,
     init: function (e) {
       e.st = (e.data && e.data.students) || []; e.sel = 0; e.selAt = 0; e.nextSel = 6;
       document.addEventListener('scenepick', function (ev) {   // a card below asks for its student's project
         var i = e.st.map(function (s) { return s.n; }).indexOf(ev.detail && ev.detail.name);
         if (i < 0) return;
-        e.sel = i; e.selAt = e.t || 0; e.nextSel = (e.t || 0) + 9; SCENES.mentoring.announce(e);
+        e.hovered = false; e.sel = i; e.selAt = e.t || 0; e.nextSel = (e.t || 0) + 9; SCENES.mentoring.announce(e);
         if (e.redraw) e.redraw();
       });
     },
@@ -3723,14 +3727,14 @@
     return rows(pick) || rows(items.map(function (it, i) { return i % 2; }), true);
   }
   SCENES.timeline = {
-    touchHint: 'Tap for the next stage',
+    touchHint: 'Tap for the next stage', pauseOnHover: true,
     init: function (e) {
       e.st = (e.data && e.data.stages) || []; e.now = (e.data && e.data.now) || 2026.8; e.c0 = 0; e.cur = -2; e.hold = null; e.pick = -1;
       document.addEventListener('scenepick', function (ev) {   // a CV entry below asks for its stage: the present waits there a while
         var i = e.st.map(function (s) { return s.title + ' · ' + s.w; }).indexOf(ev.detail && ev.detail.name);
         if (i < 0 || e.y0 === undefined) return;
         var s = e.st[i], mid = (s.s + Math.min(s.e || e.now, e.now)) / 2;
-        e.hold = { c: 9.5 * (mid - e.y0) / (e.now - e.y0), until: (e.t || 0) + 4.5 }; e.pick = i; e.cur = -2;
+        e.hovered = false; e.hold = { c: 9.5 * (mid - e.y0) / (e.now - e.y0), until: (e.t || 0) + 4.5 }; e.pick = i; e.cur = -2;
         if (e.redraw) e.redraw();
       });
     },
