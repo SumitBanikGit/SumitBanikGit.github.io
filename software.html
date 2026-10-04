@@ -620,12 +620,17 @@
   var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar'),
       cornerFind = document.querySelector('.ss-btn.corner');
   if (corner && navbar) {                           // the corner switches step aside as the menu bar with its own reaches them
+    var edge = 0, queued = false;                     // where the corner buttons end (measured once per size, not on every scroll)
+    var measure = function () { edge = corner.offsetTop + corner.offsetHeight + 8; };
     var place = function () {
-      var away = navbar.getBoundingClientRect().top <= corner.offsetTop + corner.offsetHeight + 8;
+      queued = false;
+      var away = navbar.getBoundingClientRect().top <= edge;
       corner.classList.toggle('away', away);
       if (cornerFind) cornerFind.classList.toggle('away', away);
     };
-    window.addEventListener('scroll', place, { passive: true }); window.addEventListener('resize', place); place();
+    window.addEventListener('scroll', function () { if (!queued) { queued = true; requestAnimationFrame(place); } }, { passive: true });
+    window.addEventListener('resize', function () { measure(); place(); });
+    requestAnimationFrame(function () { measure(); place(); });   // after the first layout, so as not to force one
   }
   var dq = window.matchMedia('(prefers-color-scheme: dark)'), follow = function (ev) {
     var saved = null; try { saved = localStorage.getItem('sb-theme'); } catch (e) {}
