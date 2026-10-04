@@ -2857,3 +2857,27 @@ dialog.tour-list { width: min(38rem, calc(100vw - 1.5rem)); }
 .award:hover .aw-go, .award:focus-visible .aw-go { transform: translateX(4px); }
 @media (max-width: 34rem) { .award { grid-template-columns: 2.9rem 1fr 1rem; gap: .6rem; } }
 @media (prefers-reduced-motion: reduce) { .award .aw-go { transition: none; } }
+/* Research: a map of the papers, placed by the words they share */
+.pmap { margin: .8rem 0 0; }
+.pmap-lede { max-width: var(--prose); margin: 0 0 .9rem; }
+.pmap-box { position: relative; height: clamp(17rem, 34vw, 23rem); border-radius: 8px; border: 1px solid var(--hair); overflow: hidden;
+            background: radial-gradient(60rem 22rem at 50% 0%, rgba(168,137,79,.08), transparent 70%), #f9f7f1; }
+html[data-theme="dark"] .pmap-box { background: radial-gradient(60rem 22rem at 50% 0%, rgba(214,185,121,.07), transparent 70%), #111c18; }
+html:not(.js) .pmap-box, html:not(.js) .pmap-foot { display: none; }
+.pmap-plot { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pmap-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .4rem 1.2rem; margin-top: .55rem; }
+.pmap-read { flex: 1 1 22rem; margin: 0; min-height: 1.4em; font-family: var(--sans); font-size: .7rem; color: var(--grey); }
+.pmap-read.on { font-family: var(--serif); font-size: .92rem; color: var(--ink); }
+.pmap-read .pr-y { font-family: var(--sans); font-size: .68rem; letter-spacing: .1em; color: var(--accent); margin-right: .3rem; }
+.pmap-read .pr-n { color: var(--navy); }
+.pmap-read .pr-r { display: block; font-family: var(--sans); font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; color: var(--grey); margin-top: .15rem; }
+.pmap-key { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: 0; padding: 0; font-family: var(--sans); font-size: .6rem;
+            font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--grey); }
+.pmap-key li { display: inline-flex; align-items: center; gap: .4rem; }
+.pmap-key li::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: rgb(122, 95, 42); }
+.pmap-key .k-ph::before { background: rgb(46, 92, 78); }
+.pmap-key .k-pr::before { background: transparent; box-shadow: inset 0 0 0 1.4px var(--grey); }
+html[data-theme="dark"] .pmap-key .k-fi::before { background: rgb(214, 180, 110); }
+html[data-theme="dark"] .pmap-key .k-ph::before { background: rgb(127, 184, 163); }
+@media (max-width: 40rem) { .pmap-box { height: 19rem; } .pmap-read { min-height: 3.6em; } }
+@media print { .pmap-box { break-inside: avoid; } .pmap-read { display: none; } }

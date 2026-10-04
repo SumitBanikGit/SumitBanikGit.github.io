@@ -705,24 +705,93 @@ would will our can article""".split())
 _RELATED = {}
 
 
+def _paper_vectors():
+    """Each paper as a unit vector of the words of its title and abstract, each word weighted by how rare it is
+    among the papers (tf-idf), the title counting twice."""
+    import math
+    from collections import Counter
+    words = {}
+    for q in PUBS:
+        t = _plain(q["title"])
+        text = f'{t} {t} {_plain(_tex_html(PUB_DETAILS.get(q.get("inspire", ""), {}).get("abstract", "")))}'
+        words[_pub_id(q)] = [w for w in re.findall(r"[a-z][a-z0-9-]{3,}", text.lower()) if w not in _RELATED_STOP]
+    n = len(words)
+    df = Counter(w for ws in words.values() for w in set(ws))
+    vec = {}
+    for k, ws in words.items():
+        v = {w: c / len(ws) * math.log(n / df[w]) for w, c in Counter(ws).items() if df[w] < n}
+        norm = math.sqrt(sum(x * x for x in v.values())) or 1
+        vec[k] = {w: x / norm for w, x in v.items()}
+    return vec
+
+
+def paper_map_data():
+    """The papers on a plane, placed by the words they share: classical multidimensional scaling of the distances
+    between their word vectors (the two leading eigenvectors of the doubly centred matrix of squared distances).
+    The first direction runs from the phenomenology papers to the mathematical ones, and it is turned so that
+    phenomenology is on the left. The second is turned so that the paper farthest from the middle is at the top, and
+    spread with an arcsinh about its median, so that the crowded groups open up."""
+    import math
+    vec = _paper_vectors()
+    order = sorted(PUBS, key=lambda p: (int(p["year"]), p.get("arxiv") or "9999.99999"))
+    ids = [_pub_id(p) for p in order]
+    n = len(ids)
+    D2 = [[2 * (1 - sum(x * vec[b].get(w, 0) for w, x in vec[a].items())) for b in ids] for a in ids]
+    r = [sum(row) / n for row in D2]
+    g = sum(r) / n
+    B = [[-0.5 * (D2[i][j] - r[i] - r[j] + g) for j in range(n)] for i in range(n)]
+    def leading(defl):                                   # power iteration, from a fixed start so that every build agrees
+        v = [math.sin(i + 1.0) for i in range(n)]
+        for _ in range(400):
+            w = [sum(B[i][j] * v[j] for j in range(n)) for i in range(n)]
+            for u in defl:
+                d = sum(a * b for a, b in zip(w, u))
+                w = [a - d * b for a, b in zip(w, u)]
+            nr = math.sqrt(sum(a * a for a in w)) or 1
+            v = [a / nr for a in w]
+        return sum(v[i] * sum(B[i][j] * v[j] for j in range(n)) for i in range(n)), v
+    l1, v1 = leading([])
+    l2, v2 = leading([v1])
+    xs = [a * math.sqrt(max(l1, 0)) for a in v1]
+    ys = [a * math.sqrt(max(l2, 0)) for a in v2]
+    ph = [x for x, p in zip(xs, order) if p["topic"] == "pheno"]
+    if ph and sum(ph) / len(ph) > 0:
+        xs = [-x for x in xs]
+    if ys[max(range(n), key=lambda i: abs(ys[i]))] < 0:
+        ys = [-y for y in ys]
+    med = sorted(ys)[n // 2]                             # the up and down spread of the crowded groups, with the far one kept in reach
+    mad = sorted(abs(y - med) for y in ys)[n // 2] or 1e-6
+    ys = [math.asinh((y - med) / mad) for y in ys]
+    def unit(a):
+        lo, hi = min(a), max(a)
+        return [round((v - lo) / ((hi - lo) or 1), 4) for v in a]
+    X, Y, place = unit(xs), unit(ys), {k: i for i, k in enumerate(ids)}
+    return [dict(x=X[i], y=Y[i], t="pheno" if p["topic"] == "pheno" else "fi", k=p["kind"], yr=int(p["year"]),
+                 n=_plain(p["title"]).strip(), r=_plain(p["ref"]).strip(), u=f"publications.html#{_pub_id(p)}",
+                 e=[place[_pub_id(q)] for q in _related(p)]) for i, p in enumerate(order)]
+
+
+def render_paper_map():
+    import json
+    pts = paper_map_data()
+    blob = json.dumps(pts, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return ('<figure class="pmap" aria-labelledby="pmap-cap">\n'
+            f'<p class="pmap-lede">Each dot is one of the {len(pts)} papers, placed by the words its title and abstract share with '
+            'the others, so that papers on the same subject sit close together. A line joins each paper to the three closest to it.</p>\n'
+            '<div class="pmap-box"><canvas class="pmap-plot" role="img" aria-label="A map of the papers by subject, '
+            'from the search for new Higgs bosons on the left to the mathematics of Feynman integrals on the right."></canvas></div>\n'
+            '<div class="pmap-foot"><p class="pmap-read" id="pmap-cap"></p>'
+            '<ul class="pmap-key" aria-hidden="true"><li class="k-fi">Feynman integrals</li><li class="k-ph">Phenomenology</li>'
+            '<li class="k-pr">Proceedings</li></ul></div>\n'
+            f'<script type="application/json" class="pmap-data">{blob}</script>\n'
+            '</figure>\n' + PMAP_JS)
+
+
 def _related(p):
     """The papers closest to this one, at most three: by the words of their titles and abstracts (each word weighted
     by how rare it is among the papers, the title counting twice), then the research domains and co-authors they share."""
-    import math
-    from collections import Counter
     if not _RELATED:
-        words = {}
-        for q in PUBS:
-            t = _plain(q["title"])
-            text = f'{t} {t} {_plain(_tex_html(PUB_DETAILS.get(q.get("inspire", ""), {}).get("abstract", "")))}'
-            words[_pub_id(q)] = [w for w in re.findall(r"[a-z][a-z0-9-]{3,}", text.lower()) if w not in _RELATED_STOP]
-        n = len(words)
-        df = Counter(w for ws in words.values() for w in set(ws))
-        vec = {}
-        for k, ws in words.items():
-            v = {w: c / len(ws) * math.log(n / df[w]) for w, c in Counter(ws).items() if df[w] < n}
-            norm = math.sqrt(sum(x * x for x in v.values())) or 1
-            vec[k] = {w: x / norm for w, x in v.items()}
+        vec = _paper_vectors()
         def coauthors(q):
             return {a.strip() for a in _plain(q["authors"]).split(",")} - {"S. Banik"}
         for q in PUBS:
@@ -1517,6 +1586,125 @@ def render_continuation():
         '</figure>\n' + CONT_JS)
 
 
+PMAP_JS = r"""<script>
+(function () {
+  'use strict';
+  var fig = document.querySelector('.pmap'), cv = fig && fig.querySelector('.pmap-plot'), src = fig && fig.querySelector('.pmap-data');
+  if (!cv || !cv.getContext || !src) return;
+  var P = []; try { P = JSON.parse(src.textContent); } catch (e) { return; }
+  var ctx = cv.getContext('2d'), read = fig.querySelector('.pmap-read');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches, touch = window.matchMedia('(hover: none)').matches;
+  var INKS = {
+    light: { fi: '122,95,42', ph: '46,92,78', b: '168,137,79', s: '74,90,102', p: '249,247,241', g: '28,53,47' },
+    dark:  { fi: '214,180,110', ph: '127,184,163', b: '201,168,104', s: '170,182,186', p: '17,28,24', g: '232,226,208' }
+  };
+  var C = INKS.light;
+  function palette() { C = INKS[document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light']; }
+  function ink(k, a) { return 'rgba(' + C[k] + ',' + a + ')'; }
+  var W = 0, H = 0, dpr = 1, pos = [], hov = -1, tapped = -1, t0 = null, raf = null, played = reduce;
+  var M = { l: 26, r: 26, t: 20, b: 34 };
+  function layout() {                              // the scaled places, then nudged apart so that no two dots overlap
+    var w = W - M.l - M.r, h = H - M.t - M.b, min = Math.max(11, Math.min(16, w / 46));
+    var home = P.map(function (q) { return [M.l + q.x * w, M.t + (1 - q.y) * h]; });
+    pos = home.map(function (a) { return [a[0], a[1]]; });
+    for (var it = 0; it < 160; it++) {
+      for (var i = 0; i < pos.length; i++) for (var j = i + 1; j < pos.length; j++) {
+        var dx = pos[j][0] - pos[i][0], dy = pos[j][1] - pos[i][1], d = Math.hypot(dx, dy) || 0.01;
+        if (d < min) { var f = (min - d) / d / 2; pos[i][0] -= dx * f; pos[i][1] -= dy * f; pos[j][0] += dx * f; pos[j][1] += dy * f; }
+      }
+      pos.forEach(function (a, i) {                  // and pulled back towards where they belong, inside the frame
+        a[0] += (home[i][0] - a[0]) * 0.04; a[1] += (home[i][1] - a[1]) * 0.04;
+        a[0] = Math.max(M.l, Math.min(W - M.r, a[0])); a[1] = Math.max(M.t, Math.min(H - M.b, a[1]));
+      });
+    }
+  }
+  function size() {
+    W = cv.clientWidth; H = cv.clientHeight; dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    if (W) { layout(); draw(); }
+  }
+  function ease(x) { x = x < 0 ? 0 : x > 1 ? 1 : x; return 1 - Math.pow(1 - x, 3); }
+  function where(i, u) {                           // during the opening the dots come out of the middle, oldest first
+    var k = ease(u * 1.8 - i / P.length * 0.8), a = pos[i];
+    return [W / 2 + (a[0] - W / 2) * k, H / 2 + (a[1] - H / 2) * k, k];
+  }
+  function draw() {
+    if (!W) return;
+    var u = played && t0 === null ? 1 : t0 === null ? 0 : Math.min(1, (performance.now() - t0) / 1800);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.font = '600 9px Inter, system-ui, sans-serif'; ctx.textBaseline = 'alphabetic';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '1.2px';
+    ctx.fillStyle = ink('s', 0.85);
+    ctx.textAlign = 'left'; ctx.fillText('NEW HIGGS BOSONS', M.l - 8, H - 10);
+    ctx.textAlign = 'right'; ctx.fillText('FEYNMAN INTEGRALS', W - M.r + 8, H - 10);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    ctx.strokeStyle = ink('b', 0.35); ctx.lineWidth = 1;   // the arrow between the two ends
+    var y0 = H - 13, xa = M.l + 108, xb = W - M.r - 116;
+    if (xb > xa + 30) { ctx.beginPath(); ctx.moveTo(xa, y0); ctx.lineTo(xb, y0); ctx.moveTo(xa + 5, y0 - 3); ctx.lineTo(xa, y0); ctx.lineTo(xa + 5, y0 + 3);
+                         ctx.moveTo(xb - 5, y0 - 3); ctx.lineTo(xb, y0); ctx.lineTo(xb - 5, y0 + 3); ctx.stroke(); }
+    var lk = ease((u - 0.55) / 0.45), at = P.map(function (q, i) { return where(i, u); });
+    if (lk > 0) {                                  // each paper joined to the three closest to it
+      ctx.lineWidth = 1;
+      P.forEach(function (q, i) {
+        q.e.forEach(function (j) {
+          if (j < i && P[j].e.indexOf(i) >= 0) return;    // a pair joined both ways is drawn once
+          var on = hov >= 0 && (i === hov || j === hov);
+          ctx.strokeStyle = ink('b', (on ? 0.85 : hov >= 0 ? 0.08 : 0.2) * lk);
+          ctx.lineWidth = on ? 1.4 : 1;
+          ctx.beginPath(); ctx.moveTo(at[i][0], at[i][1]); ctx.lineTo(at[j][0], at[j][1]); ctx.stroke();
+        });
+      });
+    }
+    P.forEach(function (q, i) {
+      var a = at[i], col = q.t === 'pheno' ? 'ph' : 'fi', near = hov >= 0 && (i === hov || P[hov].e.indexOf(i) >= 0 || q.e.indexOf(hov) >= 0);
+      var al = (hov >= 0 && !near ? 0.35 : 1) * a[2], r = q.k === 'proceedings' ? 3.4 : 4.2;
+      if (al <= 0) return;
+      ctx.beginPath(); ctx.arc(a[0], a[1], r, 0, 2 * Math.PI);
+      if (q.k === 'proceedings') { ctx.fillStyle = ink('p', al); ctx.fill(); ctx.lineWidth = 1.4; ctx.strokeStyle = ink(col, 0.95 * al); ctx.stroke(); }
+      else { ctx.fillStyle = ink(col, 0.95 * al); ctx.fill(); }
+      if (q.k === 'thesis') { ctx.lineWidth = 1; ctx.strokeStyle = ink(col, 0.8 * al); ctx.beginPath(); ctx.arc(a[0], a[1], r + 3, 0, 2 * Math.PI); ctx.stroke(); }
+      if (i === hov) { ctx.lineWidth = 1.3; ctx.strokeStyle = ink('b', 1); ctx.beginPath(); ctx.arc(a[0], a[1], r + 5, 0, 2 * Math.PI); ctx.stroke(); }
+    });
+    if (u < 1) raf = requestAnimationFrame(draw); else { raf = null; t0 = null; played = true; }
+  }
+  function say() {
+    if (!read) return;
+    if (hov < 0) { read.textContent = touch ? 'Tap a dot to read its title, tap it again to open the paper' : 'Point at a dot to read its title, click to open the paper'; read.classList.remove('on'); return; }
+    var q = P[hov];
+    read.innerHTML = '<span class="pr-y">' + q.yr + '</span> <span class="pr-n"></span> <span class="pr-r"></span>';
+    read.querySelector('.pr-n').textContent = q.n; read.querySelector('.pr-r').textContent = q.r;
+    read.classList.add('on');
+  }
+  function pick(ev) {
+    var r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top, best = -1, bd = 14;
+    pos.forEach(function (a, i) { var d = Math.hypot(a[0] - x, a[1] - y); if (d < bd) { bd = d; best = i; } });
+    return best;
+  }
+  cv.addEventListener('mousemove', function (ev) {
+    if (!played) return;
+    var h = pick(ev);
+    if (h !== hov) { hov = h; cv.style.cursor = h >= 0 ? 'pointer' : ''; draw(); say(); }
+  });
+  cv.addEventListener('mouseleave', function () { if (hov >= 0) { hov = -1; draw(); say(); } });
+  cv.addEventListener('click', function (ev) {
+    var h = pick(ev);
+    if (h < 0) { if (hov >= 0) { hov = -1; tapped = -1; draw(); say(); } return; }
+    if (touch && tapped !== h) { tapped = h; hov = h; draw(); say(); return; }   // on a touch screen the first tap names it
+    location.href = P[h].u;
+  });
+  document.addEventListener('themechange', function () { palette(); draw(); });
+  palette(); say();
+  if (window.ResizeObserver) new ResizeObserver(size).observe(cv); else { window.addEventListener('resize', size); size(); }
+  if (!played && window.IntersectionObserver) {      // the dots come out once, when the map comes into view
+    var io = new IntersectionObserver(function (es) {
+      if (es[0].isIntersecting) { io.disconnect(); t0 = performance.now(); if (!raf) raf = requestAnimationFrame(draw); }
+    }, { threshold: 0.4 });
+    io.observe(cv);
+  } else played = true;
+})();
+</script>"""
+
+
 CONT_JS = r"""<script>
 (function () {
   'use strict';
@@ -1940,6 +2128,7 @@ def nav_drops():
         "research.html": [("A tour of my papers", "research.html#top", f"{_tour_slides()} animated slides"),
                           ("Research domains", "research.html#research-domains", ""),
                           ("Selected work", "research.html#selected-work", ""),
+                          ("A map of the papers", "research.html#a-map-of-the-papers", "Placed by what they are about"),
                           ("One integral, two series", "research.html#one-integral-two-series", "Two series on a slider")],
         "publications.html": [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
                               ("Conference proceedings", "publications.html#conference-proceedings", f"{procs} contributions"),
@@ -2726,7 +2915,7 @@ def main():
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
         domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)), coauthors=render_coauthors(),
-        pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), continuation=render_continuation(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
+        pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), continuation=render_continuation(), paper_map=render_paper_map(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), cv_awards=render_cv_awards(), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
@@ -2945,6 +3134,8 @@ Standard Model at particle colliders.</p>
 <div class="picks">
 {selected}
 </div>
+<h3 class="sect">A map of the papers</h3>
+{paper_map}
 <h3 class="sect">One integral, two series</h3>
 {continuation}
 </section>
