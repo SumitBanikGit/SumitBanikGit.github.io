@@ -769,7 +769,7 @@ def _pub_more(p):
         facts.append(("arXiv", f'{p["arxiv"]} [{d["cat"]}]'))
     if d.get("cited"):                             # how often it has been cited, as INSPIRE counted it when the data was read
         when = date.fromisoformat(d["cited_on"]).strftime("%B %Y") if d.get("cited_on") else ""
-        facts.append(("Citations", f'<a href="https://inspirehep.net/literature?q=refersto%3Arecid%3A{p["inspire"]}" '
+        facts.append(("Citations", f'<a class="cites" href="https://inspirehep.net/literature?q=refersto%3Arecid%3A{p["inspire"]}" '
                                    f'title="The papers that cite it, on INSPIRE">{d["cited"]}</a>'
                                    + (f' <span class="muted">(INSPIRE, {when})</span>' if when else "")))
     facts_html = "".join(f'<div><span class="k">{k}</span>{v}</div>' for k, v in facts)
@@ -1435,6 +1435,201 @@ def render_selected():
         for topic, title, ref, arx, pitch in SELECTED)
 
 
+# Research: one Mellin-Barnes integral and its two series, the example of the tour's slide "What is a Mellin-Barnes
+# integral?". Closing the contour to the right sums the poles of Γ(−z) into a series in x, which converges for
+# |x| <= 1 (its radius is set by the branch point of (1 - x)^(1/2) at x = 1). Closing it to the left sums the
+# poles of Γ(−1/2 + z) into a series in 1/x, which converges for |x| >= 1. Both are −2√π (1 − x)^(1/2), and on the
+# real line they meet at x = −1, where they are the same series term by term. A slider sets the number of terms.
+def render_continuation():
+    g = '<span class="g">Γ</span>'
+    half = '<span class="fr">½</span>'
+    right = (f'Σ<sub><i>n</i></sub> {g}(<i>n</i> − {half}) <i>x</i><sup><i>n</i></sup>/<i>n</i>!')
+    left = (f'(−<i>x</i>)<sup>{half}</sup> Σ<sub><i>n</i></sub> {g}(<i>n</i> − {half}) <i>x</i><sup>−<i>n</i></sup>/<i>n</i>!')
+    func = f'−2√π (1 − <i>x</i>)<sup>{half}</sup>'
+    return (
+        '<figure class="cont" aria-labelledby="cont-cap">\n'
+        '<p class="cont-lede">Closing the contour of a Mellin-Barnes integral to the right or to the left picks up different poles, '
+        'and gives a different series for the same function. Each series converges in a region of its own, and each is the '
+        'analytic continuation of the other. Here is the integral of the slide '
+        '<a href="#tour-2402.04174">What is a Mellin-Barnes integral?</a> in the tour above, with the number of terms on a slider.</p>\n'
+        f'<p class="cont-eq"><span><i>I</i>(<i>x</i>) = ∫ d<i>z</i>/2π<i>i</i> (−<i>x</i>)<sup><i>z</i></sup> '
+        f'{g}(−<i>z</i>) {g}(−{half} + <i>z</i>)</span> <span>= {func}</span></p>\n'
+        '<div class="cont-box"><canvas class="cont-plot" role="img" aria-label="The function and the two series for x from −4 to 1. '
+        'The series in x settles onto the function for |x| ≤ 1 and breaks away below x = −1, where the series in 1/x settles onto it instead."></canvas></div>\n'
+        '<p class="cont-read" aria-hidden="true"></p>\n'
+        '<div class="cont-ctl"><label for="cont-n">Terms in each series</label>'
+        '<input class="cont-range" id="cont-n" type="range" min="1" max="40" step="1" value="30">'
+        '<output class="cont-n" for="cont-n">30</output>'
+        '<button class="cont-play" type="button">Play again</button></div>\n'
+        '<ul class="cont-key">'
+        f'<li class="k-r"><span class="sw" aria-hidden="true"></span><span>Closing to the right, on the poles of {g}(−<i>z</i>): '
+        f'<span class="nw">{right}</span>, which converges for |<i>x</i>| ≤ 1</span></li>'
+        f'<li class="k-l"><span class="sw" aria-hidden="true"></span><span>Closing to the left, on the poles of {g}(−{half} + <i>z</i>): '
+        f'<span class="nw">{left}</span>, which converges for |<i>x</i>| ≥ 1</span></li>'
+        f'<li class="k-f"><span class="sw" aria-hidden="true"></span><span>The function itself, <span class="nw">{func}</span></span></li>'
+        '</ul>\n'
+        '<figcaption id="cont-cap">The radius of the series in <i>x</i> is set by the branch point of '
+        f'(1 − <i>x</i>)<sup>{half}</sup> at <i>x</i> = 1. On the real line the two regions meet at <i>x</i> = −1, where the two '
+        'series are the same series term by term. With more integration variables there are many more ways to close the '
+        'contours. The two-fold integral of the Appell function <i>F</i><sub>1</sub> already has five series representations, '
+        'whose regions of convergence tile the plane of |<i>u</i><sub>1</sub>| and |<i>u</i><sub>2</sub>| '
+        f'(<a href="{_pub_link("2012.15108")}">Phys. Rev. Lett. 127, 151601</a>), and the nine-fold integral of the conformal '
+        f'hexagon has 194160 (<a href="{_pub_link("2309.00409")}">Phys. Rev. D 110, 036002</a>). '
+        '<a href="software.html#mbconichulls">MBConicHulls</a> derives them automatically.</figcaption>\n'
+        '</figure>\n' + CONT_JS)
+
+
+CONT_JS = r"""<script>
+(function () {
+  'use strict';
+  var fig = document.querySelector('.cont'), cv = fig && fig.querySelector('.cont-plot');
+  if (!cv || !cv.getContext) return;
+  var ctx = cv.getContext('2d'), box = fig.querySelector('.cont-box'), rng = fig.querySelector('.cont-range'),
+      out = fig.querySelector('.cont-n'), read = fig.querySelector('.cont-read'), again = fig.querySelector('.cont-play');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      touch = window.matchMedia('(hover: none)').matches;
+  var INKS = {                                       // the inks of the page scenes, by day and by night
+    light: { f: '28,53,47', r: '110,44,52', l: '46,92,78', b: '168,137,79', s: '74,90,102', p: '249,247,241' },
+    dark:  { f: '232,226,208', r: '216,132,142', l: '127,184,163', b: '201,168,104', s: '170,182,186', p: '17,28,24' }
+  };
+  var C = INKS.light;
+  function palette() { C = INKS[document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light']; }
+  function ink(k, a) { return 'rgba(' + C[k] + ',' + a + ')'; }
+
+  // the coefficients c_n = Γ(n − 1/2)/n!, from Γ(−1/2) = −2√π and c_n = c_(n−1) (n − 3/2)/n
+  var NMAX = 40, SQPI = Math.sqrt(Math.PI), co = [-2 * SQPI];
+  for (var k = 1; k <= NMAX; k++) co.push(co[k - 1] * (k - 1.5) / k);
+  function fn(x) { return -2 * SQPI * Math.sqrt(1 - x); }
+  function partial(u, N) {                         // c_0 + c_1 u + ... with N terms (while the slider moves, the next one comes in gradually)
+    var s = 0, p = 1, m = Math.floor(N), f = N - m;
+    for (var i = 0; i < m; i++) { s += co[i] * p; p *= u; }
+    return s + (f > 0 ? f * co[m] * p : 0);
+  }
+  function right(x, N) { return partial(x, N); }                   // closing to the right: the series in x
+  function left(x, N) { return Math.sqrt(-x) * partial(1 / x, N); }  // closing to the left: the series in 1/x (x < 0 on the real line)
+
+  var X0 = -4, X1 = 1, Y0 = -9, Y1 = 1.2, W = 0, H = 0, dpr = 1, P = { l: 34, r: 10, t: 12, b: 24 };
+  var N = reduce ? 30 : 1, hx = null, played = reduce, raf = null;
+  function PX(x) { return P.l + (x - X0) / (X1 - X0) * (W - P.l - P.r); }
+  function PY(y) { return P.t + (Y1 - y) / (Y1 - Y0) * (H - P.t - P.b); }
+  function XP(px) { return X0 + (px - P.l) / (W - P.l - P.r) * (X1 - X0); }
+  function size() {
+    W = cv.clientWidth; H = cv.clientHeight; dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    draw();
+  }
+  function curve(f, from, to, col, lw) {          // one value per pixel, kept within reach of the frame
+    var lo = PY(Y0) + 60, hi = PY(Y1) - 60, on = false;
+    ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.beginPath();
+    for (var px = Math.ceil(PX(from)), end = PX(to); px <= end + 0.5; px++) {
+      var y = f(Math.min(XP(px), to)), py = PY(y);
+      if (y !== y) { on = false; continue; }
+      py = py > lo ? lo : py < hi ? hi : py;
+      if (on) ctx.lineTo(px, py); else { ctx.moveTo(px, py); on = true; }
+    }
+    ctx.stroke();
+  }
+  function label(t, x, y, col, align, size, italic) {
+    ctx.font = (italic ? 'italic ' : '') + (italic ? 400 : 500) + ' ' + (size || 10) + 'px ' + (italic ? '"Source Serif 4", Georgia, serif' : 'Inter, system-ui, sans-serif');
+    ctx.fillStyle = col; ctx.textAlign = align || 'center'; ctx.fillText(t, x, y);
+  }
+  function draw() {
+    if (!W) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    var l = P.l, r = W - P.r, t = P.t, b = H - P.b, m1 = PX(-1);
+    ctx.fillStyle = ink('l', 0.06); ctx.fillRect(l, t, m1 - l, b - t);        // where each series converges
+    ctx.fillStyle = ink('r', 0.05); ctx.fillRect(m1, t, r - m1, b - t);
+    ctx.textBaseline = 'alphabetic';
+    label('|x| ≥ 1', (l + m1) / 2, b - 8, ink('l', 0.9), 'center', 12, true);
+    label('|x| ≤ 1', (m1 + r) / 2, b - 8, ink('r', 0.9), 'center', 12, true);
+    ctx.strokeStyle = ink('f', 0.12); ctx.lineWidth = 1;                       // the grid, the axis and the ticks
+    for (var g = -8; g <= 0; g += 2) { ctx.beginPath(); ctx.moveTo(l, PY(g)); ctx.lineTo(r, PY(g)); ctx.stroke(); }
+    ctx.strokeStyle = ink('f', 0.45); ctx.beginPath(); ctx.moveTo(l, b); ctx.lineTo(r, b); ctx.stroke();
+    for (var x = X0; x <= X1; x++) {
+      ctx.beginPath(); ctx.moveTo(PX(x), b); ctx.lineTo(PX(x), b + 4); ctx.stroke();
+      label(String(x).replace('-', '−'), PX(x), b + 15, ink('s', 0.95), 'center');
+    }
+    for (g = -8; g <= 0; g += 2) { ctx.textBaseline = 'middle'; label(String(g).replace('-', '−'), l - 7, PY(g), ink('s', 0.95), 'right'); }
+    ctx.textBaseline = 'alphabetic';
+    label('x', r, b - 6 - 14, ink('s', 0.9), 'right', 12, true);
+    ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = ink('b', 0.8); ctx.beginPath(); ctx.moveTo(m1, t); ctx.lineTo(m1, b); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(l, t - 2, r - l + 2, b - t + 2); ctx.clip();
+    curve(fn, X0, X1, ink('f', 0.14), 6); curve(fn, X0, X1, ink('f', 0.85), 1.3);   // the function
+    curve(function (x) { return right(x, N); }, X0, -1, ink('r', 0.4), 1.6);        // each series, strong where it converges
+    curve(function (x) { return left(x, N); }, -1, -0.01, ink('l', 0.4), 1.6);
+    curve(function (x) { return right(x, N); }, -1, X1, ink('r', 0.95), 1.9);
+    curve(function (x) { return left(x, N); }, X0, -1, ink('l', 0.95), 1.9);
+    ctx.restore();
+    ctx.strokeStyle = ink('f', 0.85); ctx.lineWidth = 1.2; ctx.fillStyle = ink('p', 1);   // the branch point at x = 1, an open circle
+    ctx.beginPath(); ctx.arc(PX(1), PY(0), 3.4, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+    label('branch point', PX(1) - 7, PY(0) + 3.5, ink('s', 0.9), 'right', 9.5);
+    if (hx !== null) {                               // the place being read
+      var px = PX(hx);
+      ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = ink('b', 0.9); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, t); ctx.lineTo(px, b); ctx.stroke(); ctx.restore();
+      [[fn(hx), 'f'], [Math.abs(hx) <= 1 ? right(hx, N) : NaN, 'r'], [hx <= -1 ? left(hx, N) : NaN, 'l']].forEach(function (q) {
+        var py = PY(q[0]);
+        if (q[0] === q[0] && py > t && py < b) { ctx.fillStyle = ink(q[1], 1); ctx.beginPath(); ctx.arc(px, py, 3, 0, 2 * Math.PI); ctx.fill(); }
+      });
+    }
+  }
+  var SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+  function num(v) { return v.toFixed(4).replace('-', '−'); }
+  function off(e) {                                  // how far a partial sum is from the function
+    if (e >= 0.001) return e.toFixed(e >= 0.1 ? 2 : 3);
+    if (e < 1e-15) return '0';
+    var p = Math.floor(Math.log(e) / Math.LN10), m = e / Math.pow(10, p);
+    if (m >= 9.95) { m = 1; p++; }
+    return m.toFixed(1) + ' × 10' + String(p).replace(/./g, function (c) { return SUP[c]; });
+  }
+  function readout() {
+    if (!read) return;
+    if (hx === null) { read.innerHTML = '<span class="cr-hint">' + (touch ? 'Touch' : 'Point at') + ' the plot to read the values</span>'; return; }
+    var f = fn(hx), parts = ['<span class="cr-x"><i>x</i> = ' + num(hx).slice(0, -2) + '</span>', '<span class="cr-f">function ' + num(f) + '</span>'];
+    [['r', Math.abs(hx) <= 1 ? right(hx, Math.round(N)) : null, 'series in <i>x</i>'],
+     ['l', hx <= -1 ? left(hx, Math.round(N)) : null, 'series in 1/<i>x</i>']].forEach(function (q) {
+      parts.push('<span class="cr-' + q[0] + '">' + q[2] + ' ' + (q[1] === null ? 'diverges here' : num(q[1]) + ' <span class="cr-off">off by ' + off(Math.abs(q[1] - f)) + '</span>') + '</span>');
+    });
+    read.innerHTML = parts.join('');
+  }
+  function show(n) { var k = Math.round(n); if (+rng.value !== k) rng.value = k; out.textContent = k; }
+  function play() {                                  // the terms come in one after another, the first ones slowly
+    if (raf) cancelAnimationFrame(raf);
+    played = true; var t0 = null, T = 8;
+    function step(now) {
+      if (t0 === null) t0 = now;
+      var u = Math.min(1, (now - t0) / 1000 / T);
+      N = 1 + 29 * Math.pow(u, 1.8); show(N); draw(); readout();
+      raf = u < 1 ? requestAnimationFrame(step) : null;
+    }
+    raf = requestAnimationFrame(step);
+  }
+  rng.addEventListener('input', function () {
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    played = true; N = +rng.value; show(N); draw(); readout();
+  });
+  if (again && reduce) again.hidden = true;           // without motion the terms are all there at once
+  else if (again) again.addEventListener('click', function () { N = 1; show(N); play(); });
+  function at(ev) {
+    var r = cv.getBoundingClientRect(), x = XP(ev.clientX - r.left);
+    hx = x < X0 || x > X1 ? null : Math.round(x * 100) / 100; draw(); readout();
+  }
+  cv.addEventListener('pointermove', at);
+  cv.addEventListener('pointerdown', at);
+  cv.addEventListener('pointerleave', function (ev) { if (ev.pointerType === 'mouse') { hx = null; draw(); readout(); } });
+  document.addEventListener('themechange', function () { palette(); draw(); });
+  palette(); show(N); readout();
+  if (window.ResizeObserver) new ResizeObserver(size).observe(box); else { window.addEventListener('resize', size); size(); }
+  if (!played && window.IntersectionObserver) {      // it plays once, when it comes into view
+    var io = new IntersectionObserver(function (es) {
+      if (es[0].isIntersecting) { io.disconnect(); if (!played) play(); }
+    }, { threshold: 0.45 });
+    io.observe(box);
+  } else if (!played) { N = 30; show(N); }
+})();
+</script>"""
+
+
 def talk_row(year, event, city, title, note):
     note_html = f'<div class="meta">{note}</div>' if note else ""
     return (f'<div class="entry"><div class="rail">{year}</div><div class="body">'
@@ -1666,7 +1861,8 @@ def nav_drops():
                    ("Recent news", "index.html#recent-news", ""), ("Explore the site", "index.html#explore", "")],
         "research.html": [("A tour of my papers", "research.html#top", f"{_tour_slides()} animated slides"),
                           ("Research domains", "research.html#research-domains", ""),
-                          ("Selected work", "research.html#selected-work", "")],
+                          ("Selected work", "research.html#selected-work", ""),
+                          ("One integral, two series", "research.html#one-integral-two-series", "Two series on a slider")],
         "publications.html": [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
                               ("Conference proceedings", "publications.html#conference-proceedings", f"{procs} contributions"),
                               ("PhD thesis", "publications.html#thesis", "IISc, 2022")],
@@ -2448,7 +2644,7 @@ def main():
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
         n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
         domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)), coauthors=render_coauthors(),
-        pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
+        pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), continuation=render_continuation(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
         software=render_software(), fav_v=_ver("assets/favicon.svg"), ico_v=_ver("favicon.ico"), touch_v=_ver("assets/apple-touch-icon.png"), toolkit=render_toolkit(), employment=render_positions(EMPLOYMENT), education=render_positions(EDUCATION), tongues=render_tongues(),
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
@@ -2663,6 +2859,8 @@ Standard Model at particle colliders.</p>
 <div class="picks">
 {selected}
 </div>
+<h3 class="sect">One integral, two series</h3>
+{continuation}
 </section>
 
 <section class="chapter" id="publications">
