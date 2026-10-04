@@ -3016,19 +3016,19 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   <div class="interest pheno">{ix_pheno}
     <div class="kicker">Particle phenomenology</div>
     <ul>
-      <li>Collider phenomenology</li>
-      <li>Beyond the Standard Model</li>
-      <li>Higgs physics</li>
-      <li>Effective field theory</li>
+      <li><button class="int-q" type="button" data-ss="LHC" title="Search the site for LHC">Collider phenomenology</button></li>
+      <li><button class="int-q" type="button" data-ss="new physics" title="Search the site for new physics">Beyond the Standard Model</button></li>
+      <li><button class="int-q" type="button" data-ss="Higgs" title="Search the site for Higgs">Higgs physics</button></li>
+      <li><button class="int-q" type="button" data-ss="SMEFT" title="Search the site for SMEFT">Effective field theory</button></li>
     </ul>
   </div>
   <div class="interest fi">{ix_fi}
     <div class="kicker">Mathematical &amp; computational methods</div>
     <ul>
-      <li>Multi-loop Feynman integrals</li>
-      <li>Hypergeometric functions</li>
-      <li>Mellin-Barnes representation</li>
-      <li>Computer algebra</li>
+      <li><button class="int-q" type="button" data-ss="Feynman integrals" title="Search the site for Feynman integrals">Multi-loop Feynman integrals</button></li>
+      <li><button class="int-q" type="button" data-ss="hypergeometric" title="Search the site for hypergeometric">Hypergeometric functions</button></li>
+      <li><button class="int-q" type="button" data-ss="Mellin-Barnes" title="Search the site for Mellin-Barnes">Mellin-Barnes representation</button></li>
+      <li><button class="int-q" type="button" data-ss="Mathematica" title="Search the site for Mathematica">Computer algebra</button></li>
     </ul>
   </div>
 </div>
@@ -3685,6 +3685,9 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     ssh.addEventListener('click', function (ev) {{
       var b = ev.target.closest('button'); if (!b) return;
       ssq.value = b.textContent; ssq.focus(); if (ssIndex) ssShow();
+    }});
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ss]'), function (b) {{   // a topic on the page: everything about it, at once
+      b.addEventListener('click', function () {{ ssOpen(); ssq.value = b.dataset.ss; ssAsTyped = false; if (ssIndex) ssShow(); }});
     }});
     ss.querySelector('.ss-close').addEventListener('click', function () {{ ss.close(); }});
     ss.addEventListener('click', function (ev) {{ if (ev.target === ss) ss.close(); }});   // a click outside the box

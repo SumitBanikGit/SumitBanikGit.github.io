@@ -2830,3 +2830,15 @@ dialog.tour-list { width: min(38rem, calc(100vw - 1.5rem)); }
 .sec-link.done::after { opacity: 1; transform: translate(0, -50%); }
 @media (hover: none) { .sec-link { display: none; } }
 @media print { .sec-link { display: none; } }
+/* CV: each research interest opens the site search on its topic */
+.int-q { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; text-align: left; cursor: pointer;
+         text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .2em; text-decoration-thickness: 1px;
+         transition: color .2s, text-decoration-color .2s; }
+.int-q::after { content: ""; display: inline-block; width: .72em; height: .72em; margin-left: .35em; vertical-align: -.02em; opacity: 0;
+                background: currentColor; transition: opacity .2s;
+                -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='10.5' cy='10.5' r='6' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M15 15l5 5' stroke='black' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+                mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='10.5' cy='10.5' r='6' fill='none' stroke='black' stroke-width='2.2'/%3E%3Cpath d='M15 15l5 5' stroke='black' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.int-q:hover, .int-q:focus-visible { color: var(--accent); text-decoration-color: var(--accent); }
+.int-q:hover::after, .int-q:focus-visible::after { opacity: .8; }
+.int-q:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
+@media (hover: none) { .int-q::after { opacity: .55; } }
