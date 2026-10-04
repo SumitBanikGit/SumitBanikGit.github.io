@@ -1497,9 +1497,13 @@ def _proposal_html(name):
             body += '<ol class="fund-wps">' + "".join(f'<li><span class="wp-n">{n}.</span> {t}</li>' for n, t in part["list"]) + '</ol>'
         else:
             body += f'<p>{part}</p>'
+    rel = [_paper(a) for a in pr.get("related", [])]           # the papers it builds on or that came out of it, on Publications
+    rel_html = ("" if not rel else '<div class="pub-rel"><span class="k">Related papers</span><ul>' + "".join(
+        f'<li style="--k:{k}"><a href="publications.html#{_pub_id(q)}">{q["title"]}</a> <span class="muted">{q["year"]}</span></li>'
+        for k, q in enumerate(rel)) + '</ul></div>')
     return (f'<details class="fund-more"><summary><span class="t-show">Research proposal</span><span class="t-hide">Hide the proposal</span>'
             f'{PKG_CHEVRON}</summary><div class="fund-abs"><span class="k">Title</span><p class="fund-ptitle">{pr["title"]}</p>'
-            f'<span class="k">Abstract</span>{body}</div></details>')
+            f'<span class="k">Abstract</span>{body}{rel_html}</div></details>')
 
 
 def fund_card(year, name, agency, country, amount, dur, status):

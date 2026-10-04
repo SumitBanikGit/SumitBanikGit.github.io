@@ -1,15 +1,31 @@
 {
- "_about": "The research proposals behind the postdoctoral fellowships and grants on the Funding page: the title and the abstract as written in each application (Fellowship Applications folders, 2024 and 2025), with the citations left out. Shown when a card is opened. Paragraphs are strings, a list of work packages is {\"list\": [[name, text], ...]}.",
+ "_about": "The research proposals behind the postdoctoral fellowships and grants on the Funding page: the title and the abstract as written in each application (Fellowship Applications folders, 2024 and 2025), with the citations left out. Shown when a card is opened. Paragraphs are strings, a list of work packages is {\"list\": [[name, text], ...]}. \"related\" lists the papers (arXiv numbers) that the proposal builds on or that came out of it, chosen by hand.",
  "Walter Benjamin Fellowship": {
   "title": "Novel Computational Techniques in Perturbative Quantum Field Theory",
   "abstract": [
    "The Large Hadron Collider is gearing up for its High-Luminosity phase, which will deliver ten times more data than present runs and enable measurements with unprecedented precision. To fully exploit the scientific potential of these measurements, theoretical predictions must reach a comparable level of precision. Currently, a significant obstacle to achieving this precision is the evaluation of complex high-dimensional Feynman integrals (FIs) that appear in the intermediate steps. Our proposal will tackle this challenge by developing innovative mathematical techniques and automated software to evaluate FIs at the precision frontier and study their formal properties. The proposal is structured into three integrated Work Packages (WPs):",
-   {"list": [
-    ["Advances in the Theory of Mellin-Barnes Integrals", "For over three decades, the Mellin-Barnes (MB) method has been a cornerstone of FI computations. However, critical bottlenecks continue to limit its use in state-of-the-art calculations. To overcome these challenges, we will develop tools to reduce the dimensionality of MB integrals, thereby simplifying subsequent numerical and analytic evaluation. Additionally, we will build the first public software to evaluate MB containing polygamma functions that naturally arise after resolving singularities of FIs."],
-    ["Algorithms for Analytic Evaluation of Feynman Integrals", "Currently, no public software can evaluate the MB representation of FIs in terms of polylogarithmic functions, a class of functions ideal for phenomenological studies. This WP will fill this gap by building two novel algorithms based on advanced symbolic summation and integration techniques and implementing them in a <i>Mathematica</i> package that can be readily used for practical calculations."],
-    ["Formal Advances in QFT and Precision Higgs Physics", "Using the tools developed above, we will then study formal aspects of quantum field theory, focusing on Yangian symmetries of FIs and their remarkable connection to MB to reveal hidden symmetries. In parallel, we will compute the partonic tree-level cross-section of Higgs boson production with four massless partons, which is necessary for determining the inclusive Higgs cross-section via gluon fusion for hadron colliders at N<sup>4</sup>LO."]
-   ]},
+   {
+    "list": [
+     [
+      "Advances in the Theory of Mellin-Barnes Integrals",
+      "For over three decades, the Mellin-Barnes (MB) method has been a cornerstone of FI computations. However, critical bottlenecks continue to limit its use in state-of-the-art calculations. To overcome these challenges, we will develop tools to reduce the dimensionality of MB integrals, thereby simplifying subsequent numerical and analytic evaluation. Additionally, we will build the first public software to evaluate MB containing polygamma functions that naturally arise after resolving singularities of FIs."
+     ],
+     [
+      "Algorithms for Analytic Evaluation of Feynman Integrals",
+      "Currently, no public software can evaluate the MB representation of FIs in terms of polylogarithmic functions, a class of functions ideal for phenomenological studies. This WP will fill this gap by building two novel algorithms based on advanced symbolic summation and integration techniques and implementing them in a <i>Mathematica</i> package that can be readily used for practical calculations."
+     ],
+     [
+      "Formal Advances in QFT and Precision Higgs Physics",
+      "Using the tools developed above, we will then study formal aspects of quantum field theory, focusing on Yangian symmetries of FIs and their remarkable connection to MB to reveal hidden symmetries. In parallel, we will compute the partonic tree-level cross-section of Higgs boson production with four massless partons, which is necessary for determining the inclusive Higgs cross-section via gluon fusion for hadron colliders at N<sup>4</sup>LO."
+     ]
+    ]
+   },
    "This research proposal is highly interdisciplinary and combines advanced mathematics, physics, and computational techniques. The methods and tools developed here will benefit particle physics and other fields, such as hypergeometric function theory, electromagnetic wave propagation, condensed matter physics, and finance, where MB appears. From a phenomenological perspective, this proposal will help us accurately predict the Higgs production cross-section, which directly enters into the measurement of Higgs couplings. Consequently, the successful execution of this proposal is a timely and impactful step in studying the properties of the Higgs boson, and it will help us discern new physics from the Standard Model with unprecedented precision."
+  ],
+  "related": [
+   "2512.19803",
+   "2309.00409",
+   "2012.15108"
   ]
  },
  "Postdoc.Mobility Fellowship": {
@@ -17,11 +33,24 @@
   "abstract": [
    "The Large Hadron Collider (LHC) is set to enter the High-Luminosity Phase (HL-LHC) in 2030, improving the precision of most experimental measurements to the percent level. But can our theoretical predictions match this precision to fully utilize the scientific potential of HL-LHC? Not unless we develop new techniques to solve the high-dimensional integrals that arise in quantum field theory (QFT). This proposal addresses this challenge by developing innovative mathematical and computational methods for evaluating Feynman integrals (FIs), the fundamental building blocks of perturbative QFT. We will then apply these new methods to reveal hidden symmetries of FIs and contribute to precision calculations for Higgs boson production at the LHC. Therefore, this proposal will not only push the boundaries of theoretical physics but also enhance our ability to test the Standard Model and search for potential new physics at the HL-LHC.",
    "This proposal is divided into two Working Packages:",
-   {"list": [
-    ["Conceptual Challenges in the Theory of Mellin-Barnes Integrals", "The Mellin-Barnes (MB) representation approach is one of the most widely used and successful integration techniques to compute Feynman integrals. However, certain challenges currently limit the ability of the MB approach to compute FIs. To address this, we will first develop an innovative systematic algebraic approach to reduce the dimensionality of MB integrals, thus enabling an efficient numerical and analytic evaluation. Next, we will formulate a novel algebro-geometric technique using the topology of multivariate residues to analytically resolve singularities of MB integrals associated with dimensionally regularized FIs. Lastly, we will build the first public software to systematically evaluate MB integrals in terms of well-known polylogarithmic functions by using properties of Euler beta functions."],
-    ["Formal Advances in QFT and Precision Higgs Physics", "Recently, an infinite-dimensional symmetry has been identified for a broad class of FIs, and is closely related to MB integrals. Studies suggest that there are additional hidden symmetries, which we will uncover using MB integrals. In parallel, we will compute higher-order corrections for two of the most phenomenologically relevant processes at the HL-LHC: single- and double-Higgs production. The upcoming HL-LHC is expected to reduce the experimental uncertainty of the total Higgs boson cross section from 8% to 3% and for most Higgs couplings to 2 to 5%. To match this precision, we will compute the cross-section for the production of a Higgs boson plus four partons, a key ingredient for determining the inclusive cross-section at N<sup>4</sup>LO in QCD. For Higgs pair production, we will compute three-loop FIs required for NNLO QCD corrections."]
-   ]},
+   {
+    "list": [
+     [
+      "Conceptual Challenges in the Theory of Mellin-Barnes Integrals",
+      "The Mellin-Barnes (MB) representation approach is one of the most widely used and successful integration techniques to compute Feynman integrals. However, certain challenges currently limit the ability of the MB approach to compute FIs. To address this, we will first develop an innovative systematic algebraic approach to reduce the dimensionality of MB integrals, thus enabling an efficient numerical and analytic evaluation. Next, we will formulate a novel algebro-geometric technique using the topology of multivariate residues to analytically resolve singularities of MB integrals associated with dimensionally regularized FIs. Lastly, we will build the first public software to systematically evaluate MB integrals in terms of well-known polylogarithmic functions by using properties of Euler beta functions."
+     ],
+     [
+      "Formal Advances in QFT and Precision Higgs Physics",
+      "Recently, an infinite-dimensional symmetry has been identified for a broad class of FIs, and is closely related to MB integrals. Studies suggest that there are additional hidden symmetries, which we will uncover using MB integrals. In parallel, we will compute higher-order corrections for two of the most phenomenologically relevant processes at the HL-LHC: single- and double-Higgs production. The upcoming HL-LHC is expected to reduce the experimental uncertainty of the total Higgs boson cross section from 8% to 3% and for most Higgs couplings to 2 to 5%. To match this precision, we will compute the cross-section for the production of a Higgs boson plus four partons, a key ingredient for determining the inclusive cross-section at N<sup>4</sup>LO in QCD. For Higgs pair production, we will compute three-loop FIs required for NNLO QCD corrections."
+     ]
+    ]
+   },
    "This proposal is highly interdisciplinary, integrating novel concepts from mathematics, physics, and computer programming. Since MB integrals are widely used in science, the tools developed here will be valuable not only for particle physics but also in fields such as hypergeometric function theory, electromagnetic wave propagation, detector physics, condensed matter physics, and option pricing in finance. From a phenomenological perspective, this proposal will help us improve Higgs boson production cross-sections, which directly enter into the measurement of Higgs couplings. Consequently, the successful execution of this proposal is a timely and impactful step in studying the properties of the Higgs boson and will enable us to discern new physics from the Standard Model at unprecedented levels of precision."
+  ],
+  "related": [
+   "2512.19803",
+   "2309.00409",
+   "2012.15108"
   ]
  },
  "Humboldt Postdoctoral Research Fellowship": {
@@ -29,13 +58,22 @@
   "abstract": [
    "With the discovery of the Higgs boson in 2012, the Standard Model (SM) is complete. However, several experimental observations remain unanswered by the SM, indicating that it is not the ultimate theory of nature. Despite this, the SM predictions agree well with most collider experiments, suggesting that the New Physics (NP) scale could be either beyond the TeV scale or below it but with a suppressed production cross-section. Since the present and proposed future colliders cannot reach this energy scale, the most reasonable way to discover NP is by identifying small deviations (due to virtual corrections from NP particles) from the SM prediction at a low-energy scale accessible to colliders. This is particularly timely due to several upcoming experiments, ranging from neutrino physics to high-energy physics, which will improve the experimental sensitivity by an order of magnitude, making it possible to identify minor deviations from the SM. However, on the theoretical side, this requires precise predictions, which is a very challenging task that needs to be resolved to utilize the full potential of future experimental data.",
    "This proposal addresses these challenges by developing new mathematical techniques and building automated software to compute Feynman Integrals (FIs) appearing in the intermediate steps to obtain precise theoretical predictions. In the first part of this proposal, we will study and resolve two critical problems in the Mellin-Barnes (MB) approach to solve FIs by reducing the dimensionality of MB integrals and solving the known issue of the white zones. A solution to these important problems will allow us to compute FIs beyond the current state-of-the-art, which we will illustrate by evaluating a three-loop massive FI. In the second part, we will formulate a new method to extract the divergence of FIs without a full evaluation and derive two-loop renormalization group equations for dimension six operators in effective field theories."
+  ],
+  "related": [
+   "2309.00409",
+   "2510.08682"
   ]
  },
  "UZH Postdoc Grant": {
   "title": "Higgs Triplet at the LHC",
   "abstract": [
    "With the discovery of the Higgs boson in 2012 at CERN, the Standard Model (SM) of particle physics is completed, and all its predictions pertaining to fundamental particles have been exhausted. However, the motivation for the existence of New Physics (NP) is no less than prior to the discovery of the Higgs boson, as the SM cannot explain dark matter, dark energy, neutrino oscillations, matter-antimatter asymmetry, etc. Therefore, in the past decade, much of the efforts from the experimental collaborations at the Large Hadron Collider (LHC) have been put into accumulating evidence for NP in different measurements. The goal of this proposal is to precisely study some of these hints in a scalar extension of the SM with an <i>SU</i>(2)<sub><i>L</i></sub> triplet Higgs. This will be a continuation of my ongoing work in collaboration with my host, Prof. Andreas Crivellin, at the Universität Zürich.",
-   "In light of the hints for new Higgs bosons (a di-photon excess at 95 GeV, the multi-lepton anomalies pointing towards a scalar of mass ≈ 151.5 GeV, the <i>t</i><span class=\"ov\"><i>t</i></span> differential cross-sections and the mass of the <i>W</i> boson), it has been pointed out in past works that the most minimal model that can explain all of these anomalies in combination with the excess in the <i>W</i>-boson mass is a real Higgs triplet model (with hypercharge <i>Y</i> = 0), which is also referred to as ΔSM. Therefore, the primary aim of this proposal is to explore the collider phenomenology of ΔSM and propose a search strategy such that the new triplet Higgses can be directly probed with the already collected Run 2 or upcoming Run 3 LHC data."
+   "In light of the hints for new Higgs bosons (a di-photon excess at 95 GeV, the multi-lepton anomalies pointing towards a scalar of mass ≈ 151.5 GeV, the <i>t</i><i>t̄</i> differential cross-sections and the mass of the <i>W</i> boson), it has been pointed out in past works that the most minimal model that can explain all of these anomalies in combination with the excess in the <i>W</i>-boson mass is a real Higgs triplet model (with hypercharge <i>Y</i> = 0), which is also referred to as ΔSM. Therefore, the primary aim of this proposal is to explore the collider phenomenology of ΔSM and propose a search strategy such that the new triplet Higgses can be directly probed with the already collected Run 2 or upcoming Run 3 LHC data."
+  ],
+  "related": [
+   "2404.14492",
+   "2411.18618",
+   "2402.00101"
   ]
  }
 }

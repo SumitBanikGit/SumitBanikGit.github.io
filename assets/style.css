@@ -2722,3 +2722,7 @@ details.fund-more > summary:focus-visible { outline: 2px solid var(--gold); outl
 .ss-fix .ss-orig { font: inherit; color: var(--accent); background: transparent; border: 0; padding: 0; cursor: pointer;
                    text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: .18em; }
 .ss-fix .ss-orig:hover { text-decoration-color: currentColor; }
+.fund-abs .pub-rel { margin-top: .9rem; }
+@media (prefers-reduced-motion: no-preference) {
+  details.fund-more[open] .pub-rel li { animation: rel-in .4s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(.3s + var(--k, 0) * 80ms); }
+}
