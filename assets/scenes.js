@@ -3447,12 +3447,18 @@
   var EQUATIONS = [
     { name: 'The Dirac equation', course: 'Quantum Field Theory', lines: ['(iγ^μ\\,∂_μ−m)\\,ψ=0'] },
     { name: 'The Feynman propagator', course: 'Quantum Field Theory', lines: ['D_F(p)=\\frac{i}{p^2−m^2+iε}'] },
+    { name: 'The Lagrangian of QED', course: 'Quantum Field Theory',          // (the covariant derivative as in Peskin and Schroeder)
+      lines: ['ℒ=\\bar{ψ}\\,(iγ^μD_μ−m)\\,ψ−\\frac{1}{4}F_{μν}F^{μν}', 'D_μ=∂_μ+ieA_μ'] },
     { name: 'Electron-positron annihilation into muons', course: 'Quantum Field Theory', fig: annihilation },
     { name: 'The angular distribution of the muons', course: 'Quantum Field Theory', fig: angular },
     { name: 'Unitarity of the CKM matrix', course: 'Flavour Physics', lines: ['V_{ud}V^∗_{ub}+V_{cd}V^∗_{cb}+V_{td}V^∗_{tb}=0'] },
     { name: 'The unitarity triangle', course: 'Flavour Physics', fig: unitarityTriangle },
     { name: 'The box diagram of B meson mixing', course: 'Flavour Physics', fig: boxMixing },
+    { name: 'Muon decay and the Fermi constant', course: 'Flavour Physics',   // at tree level, with the electron mass neglected
+      lines: ['Γ(μ→eν\\bar{ν})=\\frac{G_F^2\\,m_μ^5}{192π^3}', '\\frac{G_F}{√2}=\\frac{g^2}{8m_W^2}'] },
     { name: 'Gauss’s law and Faraday’s law', course: 'Introductory Physics', lines: ['\\oint\\bf{E}\\cdot\\rm{d}\\bf{A}=\\frac{Q}{ε_0}', '\\oint\\bf{E}\\cdot\\rm{d}\\bf{l}=−\\frac{\\rm{d}Φ_B}{\\rm{d}t}'] },
+    { name: 'The Ampère-Maxwell law', course: 'Introductory Physics',
+      lines: ['\\oint\\bf{B}\\cdot\\rm{d}\\bf{l}=μ_0I+μ_0ε_0\\frac{\\rm{d}Φ_E}{\\rm{d}t}'] },
     { name: 'The magnetic field of a long straight wire', course: 'Introductory Physics', fig: ampere }
   ];
   function courseOf(e, eq) {
