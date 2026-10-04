@@ -1868,6 +1868,32 @@ def software_jsonld():
     return json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
 
 
+def pubs_jsonld():
+    """Each paper as a ScholarlyArticle (the thesis as a Thesis), with its authors, year, journal and identifiers,
+    for search engines."""
+    kinds = {"article": "ScholarlyArticle", "proceedings": "ScholarlyArticle", "thesis": "Thesis"}
+    graph = []
+    for q in PUBS:
+        e = {"@type": kinds[q["kind"]], "name": _plain(q["title"]).strip(), "datePublished": str(q["year"]),
+             "author": [{"@type": "Person", "name": a.strip()} for a in _plain(q["authors"]).split(",") if a.strip()],
+             "url": f'{PROFILE["url"]}publications.html#{_pub_id(q)}'}
+        ids = []
+        if q.get("doi"):
+            ids.append({"@type": "PropertyValue", "propertyID": "DOI", "value": q["doi"]})
+            e["sameAs"] = [f"https://doi.org/{q['doi']}"]
+        if q.get("arxiv"):
+            ids.append({"@type": "PropertyValue", "propertyID": "arXiv", "value": q["arxiv"]})
+            e.setdefault("sameAs", []).append(f"https://arxiv.org/abs/{q['arxiv']}")
+        if ids:
+            e["identifier"] = ids
+        ref = _plain(q["ref"]).strip()
+        if ref and q["kind"] != "thesis":           # the journal, or the meeting for proceedings without a volume
+            name = q.get("venue") if "proceedings" in ref else re.split(r"\s+\d", ref)[0].strip().rstrip(",")
+            e["isPartOf"] = {"@type": "Periodical", "name": name}
+        graph.append(e)                            # (the abstracts are in the page itself, so not repeated here)
+    return json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False).replace("</", "<\\/")
+
+
 def toolchain_scene_data():
     """The packages in the order of the chain in the Software header, with the line about each."""
     by = {pk["name"]: pk for pk in PACKAGES}
@@ -2287,6 +2313,8 @@ def write_pages(html, n_articles, n_proc):
             h = re.sub(r'<script type="application/ld\+json">.*?</script>\n', "", h, flags=re.S)
         if file == "software.html":                 # the packages, described for search engines
             h = h.replace("</head>", f'<script type="application/ld+json">{software_jsonld()}</script>\n</head>', 1)
+        if file == "publications.html":             # and the papers
+            h = h.replace("</head>", f'<script type="application/ld+json">{pubs_jsonld()}</script>\n</head>', 1)
         h = re.sub(r'<link rel="canonical" href="[^"]*">', f'<link rel="canonical" href="{url}">', h)
         h = re.sub(r'<meta property="og:url" content="[^"]*">', f'<meta property="og:url" content="{url}">', h)
 
