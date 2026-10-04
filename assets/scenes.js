@@ -3012,12 +3012,20 @@
       e.view = d.view || [0, 0, 1200, 482];
       e.land = d.land && window.Path2D ? new Path2D(d.land) : null;
       e.grat = d.grat && window.Path2D ? new Path2D(d.grat) : null;
-      talks.forEach(function (tk, i) { tk.at = 0.35 + i * step; tk.k = i + 1; });   // one talk after another, at an even pace
+      var ki = 0;
+      talks.forEach(function (tk, i) { tk.at = 0.35 + i * step; tk.k = i + 1; if (tk.i) ki++; tk.ki = ki; });   // one talk after another, at an even pace
       e.talks = talks; e.end = talks.length ? talks[talks.length - 1].at + 1.4 : 0; e.cycle = e.end + 4.5;
       e.clock = 0; e.hoverCity = null; e.hoverKey = null; e.sel = null;
       document.addEventListener('talkcity-shown', function (ev) { e.sel = ev.detail && ev.detail.cities; });   // the list below shows these
-      e.inv = false;
-      document.addEventListener('talkinvited', function (ev) { e.inv = !!(ev.detail && ev.detail.on); });   // only the invited talks are listed
+      e.inv = false; e.baseCap = e.defaultCaption;
+      document.addEventListener('talkinvited', function (ev) {   // only the invited talks are listed: the caption counts them
+        e.inv = !!(ev.detail && ev.detail.on);
+        var where = {}, n = 0;
+        e.talks.forEach(function (tk) { if (tk.i) { n++; where[tk.c] = 1; } });
+        var nc = Object.keys(where).length;
+        e.defaultCaption = e.inv ? n + (n === 1 ? ' invited talk' : ' invited talks') + ' in ' + nc + (nc === 1 ? ' city' : ' cities') : e.baseCap;
+        e.caption(null, true);
+      });
     },
     layout: function (e) {                             // the map is drawn once per size
       var v = e.view, s = Math.min(e.w / v[2], e.h / v[3]), L = layer(e.w, e.h, e.dpr), c = L.ctx;
@@ -3050,7 +3058,8 @@
       if (e.map) ctx.drawImage(e.map, e.x, e.y, e.w, e.h);
       if (!e.reduce && !e.hoverCity) {                 // the caption keeps a running total
         if (last && c < e.end) {                       // a new year fades in, the count within a year just ticks
-          e.caption(last.y + ' · ' + last.k + (last.k === 1 ? ' talk' : ' talks') + ' so far', last.y === e.capYear);
+          var kk = e.inv ? last.ki : last.k, word = e.inv ? (kk === 1 ? ' invited talk' : ' invited talks') : (kk === 1 ? ' talk' : ' talks');
+          e.caption(last.y + ' · ' + kk + word + ' so far', last.y === e.capYear);
           e.capYear = last.y;
         } else { e.caption(null); e.capYear = null; }
       }

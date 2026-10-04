@@ -3135,12 +3135,12 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     buttons.forEach(function (x) {{ if (x.dataset.filter === 'all') x.setAttribute('aria-pressed', 'false'); }});   // not all of them
   }}
   var pq = {{}};                                       // a shared view of the list: ?topic=pheno&q=higgs (and ?domain=)
-  location.search.replace(/[?&]([a-z]+)=([^&]*)/g, function (m, k, v) {{ try {{ pq[k] = decodeURIComponent(v.replace(/\+/g, ' ')); }} catch (e) {{}} }});
+  location.search.replace(/[?&]([a-z]+)=([^&]*)/g, function (m, k, v) {{ try {{ pq[k] = decodeURIComponent(v.replace(/\\+/g, ' ')); }} catch (e) {{}} }});
   if (pq.topic && pq.topic !== 'all' && document.querySelector('.filters button[data-filter="' + pq.topic.replace(/[^a-z]/g, '') + '"]')) {{
     topic = pq.topic;
     buttons.forEach(function (x) {{ x.setAttribute('aria-pressed', x.dataset.filter === topic ? 'true' : 'false'); }});
   }}
-  if (pq.q && search) {{ search.value = pq.q.slice(0, 80); query = search.value.replace(/\s+/g, ' ').trim().toLowerCase(); }}
+  if (pq.q && search) {{ search.value = pq.q.slice(0, 80); query = search.value.replace(/\\s+/g, ' ').trim().toLowerCase(); }}
   var syncURL = function () {{                      // and the address follows the list, so that what is shown can be shared
     if (!history.replaceState || !buttons.length) return;
     var ps = [];
