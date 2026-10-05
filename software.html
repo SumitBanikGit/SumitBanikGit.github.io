@@ -311,6 +311,7 @@
    <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Step through the animation at the top of a page: the papers of the tour, the awards, the equations on the board, the students or the stages of the CV</dd></div>
    <div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>The next or previous paper of the list, on the Publications page</dd></div>
    <div><dt><kbd>O</kbd></dt><dd>Open or fold the abstract of that paper</dd></div>
+   <div><dt><kbd>P</kbd></dt><dd>Pause or play the animations, on every page</dd></div>
    <div><dt><kbd>Esc</kbd></dt><dd>Close a search, a menu or this list</dd></div>
    <div><dt><kbd>?</kbd></dt><dd>Show this list</dd></div>
   </dl>
@@ -729,6 +730,13 @@
     if (window.CustomEvent) document.dispatchEvent(new CustomEvent('motionchange', { detail: { still: on } }));
   };
   Array.prototype.forEach.call(mtBtns, function (b) { b.addEventListener('click', function () { setStill(!root.classList.contains('still'), true); }); });
+  if (mtBtns.length) document.addEventListener('keydown', function (ev) {   // P pauses or plays them from the keyboard
+    var t = ev.target;
+    if ((ev.key !== 'p' && ev.key !== 'P') || ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if ((t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) || document.querySelector('dialog[open]')) return;
+    if (getComputedStyle(mtBtns[0]).display === 'none') return;      // (not with reduced motion, where nothing moves)
+    ev.preventDefault(); setStill(!root.classList.contains('still'), true);
+  });
   if (root.classList.contains('still')) requestAnimationFrame(function () { setStill(true, false); });
 
   /* ---------- progress bar, back-to-top, current page in the menu ---------- */
