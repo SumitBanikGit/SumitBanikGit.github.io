@@ -1482,8 +1482,16 @@
              { a: 'l2', b: 'l1', t: 'f', arc: [0.95, 0.42, 0.2, 30 * D2R, 150 * D2R] },
              { a: 'l3', b: 'out', t: 'ph', lab: 'γ', lt: 0.7, lo: [12, 0] }], stagger: 0.36, edgeDur: 0.55 },
     extra: function (v, t) {
-      var k = v.reduce ? 1 : ease((t - 3.4) / 0.6), F = v.F;
-      if (k > 0) drawMath(v.ctx, 't,\\,W^±,\\,H^±', F.x + 1.2 * F.s, F.y + 0.36 * F.s, 12, ink('green', 0.9 * k), 'left');
+      var ctx = v.ctx, R = v.reduce, k = R ? 1 : ease((t - 3.4) / 0.6), k2 = R ? 1 : ease((t - 5.6) / 0.7), F = v.F;
+      if (k > 0) drawMath(ctx, 't,\\,W^±,\\,H^±', F.x + 1.2 * F.s, F.y + 0.36 * F.s, 12, ink('green', 0.9 * k), 'left');
+      if (k2 <= 0) return;                         // what the paper ties together (its abstract): the photons of A and the EDMs
+      var l1 = 'A\\toγγ\\quad\\rm{at}\\quad m_A=95\\,\\rm{or}\\,152\\,\\rm{GeV}', l2 = '\\rm{tied}\\,\\rm{to}\\quad d_e,\\,d_n,\\,d_p';
+      var room = F.x + 0.95 * F.s - 18 - (v.x + 4), S = 11.5, wide = Math.max(mathBox(ctx, l1, S).w, mathBox(ctx, l2, S).w);
+      if (wide > room) S *= Math.max(0.6, room / wide);   // kept left of the photon that leaves the loop
+      ctx.save(); ctx.globalAlpha *= k2;
+      drawMath(ctx, l1, v.x + 4, v.y + 16, S, ink('crimson', 0.95), 'left');
+      drawMath(ctx, l2, v.x + 4, v.y + 16 + 1.6 * S, S, ink('slate', 0.95), 'left');
+      ctx.restore();
     }
   });
 
