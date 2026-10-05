@@ -2819,7 +2819,7 @@ def write_pages(html, n_articles, n_proc):
             body = body.replace(f'href="{anchor}"', f'href="{local if file == current else target}"')
         return body
 
-    written = []
+    written, changed = [], set()
     for file, label, title, sub, secs in PAGES:
         url = P["url"] + ("" if file == "index.html" else file)
         h = head
@@ -2858,7 +2858,10 @@ def write_pages(html, n_articles, n_proc):
                                 f'<a class="sec-link" href="#{_slug(m.group(2))}" aria-hidden="true" tabindex="-1">{SEC_LINK_ICON}</a></h3>', body)
         if "sec-link" in body:
             body = body.replace("</body>", SEC_LINK_JS + "\n</body>", 1)
-        Path(file).write_text(_heading_levels(relink(h + body, file)), encoding="utf-8")
+        page_html = _heading_levels(relink(h + body, file))
+        if not Path(file).exists() or Path(file).read_text(encoding="utf-8") != page_html:
+            changed.add(file)                              # for the sitemap: the day each page last changed
+        Path(file).write_text(page_html, encoding="utf-8")
         written.append(file)
 
     # a friendly 404 page for mistyped addresses
@@ -2879,8 +2882,18 @@ def write_pages(html, n_articles, n_proc):
     nf = re.sub(r'(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|/|#)', r"\1/", nf)   # served at any depth, so every address starts at the root
     Path("404.html").write_text(nf.replace('href="/index.html"', 'href="/"'), encoding="utf-8")
 
-    # sitemap for search engines
-    urls = "".join(f"<url><loc>{P['url'] + ('' if f == 'index.html' else f)}</loc></url>" for f, *_ in PAGES)
+    # sitemap for search engines, with the day each page last changed (kept in tools/lastmod.json between builds)
+    lm_path = Path("tools/lastmod.json")
+    try:
+        lastmod = json.loads(lm_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        lastmod = {}
+    today = date.today().isoformat()
+    for f, *_ in PAGES:
+        if f in changed or f not in lastmod:
+            lastmod[f] = today
+    lm_path.write_text(json.dumps(lastmod, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    urls = "".join(f"<url><loc>{P['url'] + ('' if f == 'index.html' else f)}</loc><lastmod>{lastmod[f]}</lastmod></url>" for f, *_ in PAGES)
     Path("sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
                                    f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>\n')
     Path("robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {P['url']}sitemap.xml\n")
