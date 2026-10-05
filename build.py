@@ -309,7 +309,7 @@ TALKS = [
      "Algorithms for analytic and numerical evaluation of multiple Mellin-Barnes integrals",
      "Invited by J. Gluza and M. Zaro", True),
     (2026, "EPP Theory Seminar, SLAC &amp; Stanford University", "Menlo Park",
-     "Geometrical techniques to compute Feynman integrals", "", True),
+     "Geometrical techniques to compute Feynman integrals", "Invited by the SLAC Theory Group", True),   # as in the CV
     (2025, "New Ways to Higher Points, Humboldt-Universität zu Berlin", "Berlin",
      "Analytic evaluation of Feynman integrals using the Mellin-Barnes representation",
      "Invited by B. Eden", True),
