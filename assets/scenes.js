@@ -1800,7 +1800,9 @@
         caps(ctx, 'H → γγ VIA A CHARGED HIGGS LOOP', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
         ctx.globalAlpha *= R ? 1 : ease((tl - 1.2) / 0.5);
         drawMath(ctx, 'λ_6', F.x + A[0] * F.s - 6, F.y + A[1] * F.s + 22, 13, ink('brassD', 1), 'center');
-        drawMath(ctx, '\\rm{from}\\quad −λ_6\\,H_1^†H_1\\,H_2^†H_1+\\rm{h.c.}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        drawMath(ctx, '\\rm{from}\\quad λ_6\\,H_1^†H_1\\,H_2^†H_1+\\rm{h.c.}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');   // (as the abstract writes it)
+        ctx.globalAlpha *= R ? 1 : ease((tl - 2.6) / 0.6);     // and what it buys: a percent-level rate to photons, at about 4 sigma
+        drawMath(ctx, '≳4σ\\quad\\rm{for}\\quad\\rm{Br}(H\\toγγ)≈2\\,%', v.x + 4, v.y + v.h - 27, 11, ink('crimson', 0.95), 'left');
         ctx.restore();
       }
     }
