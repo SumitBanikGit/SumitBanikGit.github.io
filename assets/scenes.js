@@ -1457,9 +1457,15 @@
              { a: 'vc', b: 'w', t: 'w', lab: 'W^±', lt: 0.85, lo: [0, -9] }, { a: 'vc', b: 'z', t: 'w', lab: 'Z', lt: 0.85, lo: [4, 13] },
              { a: 'vn', b: 'g1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'vn', b: 'g2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
          stagger: 0.36, edgeDur: 0.55 },
-    extra: function (v, t) {
-      var k = v.reduce ? 1 : ease((t - 4) / 0.6);
-      if (k > 0) drawMath(v.ctx, 'm_Δ≈152\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11.5, ink('slate', 0.9 * k), 'left');
+    extra: function (v, t) {                       // then the result of the abstract: Br = 0.66 %, preferred by about 3 sigma
+      var ctx = v.ctx, R = v.reduce, k = R ? 1 : ease((t - 4) / 0.6), k2 = R ? 1 : ease((t - 6.4) / 0.7);
+      if (k > 0 && k2 < 1) drawMath(ctx, 'm_Δ≈151.5\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11.5, ink('slate', 0.9 * k * (1 - k2)), 'left');
+      if (k2 <= 0) return;
+      var src = 'm_Δ≈151.5\\,\\rm{GeV},\\quad\\rm{Br}(Δ^0\\toγγ)=0.66\\,%\\quad(≈3σ)', S = 11.5, w = mathBox(ctx, src, S).w;
+      if (w > v.w - 8) S *= (v.w - 8) / w;           // (narrower on a phone)
+      ctx.save(); ctx.globalAlpha *= k2;
+      drawMath(ctx, src, v.x + 4, v.y + v.h - 9, S, ink('green', 0.95), 'left');
+      ctx.restore();
     }
   });
 
