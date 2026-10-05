@@ -2883,3 +2883,28 @@ html[data-theme="dark"] .pmap-key .k-fi::before { background: rgb(214, 180, 110)
 html[data-theme="dark"] .pmap-key .k-ph::before { background: rgb(127, 184, 163); }
 @media (max-width: 40rem) { .pmap-box { height: 19rem; } .pmap-read { min-height: 3.6em; } }
 @media print { .pmap-box { break-inside: avoid; } .pmap-read { display: none; } }
+/* A switch in every header that pauses the animations, kept from page to page (WCAG 2.2.2) */
+.motion-toggle { position: absolute; right: .95rem; bottom: .9rem; z-index: 3; width: 2rem; height: 2rem; padding: 0; border-radius: 50%;
+                 display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--accent);
+                 background: color-mix(in srgb, var(--paper) 70%, transparent); border: 1px solid var(--rule);
+                 opacity: .7; transition: opacity .2s, border-color .2s, background-color .2s; }
+.motion-toggle:hover, .motion-toggle:focus-visible { opacity: 1; border-color: var(--gold); }
+.motion-toggle:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.motion-toggle svg { width: .95rem; height: .95rem; }
+.motion-toggle .mt-pause { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.motion-toggle .mt-play { fill: currentColor; display: none; }
+html.still .motion-toggle .mt-pause { display: none; }
+html.still .motion-toggle .mt-play { display: inline; }
+html.still .motion-toggle { opacity: 1; border-color: var(--gold); }
+html:not(.js) .motion-toggle { display: none; }
+@media (prefers-reduced-motion: reduce) { .motion-toggle { display: none; } }
+@media print { .motion-toggle { display: none; } }
+html.still .scroll-cue span, html.still .news li:first-child::before, html.still .ticker-track, html.still .stop.now .stop-node::after,
+html.still .stop.now .logo-disc::after, html.still .jm-ping, html.still .hero .aurora, html.still .visitors .ring { animation-play-state: paused; }
+@media (max-width: 52rem) {                         /* on a phone or tablet: at the top, beside the search and theme buttons */
+  .motion-toggle { top: .85rem; bottom: auto; left: auto; right: 6.55rem; width: 2.3rem; height: 2.3rem; opacity: 1; color: #dcc58f;
+                   background: rgba(28, 53, 47, .88); border-color: rgba(220, 197, 143, .6); box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5); }
+  html.still .motion-toggle { border-color: #dcc58f; }
+}
+.hero:not(.page-hero) > .motion-toggle { right: auto; left: .95rem; }   /* home: clear of the legend of the event display */
+@media (max-width: 24rem) { .page-hero .crumb { margin-top: .9rem; } }  /* the narrowest phones: the crumb below the buttons */

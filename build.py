@@ -1601,7 +1601,8 @@ PMAP_JS = r"""<script>
   var C = INKS.light;
   function palette() { C = INKS[document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light']; }
   function ink(k, a) { return 'rgba(' + C[k] + ',' + a + ')'; }
-  var W = 0, H = 0, dpr = 1, pos = [], hov = -1, tapped = -1, t0 = null, raf = null, played = reduce;
+  var W = 0, H = 0, dpr = 1, pos = [], hov = -1, tapped = -1, t0 = null, raf = null,
+      played = reduce || document.documentElement.classList.contains('still');
   var M = { l: 26, r: 26, t: 20, b: 34 };
   function layout() {                              // the scaled places, then nudged apart so that no two dots overlap
     var w = W - M.l - M.r, h = H - M.t - M.b, min = Math.max(11, Math.min(16, w / 46));
@@ -1735,7 +1736,8 @@ CONT_JS = r"""<script>
   function left(x, N) { return Math.sqrt(-x) * partial(1 / x, N); }  // closing to the left: the series in 1/x (x < 0 on the real line)
 
   var X0 = -4, X1 = 1, Y0 = -9, Y1 = 1.2, W = 0, H = 0, dpr = 1, P = { l: 34, r: 10, t: 12, b: 24 };
-  var N = reduce ? 30 : 1, hx = null, played = reduce, raf = null, focus = null;
+  var stillAtLoad = document.documentElement.classList.contains('still');   // the animations paused with the button
+  var N = reduce || stillAtLoad ? 30 : 1, hx = null, played = reduce || stillAtLoad, raf = null, focus = null;
   function PX(x) { return P.l + (x - X0) / (X1 - X0) * (W - P.l - P.r); }
   function PY(y) { return P.t + (Y1 - y) / (Y1 - Y0) * (H - P.t - P.b); }
   function XP(px) { return X0 + (px - P.l) / (W - P.l - P.r) * (X1 - X0); }
@@ -2657,6 +2659,12 @@ def render_reach():
 </section>'''
 
 
+MOTION_BUTTON = ('<button class="motion-toggle" type="button" aria-pressed="false" aria-label="Pause the animations" '
+                 'title="Pause the animations on every page">'
+                 '<svg viewBox="0 0 24 24" aria-hidden="true"><path class="mt-pause" d="M9 6.5v11M15 6.5v11"/>'
+                 '<path class="mt-play" d="M8.5 6.2v11.6l9.4-5.8z"/></svg></button>\n')
+
+
 def stats_tag():
     """GoatCounter's counting script (no cookies, no personal data), loaded on the live site only."""
     code = PROFILE.get("goatcounter")
@@ -2844,6 +2852,7 @@ def write_pages(html, n_articles, n_proc):
         if file in scenes:                                # the page scenes live in their own script
             body = body.replace("</body>", f'<script src="assets/scenes.js?v={_ver("assets/scenes.js")}" defer></script>\n</body>', 1)
         body = body.replace("</body>", stats_tag() + "</body>", 1)
+        body = body.replace("</header>", MOTION_BUTTON + "</header>", 1)   # pause the moving pictures (WCAG 2.2.2)
         body = re.sub(r'<h3 class="sect"((?: data-[a-z]+="[^"]*")?)>(.*?)</h3>',   # an id for the menu's links, and a link to copy
                       lambda m: f'<h3 class="sect" id="{_slug(m.group(2))}"{m.group(1)}>{m.group(2)}'
                                 f'<a class="sec-link" href="#{_slug(m.group(2))}" aria-hidden="true" tabindex="-1">{SEC_LINK_ICON}</a></h3>', body)
@@ -2866,7 +2875,7 @@ def write_pages(html, n_articles, n_proc):
           + sections["contact"] + "\n\n" + tail)
     nf = re.sub(r'<link rel="canonical" href="[^"]*">\n?', "", nf)   # count a missing page under its own address
     nf = nf.replace("</body>", stats_tag() + "</body>", 1)
-    nf = relink(nf, "404.html")
+    nf = relink(nf, "404.html").replace("</header>", MOTION_BUTTON + "</header>", 1)
     nf = re.sub(r'(\s(?:href|src)=")(?![a-z][a-z0-9+.-]*:|/|#)', r"\1/", nf)   # served at any depth, so every address starts at the root
     Path("404.html").write_text(nf.replace('href="/index.html"', 'href="/"'), encoding="utf-8")
 
@@ -3029,7 +3038,7 @@ TEMPLATE = """<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
 <link rel="stylesheet" href="assets/style.css?v={v_css}">
 <script type="application/ld+json">{jsonld}</script>
-<script>document.documentElement.classList.add("js");try{{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){{document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}}}catch(e){{}}try{{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}}catch(e){{}}</script>
+<script>document.documentElement.classList.add("js");try{{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){{document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}}}catch(e){{}}try{{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}}catch(e){{}}try{{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}}catch(e){{}}</script>
 </head>
 <body id="top">
 <a class="skip" href="#main">Skip to content</a>
@@ -3711,6 +3720,23 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   }};
   if (dq.addEventListener) dq.addEventListener('change', follow); else if (dq.addListener) dq.addListener(follow);
 
+  /* ---------- pause every animation: the canvases, the ticker, the journey map (kept on every page) ---------- */
+  var mtBtns = document.querySelectorAll('.motion-toggle');
+  var setStill = function (on, save) {{
+    root.classList.toggle('still', on);
+    Array.prototype.forEach.call(mtBtns, function (b) {{
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.setAttribute('aria-label', on ? 'Play the animations' : 'Pause the animations');
+      b.title = on ? 'Play the animations again' : 'Pause the animations on every page';
+    }});
+    var jsvg = document.querySelector('.journey-map svg');
+    if (jsvg && jsvg.pauseAnimations) {{ if (on) jsvg.pauseAnimations(); else jsvg.unpauseAnimations(); }}
+    if (save) {{ try {{ if (on) localStorage.setItem('sb-still', '1'); else localStorage.removeItem('sb-still'); }} catch (e) {{}} }}
+    if (window.CustomEvent) document.dispatchEvent(new CustomEvent('motionchange', {{ detail: {{ still: on }} }}));
+  }};
+  Array.prototype.forEach.call(mtBtns, function (b) {{ b.addEventListener('click', function () {{ setStill(!root.classList.contains('still'), true); }}); }});
+  if (root.classList.contains('still')) requestAnimationFrame(function () {{ setStill(true, false); }});
+
   /* ---------- progress bar, back-to-top, current page in the menu ---------- */
   var nav = document.querySelector('.navbar nav'), here = nav && nav.querySelector('.here');
   requestAnimationFrame(function () {{               // after the first layout, so that reading the sizes forces none
@@ -4264,11 +4290,15 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
           if (ang !== null) tower(ang, rH, RO * (0.03 + 0.1 * p.e), COL.gluon, 0.55 * fade);
         }}
       }});
-      raf = (!reduce && visible && !document.hidden) ? requestAnimationFrame(frame) : null;
+      raf = (!reduce && !stillNow() && visible && !document.hidden) ? requestAnimationFrame(frame) : null;
     }}
-    function start() {{ if (!raf && !reduce) raf = requestAnimationFrame(frame); }}
+    function stillNow() {{ return document.documentElement.classList.contains('still'); }}   // paused by the button
+    function start() {{ if (!raf && !reduce && !stillNow()) raf = requestAnimationFrame(frame); }}
     size();
-    if (reduce) {{ spawn(performance.now() - 1600); frame(performance.now()); }} else start();
+    if (reduce) {{ spawn(performance.now() - 1600); frame(performance.now()); }}
+    else if (stillNow()) {{ spawn(performance.now() - 1600); frame(performance.now()); }}   // a whole event, held still
+    else start();
+    document.addEventListener('motionchange', function () {{ if (!stillNow()) {{ nextAt = 0; start(); }} }});
     window.addEventListener('resize', function () {{ size(); if (reduce) frame(performance.now()); }});
     if (stage) stage.addEventListener('click', function () {{
       var now = performance.now();

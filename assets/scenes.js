@@ -105,7 +105,8 @@
     var ctx = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 2);
     var meta = stage.querySelector('.scene-meta'), cap = stage.querySelector('.scene-cap'), hint = stage.querySelector('.scene-hint');
     var touch = window.matchMedia('(hover: none)').matches;
-    var env = { ctx: ctx, dpr: dpr, stage: stage, data: readData(), t: 0, dt: 0, active: false, reduce: reduce, touch: touch };
+    var still = function () { return document.documentElement.classList.contains('still'); };   // paused by the button
+    var env = { ctx: ctx, dpr: dpr, stage: stage, data: readData(), t: 0, dt: 0, active: false, reduce: reduce || still(), touch: touch };
     if (touch && hint && scene.touchHint) hint.textContent = scene.touchHint;
     env.defaultCaption = cap ? cap.innerHTML : ''; env.defaultHint = hint ? hint.innerHTML : '';
     env.caption = swapper(cap, function () { return env.defaultCaption; });
@@ -129,7 +130,7 @@
     }
     function tick(now) {
       raf = null;
-      if (!env.active || !visible || document.hidden) { last = 0; return; }
+      if (!env.active || !visible || document.hidden || still()) { last = 0; return; }   // (a pause keeps the last picture)
       env.dt = last ? Math.min(0.05, (now - last) / 1000) : 1 / 60;
       last = now; if (!env.hovered) env.t += env.dt;     // a scene that cycles on its own waits while the pointer rests on it
       draw();
@@ -137,7 +138,7 @@
     }
     function start() {
       if (!env.active) return;
-      if (reduce) { draw(); return; }
+      if (env.reduce || still()) { draw(); return; }
       if (!raf) raf = requestAnimationFrame(tick);
     }
     env.redraw = start;
@@ -145,7 +146,12 @@
     function inside(p) { return p.x >= env.x && p.x <= env.x + env.w && p.y >= env.y && p.y <= env.y + env.h + 30; }
 
     if (scene.init) scene.init(env);
-    if (reduce) env.t = scene.still || 0;
+    if (env.reduce) env.t = scene.still || 0;
+    document.addEventListener('motionchange', function () {   // paused: the whole picture, as without motion. Played: on from there
+      if (reduce) return;
+      env.reduce = still(); last = 0;
+      start();
+    });
     size();
     start();
     document.addEventListener('themechange', function () { size(); start(); });   // lay out again in the new inks
