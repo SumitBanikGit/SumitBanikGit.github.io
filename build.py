@@ -24,7 +24,7 @@ PROFILE = {
     "url": "https://sumitbanikgit.github.io/",   # change if you add a custom domain
     "orcid": "0000-0002-5869-5293",
     "inspire": "https://inspirehep.net/authors/1810309",
-    "scholar": "https://scholar.google.com/scholar?q=%22Sumit+Banik%22+physics",  # replace with your profile URL
+    "scholar": "https://scholar.google.com/citations?user=dNGju0YAAAAJ&hl=en",  # the Google Scholar profile
     "arxiv": "https://arxiv.org/search/?query=Banik%2C+Sumit&searchtype=author",  # all 26 preprints
     "github": "https://github.com/SumitBanikGit",
     "linkedin": "https://www.linkedin.com/in/waytosumitbanik",
@@ -2447,7 +2447,7 @@ def jsonld():
                          "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park",
                                      "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}},
         **({"image": P["url"] + P["portrait"]} if P.get("portrait") else {}),
-        "sameAs": [f"https://orcid.org/{P['orcid']}", P["inspire"], P["github"], P["linkedin"]],
+        "sameAs": [f"https://orcid.org/{P['orcid']}", P["inspire"], P["scholar"], P["github"], P["linkedin"]],
     }, ensure_ascii=False)
 
 
