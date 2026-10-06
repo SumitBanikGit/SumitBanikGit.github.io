@@ -1725,6 +1725,15 @@ footer .wrap.foot { row-gap: 1.6rem; }
 .od-sep { align-self: flex-end; margin: 0 .02em .05em; font-size: .8em; color: rgba(201,169,106,.8); overflow: hidden;
           transition: width .45s ease, margin .45s ease, opacity .3s ease; }
 .od-sep.lead { width: 0; margin: 0 -.1rem; opacity: 0; }
+/* new visits while the page is open: a +3 rises beside the counter, and the bubbles that grew send out a ring */
+.vis-count { position: relative; }
+.vis-plus { position: absolute; left: 100%; top: .05em; margin-left: .5rem; pointer-events: none; opacity: 0;
+            font-family: var(--sans); font-size: .64rem; font-weight: 700; letter-spacing: .04em; color: #e9cf8f; }
+.vis-plus.up { animation: vis-up 2.8s ease-out both; }
+@keyframes vis-up { 0% { opacity: 0; transform: translateY(7px); } 14% { opacity: 1; transform: none; } 72% { opacity: 1; } 100% { opacity: 0; transform: translateY(-9px); } }
+.visitors.rolled .vb.grew .ring { animation: vis-ping 1.2s ease-out 0s 2; }
+.vb.grew .core { animation: vis-glow 1.2s ease-out 2; }
+@keyframes vis-glow { 0%, 100% { fill: #e9cf8f; } 30% { fill: #fbeec7; } }
 /* under the counter, a bar for the share of all visits: full for all countries, shorter for one of them */
 .vis-share { width: 5.2rem; height: 2px; margin-top: -.25rem; border-radius: 1px; background: rgba(201,169,106,.2); overflow: hidden; }
 .vis-share i { display: block; height: 100%; width: var(--p, 100%); background: #e9cf8f; transition: width .9s cubic-bezier(.2, .7, .2, 1); }
@@ -1736,7 +1745,7 @@ footer .wrap.foot { row-gap: 1.6rem; }
 @media (max-width: 40rem) { .visitors { flex-basis: 100%; align-items: flex-start; } .vis-label, .vis-sub { text-align: left; } }
 @media (prefers-reduced-motion: reduce) {
   .od, .od-sep, .od-strip, .vb, .vb-in, .vis-leads, .vis-tag, .vis-share i, .vis-label, .vis-sub { transition: none; }
-  .visitors.rolled .vb.hot .ring, .visitors.rolled .vb.on .ring { animation: none; }
+  .visitors.rolled .vb.hot .ring, .visitors.rolled .vb.on .ring, .visitors.rolled .vb.grew .ring, .vb.grew .core { animation: none; }
 }
 
 /* Contact: copy the email address with one click, the sheets give way to a check mark */

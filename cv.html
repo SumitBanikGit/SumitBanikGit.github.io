@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6ac53435">
+<link rel="stylesheet" href="assets/style.css?v=6ac5383f">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-cv">
@@ -175,18 +175,16 @@
     <p class="sr-only vis-sum"></p><span class="sr-only vis-say" aria-live="polite"></span>
   </div>
 <script>
-(function () {                              // the footer map of visitors, filled in from assets/visitors.json
+(function () {                              // the footer map of visitors, from assets/visitors.json, kept up to date while the page is open
   var box = document.querySelector('.visitors');
   if (!box || !window.fetch) return;
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, touch = matchMedia('(hover: none)').matches;
-  fetch('/assets/visitors.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-    if (!d || !(d.total > 0)) return;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, touch = matchMedia('(hover: none)').matches, SRC = '/assets/visitors.json';
+  function load() { return fetch(SRC, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }); }
+  load().then(function (d0) {
+    if (!d0 || !(d0.total > 0)) return;
     var NS = 'http://www.w3.org/2000/svg', map = box.querySelector('.vis-map'), svg = box.querySelector('.vis-dots'),
         tag = box.querySelector('.vis-tag'), label = box.querySelector('.vis-label'), sub = box.querySelector('.vis-sub'),
-        bar = box.querySelector('.vis-share'), say = box.querySelector('.vis-say');
-    var all = d.countries || [], n = all.length, top = n ? all[0].v : 1;
-    var since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-    var line = (d.total === 1 ? 'visit' : 'visits') + (n ? ' from ' + n + (n === 1 ? ' country' : ' countries') : '') + ' since ' + since;
+        bar = box.querySelector('.vis-share'), say = box.querySelector('.vis-say'), odo = box.querySelector('.vis-count');
     var hint = (touch ? 'Tap' : 'Click') + ' a country for its details';
     var THE = /^(US|GB|NL|CZ|AE|PH|DO|CF|CD|BS|GM|KM|MV|SC|SB|MH|KY|VG|VI|TC|FO|FK)$/;
     var ORD = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
@@ -194,31 +192,40 @@
     function ease(x) { x = clamp(x); return 1 - Math.pow(1 - x, 3); }
     function easeIO(x) { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(2 - 2 * x, 3) / 2; }
     function fmt(v) { return v < 1000 ? String(v) : (v / 1000).toFixed(v < 9950 ? 1 : 0).replace('.0', '') + 'k'; }
+    var d, all, n, top, since, line, key = '', pts = [], picked = null, hov = null, ready = false;
     function share(c) { var p = 100 * c.v / d.total; return p < 0.1 ? 'under 0.1 %' : (p >= 10 ? Math.round(p) : p.toFixed(1).replace('.0', '')) + ' %'; }
     function rank(c) {                         // first of 13 countries, joint tenth of 13 countries
       var k = 1 + all.filter(function (o) { return o.v > c.v; }).length, tie = all.some(function (o) { return o !== c && o.v === c.v; });
       return (tie ? 'joint ' : '') + (ORD[k - 1] || k + 'th') + ' of ' + n + ' countries';
     }
-    all.forEach(function (c) { c.name = (THE.test(c.c) ? 'the ' : '') + c.n; });
-    var pts = all.filter(function (c) { return typeof c.x === 'number'; }), picked = null, hov = null, ready = false;
+    function sig(x) { return JSON.stringify([x.total, (x.countries || []).map(function (c) { return c.c + c.v; })]); }
 
     var leads = document.createElementNS(NS, 'g'); leads.setAttribute('class', 'vis-leads'); svg.appendChild(leads);
-    pts.slice().reverse().forEach(function (c) {   // a bubble for each country, the busiest drawn last
-      var i = pts.indexOf(c), big = i < 24;     // (past the 24 busiest, a plain dot without its number)
-      c.r0 = big ? 7.5 + 4.5 * Math.sqrt(c.v / top) : 3.2;
-      if (big) c.r0 = Math.max(c.r0, fmt(c.v).length * 3.3 + 2.5);
-      c.ln = document.createElementNS(NS, 'line'); c.ln.setAttribute('class', 'lead');
-      c.sp = document.createElementNS(NS, 'circle'); c.sp.setAttribute('class', 'spot'); c.sp.setAttribute('r', '1.5');
-      leads.appendChild(c.ln); leads.appendChild(c.sp);
-      c.g = document.createElementNS(NS, 'g'); c.g.setAttribute('class', 'vb' + (i < 3 ? ' hot' : ''));
-      if (i < 3) c.g.style.setProperty('--d', (i * 1.05) + 's');
-      c.g.innerHTML = '<g class="vb-grow"><g class="vb-in"><circle class="halo" r="' + (2.1 * c.r0).toFixed(1) + '"/><circle class="ring" r="' +
-        c.r0.toFixed(1) + '"/><circle class="core" r="' + c.r0.toFixed(1) + '"/>' + (big ? '<text class="num" dy=".36em" font-size="' +
-        (c.r0 >= 9 ? 9.5 : 8.5) + '">0</text>' : '') + '</g></g>';
-      c.grow = c.g.firstChild; c.t = c.g.querySelector('text');
-      svg.appendChild(c.g);
-    });
-
+    function use(nd) {                        // take in a set of numbers: a bubble for each country, the busiest drawn last
+      d = nd; all = d.countries || []; n = all.length; top = n ? all[0].v : 1; key = sig(d);
+      since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+      line = (d.total === 1 ? 'visit' : 'visits') + (n ? ' from ' + n + (n === 1 ? ' country' : ' countries') : '') + ' since ' + since;
+      all.forEach(function (c) { c.name = (THE.test(c.c) ? 'the ' : '') + c.n; });
+      pts.forEach(function (c) { leads.removeChild(c.ln); leads.removeChild(c.sp); svg.removeChild(c.g); });
+      pts = all.filter(function (c) { return typeof c.x === 'number'; });
+      pts.slice().reverse().forEach(function (c) {
+        var i = pts.indexOf(c), big = i < 24;  // (past the 24 busiest, a plain dot without its number)
+        c.r0 = big ? 7.5 + 4.5 * Math.sqrt(c.v / top) : 3.2;
+        if (big) c.r0 = Math.max(c.r0, fmt(c.v).length * 3.3 + 2.5);
+        c.ln = document.createElementNS(NS, 'line'); c.ln.setAttribute('class', 'lead');
+        c.sp = document.createElementNS(NS, 'circle'); c.sp.setAttribute('class', 'spot'); c.sp.setAttribute('r', '1.5');
+        leads.appendChild(c.ln); leads.appendChild(c.sp);
+        c.g = document.createElementNS(NS, 'g'); c.g.setAttribute('class', 'vb' + (i < 3 ? ' hot' : ''));
+        if (i < 3) c.g.style.setProperty('--d', (i * 1.05) + 's');
+        c.g.innerHTML = '<g class="vb-grow"><g class="vb-in"><circle class="halo" r="' + (2.1 * c.r0).toFixed(1) + '"/><circle class="ring" r="' +
+          c.r0.toFixed(1) + '"/><circle class="core" r="' + c.r0.toFixed(1) + '"/>' + (big ? '<text class="num" dy=".36em" font-size="' +
+          (c.r0 >= 9 ? 9.5 : 8.5) + '">0</text>' : '') + '</g></g>';
+        c.grow = c.g.firstChild; c.t = c.g.querySelector('text');
+        svg.appendChild(c.g);
+      });
+      box.querySelector('.vis-sum').textContent = d.total.toLocaleString('en-US') + ' ' + line + '. ' +
+        all.map(function (c) { return c.n + ' ' + c.v; }).join(', ') + '.';
+    }
     function layout() {                       // the bubbles at their countries, pushed apart until none overlap
       var W = map.clientWidth, H = map.clientHeight;
       if (!W || !H) return;
@@ -255,19 +262,30 @@
       });
     }
 
-    var cells = [], seps = [], s = d.total.toLocaleString('en-US'), digits = '';   // the counter, one wheel per digit
-    for (var k = 0; k <= 9; k++) digits += '<i>' + k + '</i>';
-    box.querySelector('.vis-count').innerHTML = s.split('').map(function (ch, i) {
-      return ch === ',' ? '<span class="od-sep">,</span>'
-        : '<span class="od"><span class="od-strip" style="--n:' + ch + ';--i:' + i + '">' + digits + '</span></span>';
-    }).join('');
-    [].forEach.call(box.querySelectorAll('.vis-count > span'), function (el) {
-      if (el.className === 'od-sep') seps.push({ el: el, before: cells.length }); else cells.push({ el: el, strip: el.firstChild });
-    });
+    var cells = [], seps = [];
+    function wheels(total) {                  // the counter, one wheel per digit (built again when the total gains a digit)
+      var s = total.toLocaleString('en-US'), digits = '';
+      if (cells.length === s.replace(/,/g, '').length) return;
+      for (var k = 0; k <= 9; k++) digits += '<i>' + k + '</i>';
+      odo.innerHTML = s.split('').map(function (ch, i) {
+        return ch === ',' ? '<span class="od-sep">,</span>'
+          : '<span class="od"><span class="od-strip" style="--n:0;--i:' + i + '">' + digits + '</span></span>';
+      }).join('') + '<span class="vis-plus"></span>';
+      cells = []; seps = [];
+      [].forEach.call(odo.querySelectorAll('.od, .od-sep'), function (el) {
+        if (el.className === 'od-sep') seps.push({ el: el, before: cells.length }); else cells.push({ el: el, strip: el.firstChild });
+      });
+      void odo.offsetWidth;                   // so that new wheels turn up from 0
+    }
     function count(v) {                       // the wheels turn to another number, the leading ones fold away
       var ds = String(v), pad = cells.length - ds.length;
       cells.forEach(function (c, i) { c.el.classList.toggle('lead', i < pad); c.strip.style.setProperty('--n', i < pad ? 0 : ds.charAt(i - pad)); });
       seps.forEach(function (p) { p.el.classList.toggle('lead', p.before <= pad); });
+    }
+    function plus(k) {                        // new visits while the page is open: a small +3 rises beside the counter
+      var b = odo.querySelector('.vis-plus');
+      if (!b || reduce) return;
+      b.textContent = '+' + k; b.classList.remove('up'); void b.offsetWidth; b.classList.add('up');
     }
     function swap(el, text) {                 // a line of text fades over to another
       if (el.textContent === text) return;
@@ -294,17 +312,32 @@
       if (picked) return;
       if (c) place(c); else tag.classList.remove('on');
     }
-    function pick(c) {                        // a country chosen: its bubble stands out, the counter and the lines speak of it
-      picked = c || null;
+    function show() {                         // the chosen country stands out, the counter and the lines speak of it (or of all)
       box.classList.toggle('picked', !!picked);
-      pts.forEach(function (p) { p.g.classList.toggle('on', p === picked); });
+      pts.forEach(function (p) { p.g.classList.toggle('on', p === picked); p.g.classList.toggle('hov', p === hov); });
       if (picked) place(picked); else if (hov) place(hov); else tag.classList.remove('on');
       count(picked ? picked.v : d.total);
       bar.style.setProperty('--p', (picked ? 100 * picked.v / d.total : 100).toFixed(2) + '%');
       swap(label, picked ? (picked.v === 1 ? 'visit' : 'visits') + ' from ' + picked.name + ' since ' + since : line);
       swap(sub, picked ? share(picked) + ' of all visits · ' + rank(picked) : hint);
+    }
+    function pick(c) {
+      picked = c || null; show();
       say.textContent = picked ? picked.n + ', ' + picked.v + (picked.v === 1 ? ' visit, ' : ' visits, ') + share(picked) +
         ' of all, ' + rank(picked) + '.' : 'All countries, ' + d.total + ' visits.';
+    }
+    function update(nd) {                     // new numbers while the page is open: the counter turns, the bubbles that grew ping
+      var was = {}, before = d.total, pc = picked && picked.c, hc = hov && hov.c;
+      all.forEach(function (c) { was[c.c] = c.v; });
+      use(nd);
+      picked = pc ? pts.filter(function (p) { return p.c === pc; })[0] || null : null;
+      hov = hc ? pts.filter(function (p) { return p.c === hc; })[0] || null : null;
+      layout(); draw(9); wheels(d.total); show();
+      pts.forEach(function (c) {
+        if (c.v <= (was[c.c] || 0)) return;
+        c.g.classList.add('grew'); setTimeout(function () { c.g.classList.remove('grew'); }, 2600);
+      });
+      if (d.total > before) plus(d.total - before);
     }
     function hit(ev) {                        // the bubble under the pointer, with some room for a finger
       var R = map.getBoundingClientRect(), x = ev.clientX - R.left, y = ev.clientY - R.top, best = null, bd = 1e9;
@@ -319,24 +352,31 @@
     map.addEventListener('click', function (ev) { if (!ready) return; var c = hit(ev); pick(c && c !== picked ? c : null); });
     document.addEventListener('click', function (ev) { if (picked && !map.contains(ev.target)) pick(null); });
     map.addEventListener('keydown', function (ev) {   // the arrow keys go through the countries, Escape back to all of them
-      var key = ev.key, i = picked ? pts.indexOf(picked) : -1;
-      if (key === 'Escape') { if (!picked) return; pick(null); }
-      else if (key === 'ArrowRight' || key === 'ArrowDown') pick(pts[Math.min(pts.length - 1, i + 1)]);
-      else if (key === 'ArrowLeft' || key === 'ArrowUp') pick(pts[Math.max(0, i - 1)]);
-      else if (key === 'Home' || key === 'End') pick(pts[key === 'Home' ? 0 : pts.length - 1]);
+      var k = ev.key, i = picked ? pts.indexOf(picked) : -1;
+      if (k === 'Escape') { if (!picked) return; pick(null); }
+      else if (k === 'ArrowRight' || k === 'ArrowDown') pick(pts[Math.min(pts.length - 1, i + 1)]);
+      else if (k === 'ArrowLeft' || k === 'ArrowUp') pick(pts[Math.max(0, i - 1)]);
+      else if (k === 'Home' || k === 'End') pick(pts[k === 'Home' ? 0 : pts.length - 1]);
       else return;
       ev.preventDefault(); ev.stopPropagation();
     });
 
+    use(d0); wheels(d.total); count(d.total);
     label.textContent = line; sub.textContent = hint;
-    box.querySelector('.vis-sum').textContent = s + ' ' + line + '. ' +
-      all.map(function (c) { return c.n + ' ' + c.v; }).join(', ') + '.';
     box.hidden = false;
     layout(); draw(0);
     if ('ResizeObserver' in window) new ResizeObserver(function () {
       layout(); if (ready) { draw(9); if (picked) place(picked); }
     }).observe(map);
-    function finish() { draw(9); ready = true; box.classList.add('live'); }
+    function poll() {                         // the numbers are fetched again every minute while the page is on screen
+      if (!ready || document.hidden) return;
+      load().then(function (nd) { if (nd && nd.total > 0 && sig(nd) !== key) update(nd); }).catch(function () {});
+    }
+    function finish() {
+      draw(9); ready = true; box.classList.add('live');
+      setInterval(poll, 60000);
+      document.addEventListener('visibilitychange', poll);
+    }
     function roll() {
       box.classList.add('rolled');
       if (reduce || document.documentElement.classList.contains('still')) { finish(); return; }
@@ -825,7 +865,8 @@
   var nav = document.querySelector('.navbar nav'), here = nav && nav.querySelector('.here');
   requestAnimationFrame(function () {               // after the first layout, so that reading the sizes forces none
     if (nav && here && getComputedStyle(nav).overflowX === 'auto' && nav.scrollWidth > nav.clientWidth + 2) {
-      nav.scrollLeft = Math.max(0, here.offsetLeft - 24);
+      var x = here.getBoundingClientRect().left - nav.getBoundingClientRect().left + nav.scrollLeft;   // its place along the strip, not in its menu item
+      nav.scrollLeft = Math.max(0, x - (nav.clientWidth - here.offsetWidth) / 2);                    // in the middle of a phone's menu
     }
   });
   /* ---------- the menu's dropdowns on touch screens (iPad and phone): a tap opens one (the page itself
