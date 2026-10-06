@@ -2030,27 +2030,35 @@
                    { a: 'C', b: 'd', t: 's', lab: 'Δ^0', lo: [0, -10] }],
                stagger: 0.36, edgeDur: 0.5 };
   var AN_STEPS = [
-    { D: AN_W, top: 'DRELL-YAN, CHARGED CURRENT', note: 'Δ^±Δ^0→W^±Z\\,W^+W^−\\quad\\rm{or}\\quad Δ^0→γγ' },
-    { D: AN_Z, top: 'DRELL-YAN, NEUTRAL CURRENT', note: 'Δ^+Δ^−→τ^+τ^−ν\\bar{ν}\\quad\\rm{or}\\quad W^+W^−ZZ' },
+    { D: AN_W, top: 'DRELL-YAN, CHARGED CURRENT', note: 'Δ^±Δ^0→W^±Z\\,W^+W^−\\quad\\rm{or}\\quad Δ^0→γγ', len: 6,
+      res: 'Δ^0→γγ:\\quad\\rm{Br}≈0.7\\,%\\quad(≈4σ\\,\\rm{near}\\,152\\,\\rm{GeV})', rc: 'green' },     // the abstract, (iii)
+    { D: AN_Z, top: 'DRELL-YAN, NEUTRAL CURRENT', note: 'Δ^+Δ^−→τ^+τ^−ν\\bar{ν}\\quad\\rm{or}\\quad W^+W^−ZZ', len: 6,
+      res: 'τ^+τ^−ν\\bar{ν}:\\quad m_{Δ^±}<110\\,\\rm{GeV}\\,\\rm{excluded}\\,(95\\,%\\,\\rm{CL})', rc: 'crimson' },   // (i)
     { D: AN_G, top: 'GLUON FUSION, ONLY THROUGH MIXING', note: 'σ(gg→Δ^0)=\\rm{sin}^2α\\,σ_{\\rm{SM}}' }
   ];
   var ANATOMY = {
-    key: 'anatomy', paper: '2411.18618', dur: 13.5, cap: 'Anatomy of the real Higgs triplet model',
+    key: 'anatomy', paper: '2411.18618', dur: 16.5, cap: 'Anatomy of the real Higgs triplet model',
     layout: function (v) {
       v.steps = AN_STEPS.map(function (s) { var w = Object.create(v); diagramLayout(w, s.D); return w; });
     },
     frame: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, len = 4.5;
+      var ctx = v.ctx, R = v.reduce, start = 0;
       AN_STEPS.forEach(function (s, i) {
-        var lt = t - i * len, a = R ? (i === 0 ? 1 : 0) : clamp01(Math.min(lt / 0.4, (len - lt) / 0.4));
+        var len = s.len || 4.5, lt = t - start, a = R ? (i === 0 ? 1 : 0) : clamp01(Math.min(lt / 0.4, (len - lt) / 0.4));
+        start += len;
         if (i === AN_STEPS.length - 1 && !R) a = clamp01(lt / 0.4);
         if (a <= 0) return;
         ctx.save(); ctx.globalAlpha *= a;
         drawDiagram(ctx, v.steps[i], s.D, R ? 60 : lt);
         caps(ctx, s.top, v.x + 4, v.y + 12, ink(i === 2 ? 'crimson' : 'slate', 0.85), 8);
         caps(ctx, (i + 1) + ' OF 3', v.x + v.w - 4, v.y + 12, ink('slate', 0.55), 7, 'right');
-        ctx.globalAlpha *= R ? 1 : ease((lt - 2.2) / 0.5);
-        drawMath(ctx, s.note, v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        var kn = R ? 1 : ease((lt - 2.2) / 0.5), kr = !s.res ? 0 : R ? 1 : ease((lt - 3.7) / 0.6);   // the channels, then what the paper finds in them
+        if (kn * (1 - kr) > 0) { ctx.save(); ctx.globalAlpha *= kn * (1 - kr); drawMath(ctx, s.note, v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left'); ctx.restore(); }
+        if (kr > 0) {
+          var S = 11, w = mathBox(ctx, s.res, S).w;
+          if (w > v.w - 8) S *= (v.w - 8) / w;
+          ctx.save(); ctx.globalAlpha *= kr; drawMath(ctx, s.res, v.x + 4, v.y + v.h - 9, S, ink(s.rc, 0.95), 'left'); ctx.restore();
+        }
         ctx.restore();
       });
     }

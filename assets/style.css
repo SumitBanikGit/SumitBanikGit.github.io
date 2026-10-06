@@ -2986,3 +2986,14 @@ html.still .stop.now .logo-disc::after, html.still .jm-ping, html.still .hero .a
   .foot-meta a::after, details.fund-more > summary::after { content: ""; position: absolute; inset: -12px -8px; }
   .foot-mail::after, .tour-all::after, .talk-inv::after { content: ""; position: absolute; inset: -8px -4px; }
 }
+/* home, phones: each Explore card a compact row, its drawing beside the words (nine cards took a long scroll) */
+@media (max-width: 34rem) {
+  .ex-card { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); column-gap: .95rem; row-gap: .12rem; align-items: center;
+             min-height: 0; padding: .85rem 2.4rem .9rem 1rem; }
+  .ex-card .ex-icon { grid-column: 1; grid-row: 1 / span 3; width: 2.5rem; height: 1.6rem; margin: 0; }
+  .ex-card .kicker { grid-column: 2; grid-row: 1; }
+  .ex-card .ex-title { grid-column: 2; grid-row: 2; padding-right: 0; font-size: 1.2rem; }
+  .ex-card .ex-meta { grid-column: 2; grid-row: 3; margin-top: .1rem; letter-spacing: .07em; }
+  .ex-card .ex-go { top: 50%; right: 1rem; margin-top: -.72rem; }
+  .ex-card .ex-num { display: none; }         /* (the big numerals would sit on the words) */
+}
