@@ -2263,9 +2263,9 @@
                    { a: 'Tb', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.8, lo: [-10, 10] }, { a: 'Tb', b: 'Wm', t: 'w', lab: 'W^−', lt: 0.8, lo: [0, -9] }],
                stagger: 0.24, edgeDur: 0.45, labSize: 12, pad: 22 };
   var TOPDELTA = diagramVignette({
-    key: 'topdelta', paper: '2605.04233', dur: 10.5, cap: 'Indications for new Higgs bosons', D: TD_D,
+    key: 'topdelta', paper: '2605.04233', dur: 11, cap: 'Indications for new Higgs bosons', D: TD_D,
     extra: function (v, t) {
-      var ctx = v.ctx, R = v.reduce, k0 = R ? 1 : ease(t / 0.6), k = R ? 1 : ease((t - 3.4) / 0.6), F = v.F, Dn = TD_D.n.D;
+      var ctx = v.ctx, R = v.reduce, k0 = R ? 1 : ease(t / 0.6), k = R ? 1 : ease((t - 3.4) / 0.6), k2 = R ? 1 : ease((t - 6.4) / 0.7), F = v.F, Dn = TD_D.n.D;
       ctx.save(); ctx.globalAlpha *= k0;
       caps(ctx, 'TOP DECAY TO A CHARGED TRIPLET HIGGS', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
       ctx.restore();
@@ -2273,8 +2273,15 @@
       ctx.save(); ctx.globalAlpha *= k;
       var x = F.x + Dn[0] * F.s, y = F.y + Dn[1] * F.s;     // the W+ Z pair looks like the Z of t t-bar Z
       ring(ctx, x + 0.32 * F.s, y - 0.0 * F.s, 0.2 * F.s, ink('brass', 0.35 + 0.15 * Math.sin(t * 3)), 1);
-      drawMath(ctx, 'm_{Δ^±}≈m_{Δ^0}≈152\\,\\rm{GeV}<m_t,\\quad\\rm{like}\\,t\\bar{t}Z', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+      if (k2 < 1) drawMath(ctx, 'm_{Δ^±}≈m_{Δ^0}≈152\\,\\rm{GeV}<m_t,\\quad\\rm{like}\\,t\\bar{t}Z', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9 * (1 - k2)), 'left');
       ctx.restore();
+      if (k2 <= 0) return;                         // then what the recast of the t t-bar Z and t W Z data shows (Sec. 3.1)
+      var room = Math.min(v.w - 8, F.x + 1.32 * F.s - 18 - (v.x + 4)), S = 11;   // left of the b-bar label
+      var res = '\\rm{preferred}\\,\\rm{by}\\,t\\bar{t}Z\\,\\rm{and}\\,tWZ\\,\\rm{data},\\quad≈2σ\\,\\rm{near}\\,150\\,\\rm{GeV}';
+      if (mathBox(ctx, res, S).w > room) res = '≈2σ\\,\\rm{near}\\,150\\,\\rm{GeV}\\,\\rm{in}\\,t\\bar{t}Z\\,\\rm{and}\\,tWZ\\,\\rm{data}';
+      var w = mathBox(ctx, res, S).w;
+      if (w > room) S *= room / w;
+      ctx.save(); ctx.globalAlpha *= k2; drawMath(ctx, res, v.x + 4, v.y + v.h - 9, S, ink('green', 0.95), 'left'); ctx.restore();
     }
   });
 
