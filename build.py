@@ -2207,14 +2207,30 @@ def render_supervision():
         for y, name, lvl, inst, thesis in SUPERVISION) + '</div>' + BOARD_JS
 
 
+def _webp(path):
+    """A lossless WebP copy of a PNG beside it (about half the bytes, the same pixels), written again when
+    the PNG is newer. Returns the WebP's path, or None when Pillow is not installed and there is no copy yet."""
+    src, out = Path(path), Path(path).with_suffix(".webp")
+    if not out.exists() or out.stat().st_mtime < src.stat().st_mtime:
+        try:
+            from PIL import Image
+        except ImportError:
+            return str(out) if out.exists() else None
+        Image.open(src).save(out, "WEBP", lossless=True, method=6)
+    return str(out)
+
+
 def _logo(f, alt, lazy=True):
     """A logo with its size in pixels written in, so that the page keeps its place while it loads
-    (the CV shows its logos near the top, so there they load at once)."""
+    (the CV shows its logos near the top, so there they load at once). Browsers that read WebP get the
+    lighter copy; the picture element takes no box of its own, so the image keeps its place in the layout."""
     import struct
     path = f"assets/logos/{f}.png"
     w, h = struct.unpack(">II", Path(path).read_bytes()[16:24])          # from the PNG header
-    return (f'<img src="{path}?v={_ver(path)}" alt="{alt}" width="{w}" height="{h}" '
-            + ('loading="lazy">' if lazy else 'decoding="async">'))
+    img = (f'<img src="{path}?v={_ver(path)}" alt="{alt}" width="{w}" height="{h}" '
+           + ('loading="lazy">' if lazy else 'decoding="async">'))
+    webp = _webp(path)
+    return (f'<picture class="lg"><source srcset="{webp}?v={_ver(webp)}" type="image/webp">{img}</picture>' if webp else img)
 
 
 def _cv_id(e):

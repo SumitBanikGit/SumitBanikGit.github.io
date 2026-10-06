@@ -3008,3 +3008,6 @@ html[data-theme="dark"] { -webkit-tap-highlight-color: rgba(220, 197, 143, .14);
 @media (hover: none) and (prefers-reduced-motion: reduce) {
   a.ex-card:active, a.journal:active, a.pick:active, .theme:active, .news li:active { transform: none; }
 }
+/* logos: a WebP copy for the browsers that read it, the picture element taking no box of its own */
+picture.lg { display: contents; }
+picture.lg > source { display: none; }      /* (else it becomes an empty item of a grid such as the journey's discs) */
