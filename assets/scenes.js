@@ -1566,6 +1566,78 @@
     }
   };
 
+  /* The TOP2023 proceedings (2312.01458), Fig. 3: the cross section of pp -> H -> S S' -> W W b b-bar that
+     the differential t t-bar distributions prefer (1 and 2 sigma, against m_S), and the one the 95 GeV
+     di-photon excess needs if S' is SM-like (flat bands, 1 and 2 sigma), with Br(S -> W W) = 100 %.
+     Edges read off the figure, as [m_S in GeV, lower, upper] in pb. The regions overlap near 11 to 12 pb. */
+  var T95_R2 = [[142, 8.16, 10.9], [142.5, 8.06, 11.22], [143, 7.96, 11.54], [143.5, 7.85, 11.89], [144, 7.78, 12.17], [145, 7.78, 12.17],
+                [146, 7.78, 12.06], [147, 7.82, 12.1], [148, 7.78, 12.24], [149, 7.68, 12.55], [150, 7.57, 12.87], [151, 7.57, 13.01],
+                [152, 7.64, 12.97], [153, 7.68, 12.76], [154, 7.68, 12.55], [155, 7.61, 12.59], [156, 7.57, 12.48], [156.5, 7.61, 12.2],
+                [157, 7.71, 11.85], [157.5, 7.78, 11.47], [158, 7.92, 11.08], [158.5, 8.06, 10.73], [159, 8.17, 10.45], [159.5, 8.31, 10.24], [160, 8.45, 10.03]];
+  var T95_R1 = [[143.65, 10.0, 10.0], [143.8, 9.54, 10.34], [144, 9.29, 10.62], [144.5, 9.22, 10.73], [145, 9.26, 10.69], [145.5, 9.36, 10.55],
+                [146, 9.5, 10.34], [146.5, 9.54, 10.34], [147, 9.5, 10.41], [147.5, 9.43, 10.52], [148, 9.29, 10.73], [148.5, 9.05, 11.04],
+                [149, 8.84, 11.36], [149.5, 8.7, 11.61], [150, 8.63, 11.82], [150.5, 8.59, 11.92], [151, 8.63, 11.96], [151.5, 8.66, 11.96],
+                [152, 8.73, 11.92], [152.5, 8.77, 11.78], [153, 8.8, 11.64], [153.5, 8.87, 11.47], [154, 8.87, 11.33], [154.5, 8.84, 11.36],
+                [155, 8.77, 11.43], [155.5, 8.73, 11.43], [156, 8.73, 11.29], [156.5, 8.94, 10.8], [156.8, 9.19, 10.45], [157, 9.57, 10.03], [157.08, 9.8, 9.8]];
+  var T95_G2 = [5.40, 28.61], T95_G1 = [10.97, 22.37];
+  var TT95 = {
+    key: 'tt95', paper: '2312.01458', dur: 12.5, cap: 'Top-quark distributions and the 95 GeV excess',
+    layout: function (v) {
+      v.S = Math.max(9, Math.min(11.5, v.w / 46));
+      v.L = v.x + 30; v.R = v.x + v.w - 12; v.T = v.y + 22; v.B = v.y + v.h - 28;
+    },
+    frame: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, L = v.L, Rr = v.R, T = v.T, B = v.B, S = v.S;
+      function X(m) { return L + (m - 142) / 18 * (Rr - L); }
+      function Y(s) { return B - s / 38 * (B - T); }
+      function region(P) {                            // the region between the two edges, as a path
+        ctx.beginPath();
+        P.forEach(function (q, i) { if (i) ctx.lineTo(X(q[0]), Y(q[2])); else ctx.moveTo(X(q[0]), Y(q[2])); });
+        for (var i = P.length - 1; i >= 0; i--) ctx.lineTo(X(P[i][0]), Y(P[i][1]));
+        ctx.closePath();
+      }
+      var ak = R ? 1 : ease(t / 0.6);
+      ctx.save(); ctx.globalAlpha *= ak;              // the axes, as in the figure
+      line(ctx, L, T, L, B, ink('green', 0.55), 1); line(ctx, L, B, Rr, B, ink('green', 0.55), 1);
+      [145, 150, 155, 160].forEach(function (m) { line(ctx, X(m), B, X(m), B + 4, ink('green', 0.55), 1); drawMath(ctx, String(m), X(m), B + 15, S * 0.9, ink('slate', 0.85), 'center'); });
+      [0, 10, 20, 30].forEach(function (y) { line(ctx, L - 3, Y(y), L, Y(y), ink('green', 0.55), 1); drawMath(ctx, String(y), L - 5, Y(y) + 3.5, S * 0.8, ink('slate', 0.85), 'right'); });
+      drawMath(ctx, 'm_S\\,[\\rm{GeV}]', X(152.5), B + 17, S, ink('slate', 0.95), 'center');
+      drawMath(ctx, 'σ(pp\\to H\\to SS\'\\to WWb\\bar{b})\\,[\\rm{pb}]', v.x + 4, v.y + 12, S * 0.85, ink('slate', 0.95), 'left');
+      ctx.restore();
+      var mid = (T95_G1[0] + T95_G1[1]) / 2;          // the 95 GeV di-photon excess: two flat bands, opening up
+      [[T95_G2, R ? 1 : easeInOut((t - 0.8) / 1.0), 0.08, '2σ'], [T95_G1, R ? 1 : easeInOut((t - 1.5) / 1.0), 0.17, '1σ']].forEach(function (g) {
+        if (g[1] <= 0) return;
+        var lo = mid - (mid - g[0][0]) * g[1], hi = mid + (g[0][1] - mid) * g[1];
+        ctx.fillStyle = ink('pine', g[2]); ctx.fillRect(L + 0.5, Y(hi), Rr - L - 0.5, Y(lo) - Y(hi));
+        line(ctx, L, Y(hi), Rr, Y(hi), ink('pine', 0.4), 1); line(ctx, L, Y(lo), Rr, Y(lo), ink('pine', 0.4), 1);
+        if (g[1] > 0.9) drawMath(ctx, g[3], Rr - 4, Y(hi) + S * 1.05, S * 0.8, ink('pine', 0.95 * (g[1] - 0.9) * 10), 'right');
+      });
+      var lk = R ? 1 : ease((t - 2.4) / 0.6);
+      if (lk > 0) drawMath(ctx, 'S\'\\toγγ\\,\\rm{at}\\,95\\,\\rm{GeV}', X(151), Y(17.6), S, ink('pine', lk), 'center');
+      [[T95_R2, R ? 1 : easeInOut((t - 3.0) / 1.6), 0.2], [T95_R1, R ? 1 : easeInOut((t - 4.2) / 1.6), 0.55]].forEach(function (q) {
+        if (q[1] <= 0) return;                        // the t t-bar fit, swept in from low to high m_S
+        ctx.save(); ctx.beginPath(); ctx.rect(L, T, (Rr - L) * q[1], B - T); ctx.clip();
+        region(q[0]); ctx.fillStyle = ink('crimson', q[2]); ctx.fill();
+        ctx.strokeStyle = ink('crimson', 0.85); ctx.lineWidth = 1; ctx.stroke();
+        ctx.restore();
+      });
+      var rk = R ? 1 : ease((t - 3.4) / 0.6);
+      if (rk > 0) drawMath(ctx, 't\\bar{t}\\,\\rm{distributions},\\quad 1σ\\,\\rm{and}\\,2σ', L + 5, Y(2.1), S * 0.9, ink('crimson', rk), 'left');
+      var ok = R ? 1 : ease((t - 6.4) / 0.7);
+      if (ok > 0) {                                   // where the two meet, within 1 sigma of both
+        ctx.save(); ctx.globalAlpha *= ok;
+        ctx.save(); ctx.beginPath(); ctx.rect(L, Y(T95_G1[1]), Rr - L, Y(T95_G1[0]) - Y(T95_G1[1])); ctx.clip();
+        region(T95_R1); ctx.fillStyle = ink('brass', R ? 0.8 : 0.72 + 0.16 * Math.sin(t * 3)); ctx.fill();
+        ctx.strokeStyle = ink('brassD', 1); ctx.lineWidth = 1.6; ctx.stroke();
+        ctx.restore();
+        caps(ctx, 'ONE CROSS SECTION FITS BOTH', L + 5, Y(35.3), ink('brassD', 0.95), 7.5);
+        ctx.restore();
+      }
+      var nk = R ? 1 : ease((t - 7.6) / 0.7);
+      if (nk > 0) drawMath(ctx, '\\rm{if}\\,S\'\\,\\rm{is}\\,\\rm{SM-like},\\quad\\rm{Br}(S\\to WW)=100\\,%', L + 5, Y(31.1), S * 0.85, ink('slate', 0.95 * nk), 'left');
+    }
+  };
+
   /* FeynGKZ, with the worked example of the paper: the one-loop bubble with two masses. The five
      monomials of its Lee-Pomeransky polynomial G = U + F are points of the plane, their
      exponents. Their convex hull, the Newton polytope, has normalized volume 3, the number of
@@ -2741,7 +2813,7 @@
     }
   };
 
-  var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR,
+  var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR, TT95,
               HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, NPOINT, PTSPEC, REVIEW, THESIS];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
