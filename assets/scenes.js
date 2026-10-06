@@ -1508,9 +1508,14 @@
              { a: 'S', b: 'b1', t: 'f', lab: 'b', lt: 0.85, lo: [0, -8] }, { a: 'S', b: 'b2', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.85, lo: [4, 14] },
              { a: 'h', b: 'a1', t: 'ph', lab: 'γ', lt: 0.85, lo: [0, -9] }, { a: 'h', b: 'a2', t: 'ph', lab: 'γ', lt: 0.85, lo: [4, 14] }],
          stagger: 0.36, edgeDur: 0.55 },
-    extra: function (v, t) {
-      var k = v.reduce ? 1 : ease((t - 4) / 0.6);
-      if (k > 0) drawMath(v.ctx, 'm_H≈650\\,\\rm{GeV},\\quad m_{b\\bar{b}}≈90\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11.5, ink('slate', 0.9 * k), 'left');
+    extra: function (v, t) {                       // the masses of the CMS excess, then what the model predicts (abstract)
+      var ctx = v.ctx, R = v.reduce, k = R ? 1 : ease((t - 4) / 0.6), k2 = R ? 1 : ease((t - 6.6) / 0.7);
+      var m = 'm_H≈650\\,\\rm{GeV},\\quad m_{b\\bar{b}}≈90\\,\\rm{GeV}', full = m + ',\\quad\\rm{with}\\,\\rm{a}\\,\\rm{predicted}\\,\\,Z+b\\bar{b}\\,\\rm{signal}';
+      if (k > 0 && k2 < 1) drawMath(ctx, m, v.x + 4, v.y + v.h - 9, 11.5, ink('slate', 0.9 * k * (1 - k2)), 'left');
+      if (k2 <= 0) return;
+      var F = v.F, room = Math.min(v.w - 8, F.x + 1.56 * F.s - (v.x + 4)), S = 11.5, w = mathBox(ctx, full, S).w;   // clear of the lower photon
+      if (w > room) S *= room / w;
+      ctx.save(); ctx.globalAlpha *= k2; drawMath(ctx, full, v.x + 4, v.y + v.h - 9, S, ink('slate', 0.9), 'left'); ctx.restore();
     }
   });
 
