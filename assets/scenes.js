@@ -1543,16 +1543,24 @@
                     { a: 'Sp', b: 'b', t: 'f', lab: 'b', lt: 0.85, lo: [0, -8] }, { a: 'Sp', b: 'bb', t: 'f', rev: 1, lab: '\\bar{b}', lt: 0.85, lo: [4, 14] }],
                 stagger: 0.2, edgeDur: 0.45, labSize: 12 };
   var TTBAR = {
-    key: 'ttbar', paper: '2308.07953', dur: 12, cap: 'Top-quark pairs and new Higgs bosons',
+    key: 'ttbar', paper: '2308.07953', dur: 13, cap: 'Top-quark pairs and new Higgs bosons',
     layout: function (v) { v.sm = Object.create(v); diagramLayout(v.sm, TT_SM); v.np = Object.create(v); diagramLayout(v.np, TT_NP); },
     frame: function (v, t) {
       var ctx = v.ctx, R = v.reduce, split = 5.6;
-      var a1 = R ? 0 : clamp01((split - t) / 0.5), a2 = R ? 1 : clamp01((t - split) / 0.5);
+      var a1 = R ? 0 : clamp01((split - t) / 0.5), a2 = R ? 1 : clamp01((t - split) / 0.5), k2 = R ? 1 : ease((t - 9.2) / 0.7);
       if (a1 > 0) { ctx.save(); ctx.globalAlpha *= a1; drawDiagram(ctx, v.sm, TT_SM, t); caps(ctx, 'STANDARD MODEL', v.x + 4, v.y + 12, ink('slate', 0.85), 8); ctx.restore(); }
       if (a2 > 0) {
         ctx.save(); ctx.globalAlpha *= a2; drawDiagram(ctx, v.np, TT_NP, t - split);
         caps(ctx, 'NEW HIGGS BOSONS, SAME FINAL STATE', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
-        drawMath(ctx, 'm_H≈270,\\quad m_S≈152,\\quad m_{S\'}≈95\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9), 'left');
+        if (k2 < 1) drawMath(ctx, 'm_H≈270,\\quad m_S≈152,\\quad m_{S\'}≈95\\,\\rm{GeV}', v.x + 4, v.y + v.h - 9, 11, ink('slate', 0.9 * (1 - k2)), 'left');
+        if (k2 > 0) {                              // then the result of the fit to the ATLAS lepton distributions (abstract)
+          var F = v.np.F, room = Math.min(v.w - 8, F.x + 1.48 * F.s - (v.x + 4)), S = 11;   // clear of the b-bar line
+          var res = '\\rm{a}\\,\\rm{better}\\,\\rm{fit}\\,\\rm{than}\\,\\rm{the}\\,\\rm{SM}\\,\\rm{by}\\,5.8σ\\,\\rm{to}\\,13σ', more = res + ',\\quad Δχ^2=34\\,\\rm{to}\\,158';
+          if (mathBox(ctx, more, S).w <= room) res = more;
+          var w = mathBox(ctx, res, S).w;
+          if (w > room) S *= room / w;
+          ctx.save(); ctx.globalAlpha *= k2; drawMath(ctx, res, v.x + 4, v.y + v.h - 9, S, ink('green', 0.95), 'left'); ctx.restore();
+        }
         ctx.restore();
       }
     }
