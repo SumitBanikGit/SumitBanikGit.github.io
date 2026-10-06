@@ -10,6 +10,9 @@ which build.py writes). Only aggregate numbers per country are published.
 """
 import json
 import os
+import re
+import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -20,12 +23,29 @@ START = "2026-10-01T00:00:00Z"                 # the day the counting script wen
 OUT = Path("assets/visitors.json")
 
 
+class Failed(Exception):
+    """GoatCounter could not be read: the message says why, and what to check."""
+
+
 def get(path, token, **params):
     url = API + path + "?" + urllib.parse.urlencode(params)
-    req = urllib.request.Request(url, headers={"Authorization": "Bearer " + token,
-                                               "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.load(r)
+    req = urllib.request.Request(url, headers={"Authorization": "Bearer " + token, "Content-Type": "application/json",
+                                               "User-Agent": "sumitbanikgit.github.io visitor statistics"})
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.load(r)
+    except urllib.error.HTTPError as e:         # say what GoatCounter answered (a wrong key is the usual cause)
+        body = e.read().decode("utf-8", "replace")
+        try:
+            why = json.loads(body).get("error") or e.reason
+        except ValueError:
+            m = re.search(r"<p>(.*?)</p>", body, re.S)
+            why = " ".join(m.group(1).split()) if m else e.reason
+        hint = {401: " Check the GOATCOUNTER_TOKEN secret: GoatCounter does not accept this key.",
+                403: " The key needs the Read statistics permission, with access to sumitbanik.goatcounter.com."}.get(e.code, "")
+        raise Failed(f"GoatCounter answered {e.code} ({why}) for {path}.{hint}") from None
+    except urllib.error.URLError as e:
+        raise Failed(f"Could not reach GoatCounter: {e.reason}.") from None
 
 
 def collect(token):
@@ -55,20 +75,24 @@ def collect(token):
     return dict(total=total, since=START[:10], countries=ranked)
 
 
-def report(line):
-    """Print a line, and show it on the workflow run too (as a notice and in the summary)."""
-    print(f"::notice title=Visitor statistics::{line}" if os.environ.get("GITHUB_ACTIONS") else line)
+def report(line, level="notice"):
+    """Print a line, and show it on the workflow run too (as a notice or an error, and in the summary)."""
+    print(f"::{level} title=Visitor statistics::{line}" if os.environ.get("GITHUB_ACTIONS") else line)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as f:
             f.write(line + "\n")
 
 
 def main():
-    token = os.environ.get("GOATCOUNTER_TOKEN")
+    token = (os.environ.get("GOATCOUNTER_TOKEN") or "").strip()     # (a key pasted with a space or line break still works)
     if not token:
         report("The GOATCOUNTER_TOKEN secret is not set, so there is nothing to fetch.")
         return
-    data = collect(token)
+    try:
+        data = collect(token)
+    except Failed as e:
+        report(str(e), "error")
+        sys.exit(1)
     found = f"{data['total']} visits from {len(data['countries'])} countries since {data['since']}."
     old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
     if {k: old.get(k) for k in data} == data:
