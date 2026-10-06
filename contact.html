@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
-<link rel="stylesheet" href="assets/style.css?v=6ac2c061">
+<link rel="stylesheet" href="assets/style.css?v=6ac4c6cd">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-contact">
@@ -80,7 +80,7 @@
     <p class="reach-addr">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory<br>2575 Sand Hill Road<br>Menlo Park, CA 94025<br>United States</p>
         <div class="local-time" data-tz="America/Los_Angeles">
       <svg class="clock" viewBox="0 0 40 40" aria-hidden="true"><circle class="face" cx="20" cy="20" r="18.2"/><line class="tick" x1="20.00" y1="4.80" x2="20.00" y2="3.00"/><line class="tick" x1="27.60" y1="6.84" x2="28.50" y2="5.28"/><line class="tick" x1="33.16" y1="12.40" x2="34.72" y2="11.50"/><line class="tick" x1="35.20" y1="20.00" x2="37.00" y2="20.00"/><line class="tick" x1="33.16" y1="27.60" x2="34.72" y2="28.50"/><line class="tick" x1="27.60" y1="33.16" x2="28.50" y2="34.72"/><line class="tick" x1="20.00" y1="35.20" x2="20.00" y2="37.00"/><line class="tick" x1="12.40" y1="33.16" x2="11.50" y2="34.72"/><line class="tick" x1="6.84" y1="27.60" x2="5.28" y2="28.50"/><line class="tick" x1="4.80" y1="20.00" x2="3.00" y2="20.00"/><line class="tick" x1="6.84" y1="12.40" x2="5.28" y2="11.50"/><line class="tick" x1="12.40" y1="6.84" x2="11.50" y2="5.28"/><line class="h" x1="20" y1="21.5" x2="20" y2="11"/><line class="m" x1="20" y1="22" x2="20" y2="6.5"/><line class="s" x1="20" y1="23.5" x2="20" y2="5"/><circle class="hub" cx="20" cy="20" r="1.5"/></svg>
-      <div><span class="lt-label">Local time at SLAC</span><span class="lt-time" aria-live="off"></span></div>
+      <div><span class="lt-label">Local time at SLAC</span><span class="lt-time" aria-live="off"></span><span class="lt-diff"></span></div>
     </div>
     <script>
     (function () {                              // a clock showing the time in Menlo Park, wherever the visitor is
@@ -90,7 +90,18 @@
       var hh = box.querySelector('.h'), mh = box.querySelector('.m'), sh = box.querySelector('.s'), out = box.querySelector('.lt-time');
       var num = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23' });
       var zone = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' });
+      var day = new Intl.DateTimeFormat('en-US', { timeZone: tz, year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', hourCycle: 'h23' });
+      var gapOut = box.querySelector('.lt-diff');
       function part(p, t) { for (var i = 0; i < p.length; i++) if (p[i].type === t) return +p[i].value; return 0; }
+      function hours(m) {                       // 540 is 9 hours, 750 is 12½ hours
+        var h = Math.floor(m / 60), q = ({ 15: '¼', 30: '½', 45: '¾' })[m % 60] || '';
+        return (h || !q ? h : '') + q + (m === 60 ? ' hour' : ' hours');
+      }
+      function gap(d) {                         // how far the clock at SLAC is from the visitor's own
+        var p = day.formatToParts(d), there = Date.UTC(part(p, 'year'), part(p, 'month') - 1, part(p, 'day'), part(p, 'hour') % 24, part(p, 'minute'));
+        var off = Math.round((there - Math.floor(d.getTime() / 60000) * 60000) / 60000), m = -d.getTimezoneOffset() - off;
+        return m === 0 ? 'The same as your clock' : hours(Math.abs(m)) + (m > 0 ? ' behind you' : ' ahead of you');
+      }
       function tick() {
         var d = new Date(), p = num.formatToParts(d), H = part(p, 'hour') % 24, M = part(p, 'minute'), S = part(p, 'second');
         hh.setAttribute('transform', 'rotate(' + ((H % 12) * 30 + M / 2) + ' 20 20)');
@@ -98,6 +109,7 @@
         sh.setAttribute('transform', 'rotate(' + S * 6 + ' 20 20)');
         var z = zone.formatToParts(d).filter(function (x) { return x.type === 'timeZoneName'; })[0];
         out.innerHTML = ((H % 12) || 12) + ':' + (M < 10 ? '0' : '') + M + ' ' + (H < 12 ? 'am' : 'pm') + (z ? ' <span class="lt-zone">' + z.value + '</span>' : '');
+        if (S === 0 || !gapOut.textContent) gapOut.textContent = gap(d);
       }
       tick();
       setInterval(tick, still ? 20000 : 1000);
@@ -118,7 +130,7 @@
 <div class="wrap foot">
   <div class="foot-id">
     <div class="foot-name">Sumit Banik</div>
-    <div class="foot-aff">Fundamental Physics Directorate<br>SLAC National Accelerator Laboratory · Stanford&nbsp;University</div>
+    <div class="foot-aff">Fundamental Physics Directorate<br><span class="aff-a">SLAC National Accelerator Laboratory</span><span class="aff-sep"> · </span><span class="aff-a">Stanford&nbsp;University</span></div>
     <a class="foot-mail" href="mailto:banik@stanford.edu">banik@stanford.edu</a>
   </div>
   <div class="visitors" hidden>
