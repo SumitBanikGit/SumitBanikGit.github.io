@@ -2997,3 +2997,5 @@ html.still .stop.now .logo-disc::after, html.still .jm-ping, html.still .hero .a
   .ex-card .ex-go { top: 50%; right: 1rem; margin-top: -.72rem; }
   .ex-card .ex-num { display: none; }         /* (the big numerals would sit on the words) */
 }
+/* CV, phones: lower logo panels on the position and education cards */
+@media (max-width: 30rem) { .blk-logos { height: 5rem; padding: .75rem 1.2rem; gap: 1.3rem; } }

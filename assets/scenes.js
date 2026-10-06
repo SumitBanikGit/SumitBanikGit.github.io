@@ -1832,7 +1832,7 @@
   /* The method of brackets: the bracket, the bracket series of a sum (Rule 2) and the rule
      that evaluates a bracket series (Rule 4), as listed in Sec. 2.1 of the paper. */
   var BRACKETS = {
-    key: 'brackets', paper: '2112.09679', dur: 12, cap: 'Revisiting the method of brackets',
+    key: 'brackets', paper: '2112.09679', dur: 14.5, cap: 'Revisiting the method of brackets',
     lines: [['BRACKET', '\\int_0^∞x^{α−1}\\,\\rm{d}x=\\langle α\\rangle'],
             ['RULE 2', '(A+B)^α=\\frac{1}{Γ(−α)}\\sum_{m,n}φ_{m,n}\\,A^mB^n\\,\\langle −α+m+n\\rangle'],
             ['RULE 4', '\\sum_nφ_n\\,f(n)\\,\\langle an+b\\rangle=\\frac{1}{|a|}\\,f(n^∗)\\,Γ(−n^∗)'],
@@ -1845,7 +1845,7 @@
     frame: function (v, t) {
       var ctx = v.ctx, R = v.reduce, S = v.S, rate = 18, sizes = [S * 1.05, S, S, S * 0.86], t0 = 0.4, total = 0, gap = S * 1.15;
       BRACKETS.lines.forEach(function (L, i) { var ex = extent(mathBox(ctx, L[1], sizes[i]).prims); total += ex[1] - ex[0] + (i ? gap : 0); });
-      var y = v.y + (v.h - total) / 2, x = v.x + 4 + v.lab;
+      var y = v.y + (v.h - total - 16) / 2, x = v.x + 4 + v.lab;   // (room left below for the verdict)
       BRACKETS.lines.forEach(function (L, i) {
         var b = mathBox(ctx, L[1], sizes[i]), ex = extent(b.prims), n = b.prims.length, k = R ? n : Math.max(0, (t - t0) * rate);
         y -= ex[0];
@@ -1854,6 +1854,13 @@
         t0 += n / rate + 0.45;
         y += ex[1] + gap;
       });
+      var rk = R ? 1 : ease((t - t0 - 0.1) / 0.6);   // then what the paper finds (its abstract): Mellin-Barnes does better on both counts
+      if (rk > 0) {
+        var res = '\\rm{With}\\,\\rm{Mellin-Barnes}:\\quad\\rm{no}\\,\\rm{convergence}\\,\\rm{analysis},\\,\\rm{and}\\,\\rm{logarithmic}\\,\\rm{cases}\\,\\rm{too}';
+        var S2 = 11, w = mathBox(ctx, res, S2).w;
+        if (w > v.w - 8) S2 *= (v.w - 8) / w;
+        ctx.save(); ctx.globalAlpha *= rk; drawMath(ctx, res, v.x + 4, v.y + v.h - 9, S2, ink('crimson', 0.95), 'left'); ctx.restore();
+      }
     }
   };
 
