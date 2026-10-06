@@ -3011,3 +3011,7 @@ html[data-theme="dark"] { -webkit-tap-highlight-color: rgba(220, 197, 143, .14);
 /* logos: a WebP copy for the browsers that read it, the picture element taking no box of its own */
 picture.lg { display: contents; }
 picture.lg > source { display: none; }      /* (else it becomes an empty item of a grid such as the journey's discs) */
+/* the search titles are in Cormorant, whose overline sits far above a t (ascent 0.92 em, a t only 0.48 em high), where it read as an
+   underline of the line above: the bar of t-bar is drawn just above the letter instead, leaning with the italic */
+.ss-t .ov { position: relative; text-decoration: none; }
+.ss-t .ov::after { content: ""; position: absolute; left: .15em; right: -.09em; top: .3em; border-top: .07em solid currentColor; }
