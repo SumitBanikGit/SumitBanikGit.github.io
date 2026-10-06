@@ -1,6 +1,6 @@
 # Visitor statistics for the footer map: every 15 minutes, fetch the visit count and the
 # visitors' countries from GoatCounter and commit them to assets/visitors.json (only when they changed).
-# An open page fetches that file again every minute, so a new count shows without reloading.
+# It also runs after every push to main. An open page fetches that file again every minute, so a new count shows without reloading.
 # Needs the repository secret GOATCOUNTER_TOKEN (a GoatCounter API key that can read statistics).
 name: Visitor statistics
 
@@ -8,9 +8,8 @@ on:
   schedule:
     - cron: "4,19,34,49 * * * *"
   workflow_dispatch:
-  push:                                   # and whenever the script itself changes
-    branches: [main]
-    paths: ["tools/visitors.py", ".github/workflows/visitors.yml"]
+  push:                                   # and after every update of the site, as GitHub runs the timed ones late, or drops them, when it is busy
+    branches: [main]                      # (the commits of this workflow itself, made with its own token, start no new run)
 
 permissions:
   contents: write
