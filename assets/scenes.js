@@ -2418,7 +2418,7 @@
     { s: [[1, 2, 3], [1, 2, 4], [2, 4, 5]], b: 'B_{13}+B_{35}+B_{45}' }
   ];
   var TRIF = {
-    key: 'triangulation', paper: '2309.00409', dur: 13, cap: 'Triangulations of point configurations',
+    key: 'triangulation', paper: '2309.00409', dur: 14.5, cap: 'Triangulations of point configurations',
     layout: function (v) {
       v.S = Math.max(9, Math.min(12, v.w / 44));
       var side = Math.min((v.h - 26) / 0.866, v.w * 0.5);
@@ -2453,8 +2453,10 @@
       ctx.restore();
       var px = T.x + T.s + 20, room = v.x + v.w - px;  // which triangulation, and the series it gives
       if (room > 110) {
+        ctx.font = font(7.5, SANS, 600); tracking(ctx, 1.1);    // (smaller where the column is narrow, as on a 360 px phone)
+        var hz = Math.min(7.5, 7.5 * (room - 4) / ctx.measureText('FIVE REGULAR TRIANGULATIONS').width); tracking(ctx, 0);
         ctx.save(); ctx.globalAlpha *= k0;
-        caps(ctx, 'FIVE REGULAR TRIANGULATIONS', px, v.y + 16, ink('slate', 0.85), 7.5);
+        caps(ctx, 'FIVE REGULAR TRIANGULATIONS', px, v.y + 16, ink('slate', 0.85), hz);
         ctx.restore();
         TRI_SETS.forEach(function (set, j) {
           var shown = R || t > t0 + j * step;
@@ -2466,6 +2468,14 @@
           drawMath(ctx, set.b, px + S * 2.1, yy, S * 0.95, ink('green', 0.95), 'left');
           ctx.restore();
         });
+        var fk = R ? 1 : ease((t - 10.9) / 0.7);      // and what it buys (the abstract): far quicker than the cones,
+        if (fk > 0) {                                  // which is what reaches the 104-fold 15-point integral
+          var fy = v.y + 38 + 4 * (S * 2.2) + S * 2.5;
+          ctx.save(); ctx.globalAlpha *= fk;
+          caps(ctx, 'REMARKABLY FASTER', px, fy, ink('green', 0.95), 7.5);
+          caps(ctx, 'THAN CONIC HULLS', px, fy + 12, ink('slate', 0.85), 7.5);
+          ctx.restore();
+        }
       }
     }
   };
