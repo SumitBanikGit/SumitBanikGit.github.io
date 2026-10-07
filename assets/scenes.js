@@ -1727,7 +1727,10 @@
           ctx.strokeStyle = ink('green', 0.8); ctx.lineWidth = 0.8; ctx.stroke();
         });
         drawMath(ctx, 'T_' + (j + 1), px + 2 * s + 12, yy + 4, m, ink(on ? 'brassD' : 'slate', 1), 'left');
-        if (j === 1 && v.w > 420) drawMath(ctx, 'H_3,\\,H_3,\\,G_1', px + 2 * s + 12 + m * 2.2, yy + 4, m * 0.92, ink('slate', 0.95), 'left');
+        if (j === 1) {                               // what it gives, two Horn H3 and a Horn G1: wherever it fits, on phones too
+          var hx = px + 2 * s + 12 + m * 2.2, hz = m * 0.92, fit = (v.x + v.w - 3 - hx) / mathBox(ctx, 'H_3,\\,H_3,\\,G_1', hz).w;
+          if (fit >= 0.75) drawMath(ctx, 'H_3,\\,H_3,\\,G_1', hx, yy + 4, hz * Math.min(1, fit), ink('slate', 0.95), 'left');
+        }
         ctx.restore();
       });
       var nk = R ? 1 : ease((t - 6) / 0.6);
