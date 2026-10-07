@@ -2944,7 +2944,8 @@ html:not(.js) .motion-toggle { display: none; }
 html.still .scroll-cue span, html.still .news li:first-child::before, html.still .ticker-track, html.still .stop.now .stop-node::after,
 html.still .stop.now .logo-disc::after, html.still .jm-ping, html.still .hero .aurora, html.still .visitors .ring { animation-play-state: paused; }
 @media (max-width: 52rem) {                         /* on a phone or tablet: at the top, beside the search and theme buttons */
-  .motion-toggle { top: .85rem; bottom: auto; left: auto; right: 6.55rem; width: 2.3rem; height: 2.3rem; opacity: 1; color: #dcc58f;
+  /* (4 px higher than theirs, since the header starts below the 4 px rule at the top of the page) */
+  .motion-toggle { top: calc(.85rem - 4px); bottom: auto; left: auto; right: 6.55rem; width: 2.3rem; height: 2.3rem; opacity: 1; color: #dcc58f;
                    background: rgba(28, 53, 47, .88); border-color: rgba(220, 197, 143, .6); box-shadow: 0 6px 16px -8px rgba(0, 0, 0, .5); }
   html.still .motion-toggle { border-color: #dcc58f; }
 }
