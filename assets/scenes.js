@@ -4016,7 +4016,10 @@
       tracking(ctx, 0);
       ctx.font = font(12.5, DISPLAY, 500, true);
       var nw = groups.map(function (g) { return { x: (g.xa + (g.open ? X(e.now) : g.xb)) / 2, w: ctx.measureText(g.name).width }; });
-      var sw = st.map(function (s) { return { x: (X(s.s) + X(s.e || e.now)) / 2, w: mathBox(ctx, '\\rm{' + s.t + '}', 13).w }; });
+      var labs = [];                                  // stages in a row with the same title share one label (the two postdocs)
+      st.forEach(function (s, i) { var l = labs[labs.length - 1]; if (l && st[l.b].t === s.t) l.b = i; else labs.push({ a: i, b: i }); });
+      var sw = labs.map(function (l) { return { x: (X(st[l.a].s) + X(st[l.b].e || e.now)) / 2, w: mathBox(ctx, '\\rm{' + st[l.a].t + '}', 13).w }; });
+      e.labs = labs;
       e.cityAt = placeLabels(cw, lo, hi, 10);
       e.nameAt = placeLabels(nw, lo, hi, 12);
       e.stageAt = placeLabels(sw, lo, hi, 7);
@@ -4053,7 +4056,7 @@
         var end = s.e || e.now;
         if (yc < s.s) return;
         if (yc <= end + 0.001) active = i;
-        var xa = X(s.s), xb = X(Math.min(end, yc)), col = s.k === 'edu' ? 'brass' : 'pine', sp = e.stageAt[i];
+        var xa = X(s.s), xb = X(Math.min(end, yc)), col = s.k === 'edu' ? 'brass' : 'pine';
         ctx.strokeStyle = ink(col, 0.95); ctx.lineWidth = 6; ctx.lineCap = 'butt';
         ctx.beginPath(); ctx.moveTo(xa + 1.5, e.ay); ctx.lineTo(Math.max(xa + 1.5, xb - 1.5), e.ay); ctx.stroke();
         if (!s.e && done) {                             // the present position runs on beyond today
@@ -4063,11 +4066,14 @@
           ctx.strokeStyle = ink(col, 0.35); ctx.lineWidth = 1.4; ctx.lineCap = 'round';
           ctx.beginPath(); ctx.moveTo(ex - 6, e.ay - 4); ctx.lineTo(ex, e.ay); ctx.lineTo(ex - 6, e.ay + 4); ctx.stroke(); ctx.lineCap = 'butt';
         }
-        var k = R ? 1 : clamp01((yc - s.s) / 0.6);
-        ctx.save(); ctx.globalAlpha *= k;
-        drawMath(ctx, '\\rm{' + s.t + '}', sp.x, e.ay - 14 - sp.row * 14, 13, ink(i === active ? 'green' : 'slate', 0.95), 'center');
-        ctx.restore();
         dot(ctx, xa, e.ay, 4, ink('paper', 1)); ring(ctx, xa, e.ay, 4, ink(col === 'brass' ? 'brassD' : 'pine', 1), 1.3);
+      });
+      e.labs.forEach(function (l, j) {                                                               // their labels
+        var s = st[l.a], sp = e.stageAt[j], k = R ? 1 : clamp01((yc - s.s) / 0.6);
+        if (yc < s.s) return;
+        ctx.save(); ctx.globalAlpha *= k;
+        drawMath(ctx, '\\rm{' + s.t + '}', sp.x, e.ay - 14 - sp.row * 14, 13, ink(active >= l.a && active <= l.b ? 'green' : 'slate', 0.95), 'center');
+        ctx.restore();
       });
       if (!R) {                                                                                       // the present, moving along
         var xc = X(yc), g = ctx.createRadialGradient(xc, e.ay, 0, xc, e.ay, 12);
