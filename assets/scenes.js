@@ -1084,8 +1084,14 @@
      building blocks form the series representation S2 = B125 + B126. */
   var MC_E = [[-1, 0, 0], [0, -1, 0], [0, 0, -1], [1, 1, 0], [1, 0, 1], [0, 1, 1]];
   var MC_CONES = [{ g: [0, 1, 4], col: 'crimson', lab: 'C_{125}', at: 2.1 }, { g: [0, 1, 5], col: 'brass', lab: 'C_{126}', at: 3.9 }];
+  /* and the results of the abstract: the two conjectures, deduced from a Yangian bootstrap analysis, that give the
+     massive one-loop conformal n-point integral as multiple hypergeometric series are proved, and shown to be related
+     by a tower of new quadratic transformations (with reduced motion the slide shows the conjectures) */
+  var MC_LINES = [[7.8, 'slate', '17 BUILDING BLOCKS', '14 SERIES REPRESENTATIONS'],
+                  [10.2, 'green', 'TWO YANGIAN BOOTSTRAP', 'CONJECTURES PROVED'],
+                  [12.6, 'green', 'RELATED BY NEW QUADRATIC', 'TRANSFORMATIONS']];
   var MASSCONF = {
-    key: 'massconf', paper: '2012.15646', dur: 13, cap: 'Massive one-loop conformal integrals',
+    key: 'massconf', paper: '2012.15646', dur: 15, cap: 'Massive one-loop conformal integrals',
     layout: function (v) {
       v.S = Math.max(8.5, Math.min(12, v.w / 46));
       var side = Math.min(v.h - 6, v.w * 0.52);
@@ -1159,13 +1165,14 @@
         drawMath(ctx, 'S_2=B_{125}+B_{126}', px, ly + 3 * S * 1.75 + S * 0.9, S * 1.05, ink('green', 0.95), 'left');
         ctx.restore();
       }
-      var nk = R ? 1 : ease((t - 7.8) / 0.7);
-      if (nk > 0) {
-        ctx.save(); ctx.globalAlpha *= nk;
-        caps(ctx, '17 BUILDING BLOCKS', px, v.y + v.h - 22, ink('slate', 0.85), 7.5);
-        caps(ctx, '14 SERIES REPRESENTATIONS', px, v.y + v.h - 9, ink('slate', 0.85), 7.5);
+      MC_LINES.forEach(function (L, i) {            // what the cones give, then what the paper shows with them
+        var k = R ? (i === 1 ? 1 : 0) : ease((t - L[0]) / 0.7) * (i + 1 < MC_LINES.length ? 1 - ease((t - MC_LINES[i + 1][0]) / 0.7) : 1);
+        if (k <= 0) return;
+        ctx.save(); ctx.globalAlpha *= k;
+        caps(ctx, L[2], px, v.y + v.h - 22, ink(L[1], i ? 0.95 : 0.85), 7.5);
+        caps(ctx, L[3], px, v.y + v.h - 9, ink(L[1], i ? 0.95 : 0.85), 7.5);
         ctx.restore();
-      }
+      });
     }
   };
 
