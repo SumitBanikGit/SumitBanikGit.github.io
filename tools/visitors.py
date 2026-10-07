@@ -75,6 +75,7 @@ def collect(token):
         if code in where:
             c["x"], c["y"] = where[code][:2]
     ranked = sorted((c for c in countries.values() if c["v"] > 0), key=lambda c: (-c["v"], c["n"]))
+    total = max(total, sum(c["v"] for c in ranked))   # GoatCounter updates its total and its places apart: never fewer than they add up to
     return dict(total=total, since=START[:10], countries=ranked)
 
 

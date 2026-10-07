@@ -164,13 +164,14 @@
     function share(c) { var p = 100 * c.v / d.total; return p < 0.1 ? 'under 0.1 %' : (p >= 10 ? Math.round(p) : p.toFixed(1).replace('.0', '')) + ' %'; }
     function rank(c) {                         // first of 13 countries, joint tenth of 13 countries
       var k = 1 + all.filter(function (o) { return o.v > c.v; }).length, tie = all.some(function (o) { return o !== c && o.v === c.v; });
-      return (tie ? 'joint ' : '') + (ORD[k - 1] || k + 'th') + ' of ' + n + ' countries';
+      return n === 1 ? 'the only country so far' : (tie ? 'joint ' : '') + (ORD[k - 1] || k + 'th') + ' of ' + n + ' countries';
     }
     function sig(x) { return JSON.stringify([x.total, (x.countries || []).map(function (c) { return c.c + c.v; })]); }
 
     var leads = document.createElementNS(NS, 'g'); leads.setAttribute('class', 'vis-leads'); svg.appendChild(leads);
     function use(nd) {                        // take in a set of numbers: a bubble for each country, the busiest drawn last
       d = nd; all = d.countries || []; n = all.length; top = n ? all[0].v : 1; key = sig(d);
+      d.total = Math.max(d.total, all.reduce(function (a, c) { return a + c.v; }, 0));   // (never fewer than the countries add up to)
       since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
       line = (d.total === 1 ? 'visit' : 'visits') + (n ? ' from ' + n + (n === 1 ? ' country' : ' countries') : '') + ' since ' + since;
       all.forEach(function (c) { c.name = (THE.test(c.c) ? 'the ' : '') + c.n; });
