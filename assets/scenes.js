@@ -1358,7 +1358,7 @@
     { at: 4.3, lab: ['m', 'M', 'M'], col: ['brassD', 'pine', 'pine'], cap: 'TWO MASS SCALES · THE PION AND THE NUCLEON' },
     { at: 7.9, lab: ['m_1', 'm_2', 'm_3'], col: ['brassD', 'pine', 'crimson'], cap: 'THREE MASS SCALES · THE PION, KAON AND ETA' }];
   var SUNSET = {
-    key: 'sunset', paper: '2512.07727', dur: 13, cap: 'Sunset integrals with up to three mass scales',
+    key: 'sunset', paper: '2512.07727', dur: 15, cap: 'Sunset integrals with up to three mass scales',
     layout: function (v) { diagramLayout(v, SUNSET_D); },
     frame: function (v, t) {
       var ctx = v.ctx, R = v.reduce, F = v.F, si = R ? 2 : (t < SUNSET_ST[1].at ? 0 : t < SUNSET_ST[2].at ? 1 : 2);
@@ -1389,7 +1389,13 @@
       if (mk > 0) {                                  // what every sunset reduces to, by integration by parts
         ctx.save(); ctx.globalAlpha *= mk;
         drawMath(ctx, 'H_{1,1,1},\\quad H_{2,1,1},\\quad H_{1,2,1},\\quad H_{1,1,2}', v.x + 4, v.y + 16, 12, ink('green', 0.95), 'left');
-        caps(ctx, 'THE FOUR MASTER INTEGRALS', v.x + 4, v.y + 32, ink('brassD', 0.95), 7.5);
+        var xk = R ? 1 : ease((t - 11.9) / 0.7), res = 'EXACT, AS SINGLE AND DOUBLE HYPERGEOMETRIC SERIES';   // and how the paper
+        if (xk < 1) { ctx.save(); ctx.globalAlpha *= 1 - xk; caps(ctx, 'THE FOUR MASTER INTEGRALS', v.x + 4, v.y + 32, ink('brassD', 0.95), 7.5); ctx.restore(); }
+        if (xk > 0) {                                // solves them (its abstract): exact results as convergent series
+          ctx.font = font(7.5, SANS, 600); tracking(ctx, 1.1);
+          var cz = Math.min(7.5, 7.5 * (v.w - 8) / ctx.measureText(res).width); tracking(ctx, 0);
+          ctx.save(); ctx.globalAlpha *= xk; caps(ctx, res, v.x + 4, v.y + 32, ink('green', 0.95), cz); ctx.restore();
+        }
         ctx.restore();
       }
       [[S0, 1 - sk], [S1, sk]].forEach(function (P) {  // the stage, named below the diagram
