@@ -1216,7 +1216,7 @@
     return x;
   }
   var POLYGAMMA = {
-    key: 'polygamma', paper: '2512.19803', dur: 14.5, cap: 'MB integrals with polygamma functions',
+    key: 'polygamma', paper: '2512.19803', dur: 15.5, cap: 'MB integrals with polygamma functions',
     layout: function (v) {
       v.S = Math.max(8.5, Math.min(12, v.w / 44));
       v.A = { L: v.x + 8, R: v.x + v.w * (v.w > 420 ? 0.6 : 0.64), T: v.y + 6, B: v.y + v.h - 18 };
@@ -1338,6 +1338,14 @@
         ctx.save(); ctx.globalAlpha *= k3;
         caps(ctx, 'SO THE POLYGAMMA IS WRITTEN AS', px, y0 + S * 5.6, ink('slate', 0.85), 7);
         drawMath(ctx, 'ψ(m,z)=\\rm{lim}_{a,b→0}\\,∂_b^m\\,∂_a\\frac{Γ(z+a+b)}{Γ(z+b)}', px, y0 + S * 8.4, S * 0.92, ink('green', 0.95), 'left');
+        ctx.restore();
+      }
+      var k4 = R ? 1 : ease((t - 5.4) / 0.7);      // where both ways now live (the abstract: an updated MBConicHulls.wl)
+      if (k4 > 0) {
+        var ws = '\\rm{Both}\\,\\rm{ways}\\,\\rm{in}\\,\\rm{MBConicHulls}\\,1.3', wz = S * 0.92;
+        wz *= Math.min(1, (room - 4) / mathBox(ctx, ws, wz).w);
+        ctx.save(); ctx.globalAlpha *= k4;
+        drawMath(ctx, ws, px, y0 + S * 11.2, wz, ink('green', 0.95), 'left');
         ctx.restore();
       }
     }
