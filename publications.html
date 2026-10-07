@@ -1246,12 +1246,15 @@
     };
     nav.addEventListener('scroll', edges, { passive: true }); window.addEventListener('resize', edges); requestAnimationFrame(edges);
   }
-  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer'), cue = document.querySelector('.scroll-cue');
+  var bar = document.querySelector('.progress'), top = document.querySelector('.to-top'), foot = document.querySelector('footer'), cue = document.querySelector('.scroll-cue'),
+      col = document.getElementById('main'), lastY = window.scrollY, upward = false;
   function update() {
-    var max = document.documentElement.scrollHeight - window.innerHeight;
-    if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? window.scrollY / max : 0) + ')';
+    var max = document.documentElement.scrollHeight - window.innerHeight, y = window.scrollY;
+    if (bar) bar.style.transform = 'scaleX(' + (max > 0 ? y / max : 0) + ')';
+    if (Math.abs(y - lastY) > 8) { upward = y < lastY; lastY = y; }
     var atFoot = foot && foot.getBoundingClientRect().top < window.innerHeight;   // the footer has its own link up
-    if (top) top.classList.toggle('show', window.scrollY > window.innerHeight * 0.9 && !atFoot);
+    var over = top && col && col.getBoundingClientRect().right > top.getBoundingClientRect().left - 4;   // over the text (a phone, a tablet,
+    if (top) top.classList.toggle('show', y > window.innerHeight * 0.9 && !atFoot && (!over || upward));   // a small window): only on the way back up
     if (cue) cue.classList.toggle('gone', window.scrollY > 60);      // the scroll cue steps aside once the reader scrolls
   }
   var upNext = false, later = function () { if (!upNext) { upNext = true; requestAnimationFrame(function () { upNext = false; update(); }); } };
