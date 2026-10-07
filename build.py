@@ -1262,7 +1262,7 @@ VISITORS_JS = r"""<script>
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, touch = matchMedia('(hover: none)').matches, SRC = '/assets/visitors.json';
   function load() { return fetch(SRC, { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }); }
   load().then(function (d0) {
-    if (!d0 || !(d0.total > 0)) return;
+    if (!d0 || !(d0.total >= 0)) return;      // (shown at nought too, right after the count starts again)
     var NS = 'http://www.w3.org/2000/svg', map = box.querySelector('.vis-map'), svg = box.querySelector('.vis-dots'),
         tag = box.querySelector('.vis-tag'), label = box.querySelector('.vis-label'), sub = box.querySelector('.vis-sub'),
         bar = box.querySelector('.vis-share'), say = box.querySelector('.vis-say'), odo = box.querySelector('.vis-count');
@@ -1284,7 +1284,7 @@ VISITORS_JS = r"""<script>
     var leads = document.createElementNS(NS, 'g'); leads.setAttribute('class', 'vis-leads'); svg.appendChild(leads);
     function use(nd) {                        // take in a set of numbers: a bubble for each country, the busiest drawn last
       d = nd; all = d.countries || []; n = all.length; top = n ? all[0].v : 1; key = sig(d);
-      since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+      since = new Date(d.since + 'T12:00:00Z').toLocaleString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
       line = (d.total === 1 ? 'visit' : 'visits') + (n ? ' from ' + n + (n === 1 ? ' country' : ' countries') : '') + ' since ' + since;
       all.forEach(function (c) { c.name = (THE.test(c.c) ? 'the ' : '') + c.n; });
       pts.forEach(function (c) { leads.removeChild(c.ln); leads.removeChild(c.sp); svg.removeChild(c.g); });
@@ -1304,8 +1304,8 @@ VISITORS_JS = r"""<script>
         c.grow = c.g.firstChild; c.t = c.g.querySelector('text');
         svg.appendChild(c.g);
       });
-      box.querySelector('.vis-sum').textContent = d.total.toLocaleString('en-US') + ' ' + line + '. ' +
-        all.map(function (c) { return c.n + ' ' + c.v; }).join(', ') + '.';
+      box.querySelector('.vis-sum').textContent = d.total.toLocaleString('en-US') + ' ' + line + '.' +
+        (n ? ' ' + all.map(function (c) { return c.n + ' ' + c.v; }).join(', ') + '.' : '');
     }
     function layout() {                       // the bubbles at their countries, pushed apart until none overlap
       var W = map.clientWidth, H = map.clientHeight;
@@ -1400,7 +1400,7 @@ VISITORS_JS = r"""<script>
       count(picked ? picked.v : d.total);
       bar.style.setProperty('--p', (picked ? 100 * picked.v / d.total : 100).toFixed(2) + '%');
       swap(label, picked ? (picked.v === 1 ? 'visit' : 'visits') + ' from ' + picked.name + ' since ' + since : line);
-      swap(sub, picked ? share(picked) + ' of all visits · ' + rank(picked) : hint);
+      swap(sub, picked ? share(picked) + ' of all visits · ' + rank(picked) : n ? hint : '');   // (no countries yet, nothing to tap)
     }
     function pick(c) {
       picked = c || null; show();
@@ -1443,7 +1443,7 @@ VISITORS_JS = r"""<script>
     });
 
     use(d0); wheels(d.total); count(d.total);
-    label.textContent = line; sub.textContent = hint;
+    label.textContent = line; sub.textContent = n ? hint : '';
     box.hidden = false;
     layout(); draw(0);
     if ('ResizeObserver' in window) new ResizeObserver(function () {
@@ -1451,7 +1451,7 @@ VISITORS_JS = r"""<script>
     }).observe(map);
     function poll() {                         // the numbers are fetched again every minute while the page is on screen
       if (!ready || document.hidden) return;
-      load().then(function (nd) { if (nd && nd.total > 0 && sig(nd) !== key) update(nd); }).catch(function () {});
+      load().then(function (nd) { if (nd && nd.total >= 0 && sig(nd) !== key) update(nd); }).catch(function () {});
     }
     function finish() {
       draw(9); ready = true; box.classList.add('live');
@@ -1478,7 +1478,7 @@ VISITORS_JS = r"""<script>
 
 
 def render_visitors():
-    """The footer block for the visitor map and count; it stays hidden until there are visits to show.
+    """The footer block for the visitor map and count; it stays hidden until the numbers have loaded.
     Each country is a bubble with its number of visits; choosing one turns the counter and the lines under it to that country."""
     return ('<div class="visitors" hidden>\n'
             '    <div class="vis-map" role="group" tabindex="0" aria-label="Visits by country. The arrow keys go through the countries.">'

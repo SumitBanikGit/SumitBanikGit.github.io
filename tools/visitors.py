@@ -19,7 +19,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 API = "https://sumitbanik.goatcounter.com/api/v0"
-START = "2026-10-01T00:00:00Z"                 # the day the counting script went live
+START = "2026-10-07T10:00:00Z"                 # counting started again on 7 October 2026 at 12:00 in Zürich, as asked
+                                               # (GoatCounter keeps its numbers by the hour, so a start is on the hour)
 OUT = Path("assets/visitors.json")
 
 
@@ -50,6 +51,8 @@ def get(path, token, **params):
 
 def collect(token):
     end = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    if end <= datetime.strptime(START, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc):
+        return dict(total=0, since=START[:10], countries=[])    # the count has not begun yet: nothing to ask for
     span = dict(start=START, end=end.strftime("%Y-%m-%dT%H:%M:%SZ"))   # up to the end of the current hour
     total = int(get("/stats/total", token, **span).get("total") or 0)
     where = json.loads(Path("assets/map/countries.json").read_text(encoding="utf-8"))
