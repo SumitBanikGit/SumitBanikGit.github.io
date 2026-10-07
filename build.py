@@ -601,24 +601,44 @@ _TEX_SYM = {"alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ", "epsilon"
             "to": "→", "rightarrow": "→", "approx": "≈", "simeq": "≃", "sim": "∼", "pm": "±", "mp": "∓", "times": "×",
             "cdot": "·", "geq": "≥", "leq": "≤", "geqslant": "⩾", "leqslant": "⩽", "gtrapprox": "⪆", "lessapprox": "⪅",
             "gtrsim": "≳", "lesssim": "≲", "prime": "′", "ell": "ℓ", "infty": "∞", "partial": "∂", "neq": "≠",
-            "propto": "∝", "ldots": "…", "dots": "…", "%": "%", "{": "{", "}": "}", ",": " ", ";": " ", ":": " ",
+            "propto": "∝", "ldots": "…", "dots": "…", "dagger": "†", "%": "%", "{": "{", "}": "}", ",": " ", ";": " ", ":": " ",
             "!": "", " ": " ", "quad": " ", "qquad": " ", "&": "&amp;", "$": "$", "#": "#", "_": "_"}
 
 
+_TEX_REL = set("=<>→≈≃∼≠≥≤⩾⩽⪆⪅≳≲∝")             # relations and binary operators, spaced as TeX spaces them
+_TEX_BIN = set("+−±∓×·")
+_TEX_SPACE = {",": " ", ";": " ", ":": " ", " ": " ", "quad": " ", "qquad": "  "}
+
+
 def _tex_math(src):
-    """A little TeX for the maths in abstracts: letters in italics, scripts, bars, Greek and the usual signs."""
+    """A little TeX for the maths in abstracts: letters in italics, scripts, bars, Greek and the usual signs. Spaced as
+    TeX does it: the spaces of the source are ignored, relations and binary operators get room on both sides (none in
+    scripts, and none for a sign in front, as in -2), a comma a thin space after it, and thin spaces work as in TeX."""
     i, n = 0, len(src)
 
-    def group():
+    def group(script=False, text=False):
         nonlocal i
         if i < n and src[i] == "{":
             i += 1
-            return seq("}")
-        return seq(None, one=True)
+            return seq("}", script=script, text=text)
+        return seq(None, one=True, script=script, text=text)
 
-    def seq(close, one=False, upright=False):
+    def seq(close, one=False, upright=False, script=False, text=False):
         nonlocal i
-        out = []
+        out, st = [], {"prev": None, "pend": "", "tight": False}
+
+        def atom(h, kind="ord"):
+            if kind == "bin" and st["prev"] in (None, "bin", "rel", "open", "punct"):
+                kind = "ord"                              # a sign in front of something, not an operation
+            if kind in ("rel", "punct", "close") and st["prev"] == "bin":
+                out[-1], st["pend"], st["prev"] = out[-1].lstrip("\u00a0"), "", "ord"   # nor one followed by a relation
+            spaced = not (script or text) and kind in ("bin", "rel")
+            if spaced and st["prev"] is not None and not st["tight"]:
+                st["pend"] = st["pend"] or " "        # (never a line break before the sign)
+            out.append(st["pend"] + h)
+            st["pend"] = " " if spaced else " " if kind == "punct" and not (script or text) else ""
+            st["prev"], st["tight"] = kind, False
+
         while i < n:
             c = src[i]
             if close and c == close:
@@ -626,11 +646,12 @@ def _tex_math(src):
                 break
             if c == "{":
                 i += 1
-                out.append(seq("}", upright=upright))
+                atom(seq("}", upright=upright, script=script, text=text))
             elif c in "^_":
                 i += 1
                 tag = "sup" if c == "^" else "sub"
-                out.append(f"<{tag}>{group()}</{tag}>")
+                out.append(f"<{tag}>{group(script=True)}</{tag}>")   # part of the atom before it
+                st["prev"] = st["prev"] or "ord"
             elif c == "\\":
                 m = re.match(r"\\([A-Za-z]+|.)", src[i:])
                 cmd = m.group(1)
@@ -638,31 +659,54 @@ def _tex_math(src):
                 if cmd in ("bar", "overline"):
                     while i < n and src[i] == " ":
                         i += 1
-                    out.append(f'<span class="ov">{group()}</span>')
-                elif cmd in ("rm", "mathrm"):
-                    if cmd == "mathrm":
-                        out.append(_upright(group()))
-                    else:
-                        upright = True
+                    atom(f'<span class="ov">{group(script=script)}</span>')
+                elif cmd == "rm":
+                    upright = True
+                elif cmd == "mathrm":
+                    atom(_upright(group(script=script)))
                 elif cmd in ("text", "textrm", "mbox"):
-                    out.append(_upright(group()))
+                    atom(_upright(group(text=True)))
+                elif cmd == "!":
+                    st["pend"], st["tight"] = "", True
+                elif cmd in _TEX_SPACE:
+                    if not script:
+                        out.append(st["pend"] + _TEX_SPACE[cmd])
+                    st["pend"] = ""
                 else:
-                    out.append(_TEX_SYM.get(cmd, cmd))
+                    sym = _TEX_SYM.get(cmd, cmd)
+                    atom(sym, "rel" if sym in _TEX_REL else "bin" if sym in _TEX_BIN else "open" if sym == "{"
+                         else "close" if sym == "}" else "ord")
             elif c == "~":
-                out.append(" ")
+                out.append(st["pend"] + " ")
+                st["pend"] = ""
+                i += 1
+            elif c.isspace():
+                if text:
+                    out.append(c)
                 i += 1
             elif c.isalpha() and c.isascii():
-                j = i
-                while j < n and src[j].isalpha() and src[j].isascii():
+                j = i + 1
+                while not one and j < n and src[j].isalpha() and src[j].isascii():
                     j += 1
                 word = src[i:j]
-                out.append(word if upright else f"<i>{word}</i>")
+                atom(word if upright or text else f"<i>{word}</i>")
+                i = j
+            elif c.isdigit() or c == ".":
+                j = i + 1
+                while not one and j < n and (src[j].isdigit() or src[j] == "." and j + 1 < n and src[j + 1].isdigit()):
+                    j += 1
+                atom(src[i:j])
                 i = j
             else:
-                out.append({"<": "&lt;", ">": "&gt;", "&": "&amp;"}.get(c, c))
+                ch = {"-": "−", "<": "&lt;", ">": "&gt;", "&": "&amp;"}.get(c, c)
+                raw = {"&lt;": "<", "&gt;": ">"}.get(ch, ch)
+                atom(ch, "rel" if raw in _TEX_REL else "bin" if raw in _TEX_BIN else "open" if c in "([" else
+                     "close" if c in ")]" else "punct" if c in ",;" and not text else "ord")
                 i += 1
             if one and out:
                 break
+        if st["prev"] == "bin":                           # nor one at the end
+            out[-1] = out[-1].lstrip("\u00a0")
         return "".join(out)
 
     return seq(None)
@@ -691,6 +735,8 @@ def _tex_html(text):
             t = re.sub(r"\s*\\cite\{[^}]*\}", "", t)            # citations stay in the paper
             t = re.sub(r"\\%", "%", t).replace("\\,", "\u202f").replace("---", ", ").replace("--", "-").replace("–", "-").replace("—", ", ")
             t = re.sub(r"\\([A-Za-z]+)", lambda m: _TEX_SYM.get(m.group(1), m.group(1)), t)
+            t = re.sub(r"https?://[^\s<]*[^\s<.,;:)]",          # a web address is a link, which may break after a slash
+                       lambda m: f'<a href="{m.group(0)}">{re.sub(r"(?<![/:])/(?!/)", "/<wbr>", m.group(0))}</a>', t)
             out.append(t)
     return re.sub(r"\s+", " ", "".join(out)).strip()
 

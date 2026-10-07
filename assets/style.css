@@ -54,6 +54,12 @@ body {
 
 .wrap { max-width: var(--measure); margin: 0 auto; padding: 0 1.5rem; }
 
+/* Line breaks: headings and short titles in lines of similar length, running text without a lone word on its last
+   line (on phones "Postdoctoral fellowships and / grants" and "Proseminar Theoretische / Physik" were left so).
+   The longhand only, so that nothing set to nowrap starts to wrap. It is inherited, so the body sets it for all text. */
+body { text-wrap-style: pretty; }
+h1, h2, h3, h4, .page-sub, .ex-title, .pick-title, .kicker, .fund-ptitle, .vis-label { text-wrap-style: balance; }
+
 /* ------------------------------------------------------------ links */
 
 a { color: var(--accent); text-decoration-color: var(--rule);
@@ -2391,7 +2397,7 @@ details.pub-open[open] .pub-toggle .chev { transform: rotate(180deg); }
 details.pub-open > summary:hover .pub-toggle, details.pub-open[open] .pub-toggle { opacity: 1; }
 .pub-abs { margin: .75rem 0 .35rem; padding: .85rem 1.05rem .85rem; max-width: 46rem; border-left: 2px solid rgba(168, 137, 79, .6);
            border-radius: 0 4px 4px 0; background: color-mix(in srgb, var(--accent) 5%, transparent); }
-.pub-abs .abstract { margin: 0; font-size: .95rem; line-height: 1.62; }
+.pub-abs .abstract { margin: 0; font-size: .95rem; line-height: 1.62; overflow-wrap: break-word; }
 .pub-abs .k { display: block; margin-bottom: .3rem; font-family: var(--sans); font-size: .58rem; font-weight: 600;
               letter-spacing: .15em; text-transform: uppercase; color: var(--grey); }
 .pub-facts { display: flex; flex-wrap: wrap; gap: .5rem 2.2rem; margin-top: .85rem; font-size: .88rem; }
