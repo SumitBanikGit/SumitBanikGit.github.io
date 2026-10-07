@@ -1044,14 +1044,14 @@
     }
     ctx.save(); ctx.globalAlpha *= R ? 1 : ease(t / 0.5);
     caps(ctx, G.top, v.x + 4, v.y + 11, ink('slate', 0.85), 7.5);
-    if (v.w > 400) caps(ctx, G.n, v.x + 4, v.y + 24, ink('brassD', 0.85), 7.5);
+    caps(ctx, G.n, v.x + 4, v.y + 24, ink('brassD', 0.85), 7.5);     // the result, on phones too
     ctx.restore();
   }
   var CONFORMAL = {
     key: 'conformal', paper: '2007.08360', dur: 13, cap: 'Double box and hexagon conformal integrals',
     layout: function (v) {
       v.S = Math.max(9, Math.min(12, v.w / 44));
-      var top = v.w < 400 ? 14 : 0, u = Math.min((v.h - 30 - top) / 4.15, (v.w - 20) / 5.4);   // room for the label on phones
+      var top = v.w < 400 ? 27 : 0, u = Math.min((v.h - 30 - top) / 4.15, (v.w - 20) / 5.4);   // room for the labels on phones
       v.P = { u: u, cx: v.x + v.w / 2, cy: v.y + 4 + top + (v.h - 30 - top) / 2 };
     },
     frame: function (v, t) {
