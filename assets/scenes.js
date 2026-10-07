@@ -965,11 +965,19 @@
           drawMath(ctx, F.lab, lx + 22, yy, S * 0.88, ink('green', 0.95), 'left');
           ctx.restore();
         });
+        ctx.font = font(7.5, SANS, 600); tracking(ctx, 1.1);    // the small capitals fit the column on the narrowest phones
+        var cz = Math.min(7.5, 7.5 * (room - 4) / ctx.measureText('SPLIT POLES ARE REWRITTEN').width); tracking(ctx, 0);
         var fk = R ? 1 : ease((t - 6.6) / 0.8);
         if (fk > 0) {
           ctx.save(); ctx.globalAlpha *= fk;
-          caps(ctx, 'SPLIT POLES ARE REWRITTEN', lx, ly + 5 * S * 2.05 + 6, ink('crimson', 0.9), 7.5);
+          caps(ctx, 'SPLIT POLES ARE REWRITTEN', lx, ly + 5 * S * 2.05 + 6, ink('crimson', 0.9), cz);
           drawMath(ctx, 'Γ(−z_1)=−\\frac{Γ(3−z_1)\\,Γ(−2+z_1)}{Γ(1+z_1)}', lx, ly + 5 * S * 2.05 + S * 2.9, S * 0.9, ink('green', 0.95), 'left');
+          ctx.restore();
+        }
+        var rk = R ? 1 : ease((t - 9) / 0.7);          // then the conic hull method as before: at the second point 15 cones,
+        if (rk > 0) {                                   // and the same 5 series representations (Fig. 2 of the paper)
+          ctx.save(); ctx.globalAlpha *= rk;
+          caps(ctx, '15 CONES, 5 SERIES', lx, ly + 5 * S * 2.05 + S * 5.5, ink('green', 0.95), cz);   // (one line: above the pager on a phone)
           ctx.restore();
         }
       }
