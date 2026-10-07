@@ -2648,9 +2648,11 @@ html[data-theme="dark"] .pub-sort button[aria-pressed="true"] { background: var(
 #talks .tf-out { display: none !important; }
 /* the hints under the page animations: a little tighter where the animation is narrowest (small laptop windows) */
 @media (min-width: 51.01rem) and (max-width: 54rem) { .scene-hint { letter-spacing: .11em; } .scene-hint::before { width: 1.1rem; } }
-/* Software, on phones: the line about each package may take two lines (room kept for both, so nothing jumps) */
+/* Software and Funding, on phones: the line about each package or award may take two lines (room kept for both,
+   so nothing jumps). On a 390 px phone the awards that were declined lost the word "declined" to the ellipsis. */
 @media (max-width: 40rem) {
-  [data-scene="toolchain"] .scene-hint { white-space: normal; text-wrap: balance; min-height: 2.9em; line-height: 1.45; }
+  [data-scene="toolchain"] .scene-hint, [data-scene="medals"] .scene-hint { white-space: normal; text-wrap: balance;
+                                                                          min-height: 2.9em; line-height: 1.45; }
 }
 
 /* Publications: the frequent co-authors, a click shows the papers written with them */

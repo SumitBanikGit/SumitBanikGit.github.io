@@ -3881,11 +3881,14 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
 
   /* ---------- hero parallax: text and detector drift apart as the page scrolls ---------- */
   var heroEl = document.querySelector('.hero'), heroText = heroEl && heroEl.querySelector('.hero-text'),
+      heroStage = heroEl && heroEl.querySelector('.hero-stage'),
       heroField = heroEl && !heroEl.hasAttribute('data-scene') && heroEl.querySelector('.field');
   function parallax() {{
     if (reduce || !heroEl) return;
     var y = window.scrollY, h = heroEl.offsetHeight;
-    if (h > window.innerHeight) {{                    // a header taller than the screen (a phone) is read while scrolling: it stays put
+    var below = heroStage && heroText && heroStage.offsetTop >= heroText.offsetTop + heroText.offsetHeight - 1;
+    if (h > window.innerHeight || below) {{          // a header taller than the screen (a phone) is read while scrolling, and a scene
+                                                      // below the text (phones, tablets) would be run into by the slower text: it stays put
       if (heroText && heroText.style.opacity) heroText.style.transform = heroText.style.opacity = '';
       if (heroField && heroField.style.transform) heroField.style.transform = '';
       return;

@@ -3382,9 +3382,14 @@
       }
       var split = A.filter(function (a) { return a.y < 2024; }).length;                           // doctoral years and postdoctoral years
       if (split > 0 && split < n) {
-        caps(ctx, 'MASTER’S AND DOCTORAL', (e.pos[0][0] + e.pos[split - 1][0]) / 2, e.base + 27, ink('slate', 0.7), 7, 'center');
-        caps(ctx, 'POSTDOCTORAL', (e.pos[split][0] + e.pos[n - 1][0]) / 2, e.base + 27, ink('slate', 0.7), 7, 'center');
-        var xm = (e.pos[split - 1][0] + e.pos[split][0]) / 2;
+        var xm = (e.pos[split - 1][0] + e.pos[split][0]) / 2, la = 'MASTER’S AND DOCTORAL', lb = 'POSTDOCTORAL';
+        ctx.font = font(7, SANS, 600); tracking(ctx, 1.1);
+        var ha = ctx.measureText(la).width / 2 + 5, hb = ctx.measureText(lb).width / 2 + 5;
+        tracking(ctx, 0);
+        var ca = (e.pos[0][0] + e.pos[split - 1][0]) / 2, cb = (e.pos[split][0] + e.pos[n - 1][0]) / 2;
+        ca = Math.max(e.x + ha - 4, Math.min(ca, xm - ha)); cb = Math.min(e.x + e.w - hb + 4, Math.max(cb, xm + hb));   // clear of the divider (narrow phones)
+        caps(ctx, la, ca, e.base + 27, ink('slate', 0.7), 7, 'center');
+        caps(ctx, lb, cb, e.base + 27, ink('slate', 0.7), 7, 'center');
         line(ctx, xm, e.base + 18, xm, e.base + 30, ink('brass', 0.45), 1);
       }
       ctx.save(); ctx.strokeStyle = ink('brass', 0.55); ctx.lineWidth = 1.2; ctx.setLineDash([2, 4]); ctx.beginPath();  // the path of the awards
@@ -3417,7 +3422,8 @@
     announce: function (e) {
       var a = e.aw[e.sel];
       e.caption(a.n);
-      e.hint(a.s + ', ' + a.c + ' · ' + a.y + ' · ' + a.amt + (a.st ? ' · awarded, ' + a.st : ''));
+      var dot = '\u00a0· ';                           // (a line may end with the dot, on a phone, but never begins with one)
+      e.hint(a.s + ', ' + a.c + dot + a.y + dot + a.amt + (a.st ? dot + 'awarded, ' + a.st : ''));
     },
     click: function (e) { this.step(e, 1); },
     step: function (e, d) {                          // the next award, or the one before
