@@ -813,7 +813,7 @@ def paper_map_data():
         return [round((v - lo) / ((hi - lo) or 1), 4) for v in a]
     X, Y, place = unit(xs), unit(ys), {k: i for i, k in enumerate(ids)}
     return [dict(x=X[i], y=Y[i], t="pheno" if p["topic"] == "pheno" else "fi", k=p["kind"], yr=int(p["year"]),
-                 n=_plain(p["title"]).strip(), r=_plain(p["ref"]).strip(), u=f"publications.html#{_pub_id(p)}",
+                 n=p["title"].strip(), r=_plain(p["ref"]).strip(), u=f"publications.html#{_pub_id(p)}",
                  e=[place[_pub_id(q)] for q in _related(p)]) for i, p in enumerate(order)]
 
 
@@ -859,7 +859,7 @@ def _related(p):
 def _ref_button(p):
     """The paper as one line of text, for a CV, a slide or an email: authors, title, journal and arXiv number."""
     import html as _html
-    parts = [_plain(p["authors"]).strip(), _plain(p["title"]).strip(), _plain(p["ref"]).strip()]
+    parts = [_plain(p["authors"]).strip(), _text(p["title"]).strip(), _plain(p["ref"]).strip()]
     if p.get("arxiv"):
         parts.append(f'arXiv:{p["arxiv"]}')
     line = ", ".join(x for x in parts if x)
@@ -1549,6 +1549,23 @@ def _plain(text):
     return _html.unescape(re.sub(r"<[^>]+>", "", text)).replace("\u00a0", " ")
 
 
+_SUPER, _SUPER_FROM = str.maketrans("0123456789+−-=()n", "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁻⁼⁽⁾ⁿ"), set("0123456789+−-=()n")
+_SUBSCR, _SUBSCR_FROM = (str.maketrans("0123456789+−-=()aehijklmnoprstuvx", "₀₁₂₃₄₅₆₇₈₉₊₋₋₌₍₎ₐₑₕᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓ"),
+                         set("0123456789+−-=()aehijklmnoprstuvx"))
+
+
+def _text(html):
+    """Like _plain, for text that leaves the page (a copied reference, the data for search engines): a bar over a
+    letter becomes a combining macron (tt̄, not tt), and scripts become small figures where Unicode has them."""
+    def script(m, table, chars):
+        t = _plain(m.group(1))
+        return t.translate(table) if set(t) <= chars else t
+    out = re.sub(r'<span class="ov">(.*?)</span>', lambda m: "".join(c + "\u0304" if c.isalnum() else c for c in _plain(m.group(1))), html)
+    out = re.sub(r"<sup>(.*?)</sup>", lambda m: script(m, _SUPER, _SUPER_FROM), out)
+    out = re.sub(r"<sub>(.*?)</sub>", lambda m: script(m, _SUBSCR, _SUBSCR_FROM), out)
+    return _plain(out)
+
+
 def _precision_digits():
     """Digits for the HyperPrecision vignette: the Appell function F1(1; 1, 1; 2; x, y) at
     (x, y) = (-2, -3), outside the unit square where its series converges, reached along the
@@ -1902,7 +1919,7 @@ PMAP_JS = r"""<script>
     if (hov < 0) { read.textContent = touch ? 'Tap a dot to read its title, tap it again to open the paper' : 'Point at a dot to read its title, click to open the paper'; read.classList.remove('on'); return; }
     var q = P[hov];
     read.innerHTML = '<span class="pr-y">' + q.yr + '</span> <span class="pr-n"></span> <span class="pr-r"></span>';
-    read.querySelector('.pr-n').textContent = q.n; read.querySelector('.pr-r').textContent = q.r;
+    read.querySelector('.pr-n').innerHTML = q.n; read.querySelector('.pr-r').textContent = q.r;   // (the title with its maths, from the site's own data)
     read.classList.add('on');
   }
   function pick(ev) {
@@ -2627,7 +2644,7 @@ def pubs_jsonld():
     kinds = {"article": "ScholarlyArticle", "proceedings": "ScholarlyArticle", "thesis": "Thesis"}
     graph = []
     for q in PUBS:
-        e = {"@type": kinds[q["kind"]], "name": _plain(q["title"]).strip(), "datePublished": str(q["year"]),
+        e = {"@type": kinds[q["kind"]], "name": _text(q["title"]).strip(), "datePublished": str(q["year"]),
              "author": [{"@type": "Person", "name": a.strip()} for a in _plain(q["authors"]).split(",") if a.strip()],
              "url": f'{PROFILE["url"]}publications.html#{_pub_id(q)}'}
         ids = []
