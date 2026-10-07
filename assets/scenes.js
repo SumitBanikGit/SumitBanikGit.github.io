@@ -3373,11 +3373,13 @@
       ctx.restore();
       line(ctx, e.L, e.base, e.R, e.base, ink('brass', 0.55), 1);                                   // the years
       ctx.font = font(9.5, SANS, 500); ctx.textAlign = 'center';
-      A.forEach(function (a, i) {
-        var x = e.pos[i][0];
-        line(ctx, x, e.base - 3, x, e.base + 3, ink('brass', 0.6), 1);
-        ctx.fillStyle = ink(i === e.sel ? 'brassD' : 'slate', 0.9); ctx.fillText(String(a.y), x, e.base + 15);
-      });
+      A.forEach(function (a, i) { var x = e.pos[i][0]; line(ctx, x, e.base - 3, x, e.base + 3, ink('brass', 0.6), 1); });
+      for (var i0 = 0, i1; i0 < n; i0 = i1 + 1) {   // each year once, under all of its awards, their ticks joined
+        i1 = i0; while (i1 + 1 < n && A[i1 + 1].y === A[i0].y) i1++;
+        var x0 = e.pos[i0][0], x1 = e.pos[i1][0];
+        if (i1 > i0) line(ctx, x0, e.base + 3, x1, e.base + 3, ink('brass', 0.6), 1);
+        ctx.fillStyle = ink(e.sel >= i0 && e.sel <= i1 ? 'brassD' : 'slate', 0.9); ctx.fillText(String(A[i0].y), (x0 + x1) / 2, e.base + 15);
+      }
       var split = A.filter(function (a) { return a.y < 2024; }).length;                           // doctoral years and postdoctoral years
       if (split > 0 && split < n) {
         caps(ctx, 'MASTER’S AND DOCTORAL', (e.pos[0][0] + e.pos[split - 1][0]) / 2, e.base + 27, ink('slate', 0.7), 7, 'center');
