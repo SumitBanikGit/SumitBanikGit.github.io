@@ -24,7 +24,7 @@
 <link rel="preload" href="/assets/fonts/source-serif-4-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=6ac7587c">
-<link rel="stylesheet" href="/assets/style.css?v=6ac7584c">
+<link rel="stylesheet" href="/assets/style.css?v=6ac76b11">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sumit Banik", "givenName": "Sumit", "familyName": "Banik", "honorificSuffix": "PhD", "jobTitle": "Postdoctoral Researcher", "worksFor": [{"@type": "Organization", "name": "SLAC National Accelerator Laboratory"}, {"@type": "CollegeOrUniversity", "name": "Stanford University"}], "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"}, {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}], "email": "mailto:banik@stanford.edu", "url": "https://sumitbanikgit.github.io/", "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "GKZ hypergeometric systems", "Higgs physics", "two-Higgs-doublet models", "Higgs triplets", "leptoquarks", "beyond the Standard Model", "collider phenomenology", "effective field theory", "SMEFT", "renormalization group", "computer algebra"], "workLocation": {"@type": "Place", "name": "SLAC National Accelerator Laboratory", "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park", "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}}, "image": "https://sumitbanikgit.github.io/assets/portrait.jpg", "sameAs": ["https://orcid.org/0000-0002-5869-5293", "https://inspirehep.net/authors/1810309", "https://scholar.google.com/citations?user=dNGju0YAAAAJ&hl=en", "https://github.com/SumitBanikGit", "https://www.linkedin.com/in/waytosumitbanik"]}</script>
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
@@ -102,6 +102,22 @@
 <div class="contact-card">
   <p class="prose contact-lede">Feel free to get in touch. I am always happy to hear from you.</p>
   <p><a class="button" href="mailto:banik@stanford.edu">Send an email</a>
+  <button class="button copy-addr" type="button" data-copy="banik@stanford.edu">Copy email</button><span class="sr-only" role="status" aria-live="polite"></span><script>
+(function () {                              // the contact band: copy the email address, for readers with no email app
+  var b = document.querySelector('.copy-addr');
+  if (!b) return;
+  if (!(navigator.clipboard && window.isSecureContext)) { b.remove(); return; }
+  var said = b.nextElementSibling, label = b.textContent, timer;
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+      b.style.minWidth = b.offsetWidth + 'px';          // the shorter word keeps the button's width
+      b.classList.add('done'); b.textContent = 'Copied'; said.textContent = 'Email address copied';
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('done'); b.textContent = label; said.textContent = ''; }, 2200);
+    }).catch(function () {});
+  });
+})();
+</script>
   <span class="contact-alt">or find me on <a href="https://inspirehep.net/authors/1810309">INSPIRE</a>,
   <a href="https://github.com/SumitBanikGit">GitHub</a> and <a href="https://www.linkedin.com/in/waytosumitbanik">LinkedIn</a>.</span></p>
 </div>

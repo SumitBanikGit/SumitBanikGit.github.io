@@ -461,6 +461,7 @@ details.more > summary:hover { background: color-mix(in srgb, var(--accent) 8%, 
 .contact a:hover .ico { background: var(--navy); border-color: var(--navy); color: #dad7cb; }
 
 .contact .email { font-size: 1.08rem; letter-spacing: .005em; }
+.hero-mail { display: flex; align-items: center; gap: .6rem; }   /* the email at the top of the home page, with its copy button */
 
 .profiles { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.35rem;
             margin-top: .8rem; font-family: var(--serif); font-size: 1.02rem; }
@@ -904,6 +905,14 @@ main > #contact.chapter::before { border-color: transparent; }
 #contact .button { background-color: #ffffff; color: #8c1515; border-color: #ffffff;
                    background-image: linear-gradient(#f4f4f4, #f4f4f4); }
 #contact .button:hover { background-color: #ffffff; color: #8c1515; }
+/* beside it, an outlined button copies the address, for readers with no email app; it fills white when done */
+.copy-addr { display: none; }
+.js .copy-addr { display: inline-block; margin-left: .45rem; line-height: inherit; cursor: pointer; }
+#contact .button.copy-addr { background-color: transparent; color: #ffffff; border-color: rgba(255,255,255, .7);
+                             background-image: linear-gradient(#ffffff, #ffffff); }
+#contact .button.copy-addr:hover, #contact .button.copy-addr.done { background-color: transparent; color: #8c1515;
+                             border-color: #ffffff; background-size: 100% 100%; }
+#contact .button.copy-addr:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; }
 footer { border-top-color: rgba(182,177,169,.35); }
 
 /* ---------- hover lift for the new cards ---------- */
@@ -1933,6 +1942,8 @@ html[data-theme="dark"] .btn.solid:hover { color: #171612; }
 html[data-theme="dark"] .button { background-color: var(--band); color: #ffffff; }
 html[data-theme="dark"] .button:hover { background-color: var(--band); color: #171612; }
 html[data-theme="dark"] #contact .button, html[data-theme="dark"] #contact .button:hover { background-color: #ffffff; color: #8c1515; }
+html[data-theme="dark"] #contact .button.copy-addr { background-color: transparent; color: #ffffff; }
+html[data-theme="dark"] #contact .button.copy-addr:hover, html[data-theme="dark"] #contact .button.copy-addr.done { background-color: transparent; color: #8c1515; }
 html[data-theme="dark"] .filters button[aria-pressed="true"], html.js[data-theme="dark"] .pub-more:hover,
 html[data-theme="dark"] .j-now { color: #171612; }
 html[data-theme="dark"] .scroll-cue { border-color: rgba(255,255,255, .4); }

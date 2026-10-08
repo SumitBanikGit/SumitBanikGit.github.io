@@ -2886,6 +2886,30 @@ COPY_MAIL_JS = """<script>
 </script>"""
 
 
+COPY_ADDR_JS = """<script>
+(function () {                              // the contact band: copy the email address, for readers with no email app
+  var b = document.querySelector('.copy-addr');
+  if (!b) return;
+  if (!(navigator.clipboard && window.isSecureContext)) { b.remove(); return; }
+  var said = b.nextElementSibling, label = b.textContent, timer;
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+      b.style.minWidth = b.offsetWidth + 'px';          // the shorter word keeps the button's width
+      b.classList.add('done'); b.textContent = 'Copied'; said.textContent = 'Email address copied';
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('done'); b.textContent = label; said.textContent = ''; }, 2200);
+    }).catch(function () {});
+  });
+})();
+</script>"""
+
+
+def copy_addr(email):
+    """The contact band's second button, beside Send an email: it copies the address, for readers whose
+    computer has no email app set up (there the mailto link opens nothing)."""
+    return (f'<button class="button copy-addr" type="button" data-copy="{email}">Copy email</button>'
+            '<span class="sr-only" role="status" aria-live="polite"></span>' + COPY_ADDR_JS)
+
 def copy_mail(email):
     """A round button that copies the address: the two sheets give way to a check mark."""
     return (f'<button class="copy-mail" type="button" data-copy="{email}" aria-label="Copy the email address" title="Copy the email address">'
@@ -3218,7 +3242,7 @@ def main():
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
-        n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), fonts_v=_ver("assets/fonts/fonts.css"), **ICONS,
+        n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), copy_addr=copy_addr(P["email"]), copy_mail_btn=copy_mail(P["email"]), fonts_v=_ver("assets/fonts/fonts.css"), **ICONS,
         updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(), search_v=search_v,
     )
     write_vcard()
@@ -3353,7 +3377,7 @@ TEMPLATE = """<!doctype html>
       <a class="btn" href="cv.html">Curriculum vitae</a>
     </div>
     <div class="contact">
-      <a class="email" href="mailto:{email}">{i_mail}{email}</a>
+      <div class="hero-mail"><a class="email" href="mailto:{email}">{i_mail}{email}</a>{copy_mail_btn}</div>
       <nav class="profiles" aria-label="Research profiles">
         <a href="https://orcid.org/{orcid}">{i_orcid}ORCID</a>
         <a href="{inspire}">{i_inspire}INSPIRE</a>
@@ -3561,6 +3585,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
 <div class="contact-card">
   <p class="prose contact-lede">Feel free to get in touch. I am always happy to hear from you.</p>
   <p><a class="button" href="mailto:{email}">Send an email</a>
+  {copy_addr}
   <span class="contact-alt">or find me on <a href="{inspire}">INSPIRE</a>,
   <a href="{github}">GitHub</a> and <a href="{linkedin}">LinkedIn</a>.</span></p>
 </div>

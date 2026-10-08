@@ -25,7 +25,7 @@
 <link rel="preload" href="assets/fonts/source-serif-4-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts/fonts.css?v=6ac7587c">
-<link rel="stylesheet" href="assets/style.css?v=6ac7584c">
+<link rel="stylesheet" href="assets/style.css?v=6ac76b11">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sumit Banik", "givenName": "Sumit", "familyName": "Banik", "honorificSuffix": "PhD", "jobTitle": "Postdoctoral Researcher", "worksFor": [{"@type": "Organization", "name": "SLAC National Accelerator Laboratory"}, {"@type": "CollegeOrUniversity", "name": "Stanford University"}], "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"}, {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}], "email": "mailto:banik@stanford.edu", "url": "https://sumitbanikgit.github.io/", "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "GKZ hypergeometric systems", "Higgs physics", "two-Higgs-doublet models", "Higgs triplets", "leptoquarks", "beyond the Standard Model", "collider phenomenology", "effective field theory", "SMEFT", "renormalization group", "computer algebra"], "workLocation": {"@type": "Place", "name": "SLAC National Accelerator Laboratory", "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park", "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}}, "image": "https://sumitbanikgit.github.io/assets/portrait.jpg", "sameAs": ["https://orcid.org/0000-0002-5869-5293", "https://inspirehep.net/authors/1810309", "https://scholar.google.com/citations?user=dNGju0YAAAAJ&hl=en", "https://github.com/SumitBanikGit", "https://www.linkedin.com/in/waytosumitbanik"]}</script>
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
@@ -51,7 +51,21 @@
       <a class="btn" href="cv.html">Curriculum vitae</a>
     </div>
     <div class="contact">
-      <a class="email" href="mailto:banik@stanford.edu"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg>banik@stanford.edu</a>
+      <div class="hero-mail"><a class="email" href="mailto:banik@stanford.edu"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></svg>banik@stanford.edu</a><button class="copy-mail" type="button" data-copy="banik@stanford.edu" aria-label="Copy the email address" title="Copy the email address"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="cm-b" d="M15.5 5.5V5A1.5 1.5 0 0 0 14 3.5H6A1.5 1.5 0 0 0 4.5 5v8A1.5 1.5 0 0 0 6 14.5h.5"/><rect class="cm-a" x="8.5" y="8.5" width="11" height="11" rx="2"/><path class="cm-ok" pathLength="1" d="M5.5 12.5l4 4L18.5 7.5"/></svg><span class="cm-tip" aria-hidden="true">Copied</span></button><span class="sr-only" role="status" aria-live="polite"></span><script>
+(function () {                              // copy the email address with one click, and say so
+  var b = document.querySelector('.copy-mail');
+  if (!b) return;
+  if (!(navigator.clipboard && window.isSecureContext)) { b.remove(); return; }
+  var said = b.nextElementSibling, timer;
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+      b.classList.add('done'); said.textContent = 'Email address copied';
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('done'); said.textContent = ''; }, 2200);
+    }).catch(function () {});
+  });
+})();
+</script></div>
       <nav class="profiles" aria-label="Research profiles">
         <a href="https://orcid.org/0000-0002-5869-5293"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 10v6"/><circle cx="8.5" cy="7.6" r=".4" fill="currentColor"/><path d="M11.5 16V8h2a4 4 0 0 1 0 8h-2z"/></svg>ORCID</a>
         <a href="https://inspirehep.net/authors/1810309"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path fill="currentColor" stroke="none" fill-rule="evenodd" d="M7 3.5h10A3.5 3.5 0 0 1 20.5 7v10a3.5 3.5 0 0 1-3.5 3.5H7A3.5 3.5 0 0 1 3.5 17V7A3.5 3.5 0 0 1 7 3.5ZM12 6.6a1.45 1.45 0 1 0 0 2.9a1.45 1.45 0 1 0 0-2.9ZM10.8 10.9v6.6h2.4v-6.6Z"/></svg>INSPIRE</a>
@@ -148,6 +162,22 @@ New Physics beyond the Standard Model at particle colliders.</p>
 <div class="contact-card">
   <p class="prose contact-lede">Feel free to get in touch. I am always happy to hear from you.</p>
   <p><a class="button" href="mailto:banik@stanford.edu">Send an email</a>
+  <button class="button copy-addr" type="button" data-copy="banik@stanford.edu">Copy email</button><span class="sr-only" role="status" aria-live="polite"></span><script>
+(function () {                              // the contact band: copy the email address, for readers with no email app
+  var b = document.querySelector('.copy-addr');
+  if (!b) return;
+  if (!(navigator.clipboard && window.isSecureContext)) { b.remove(); return; }
+  var said = b.nextElementSibling, label = b.textContent, timer;
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(b.getAttribute('data-copy')).then(function () {
+      b.style.minWidth = b.offsetWidth + 'px';          // the shorter word keeps the button's width
+      b.classList.add('done'); b.textContent = 'Copied'; said.textContent = 'Email address copied';
+      clearTimeout(timer);
+      timer = setTimeout(function () { b.classList.remove('done'); b.textContent = label; said.textContent = ''; }, 2200);
+    }).catch(function () {});
+  });
+})();
+</script>
   <span class="contact-alt">or find me on <a href="https://inspirehep.net/authors/1810309">INSPIRE</a>,
   <a href="https://github.com/SumitBanikGit">GitHub</a> and <a href="https://www.linkedin.com/in/waytosumitbanik">LinkedIn</a>.</span></p>
 </div>
