@@ -3350,7 +3350,7 @@ TEMPLATE = """<!doctype html>
     <div class="hero-cta">
       <a class="btn solid" href="#research">Explore my research</a>
       <a class="btn" href="#publications">Publications</a>
-      <a class="btn" href="assets/cv/Sumit_Banik_CV.pdf">Curriculum vitae</a>
+      <a class="btn" href="cv.html">Curriculum vitae</a>
     </div>
     <div class="contact">
       <a class="email" href="mailto:{email}">{i_mail}{email}</a>
@@ -3392,12 +3392,12 @@ TEMPLATE = """<!doctype html>
 <div class="about-grid">
 {portrait}
 <div class="about-text">
-<p class="statement" data-hold="2600">I am a postdoctoral researcher at SLAC National Accelerator Laboratory
-and Stanford University. My research in theoretical particle physics spans
-applied mathematics, multi-loop Feynman integrals, effective field theories,
-model building, Higgs physics and the search for New Physics beyond the
-Standard Model at particle colliders.</p>
-<p class="about-links"><a href="assets/cv/Sumit_Banik_CV.pdf">Read the full CV <span aria-hidden="true">→</span></a>
+<p class="statement" data-hold="2600">I am a postdoctoral researcher in theoretical particle physics at SLAC
+National Accelerator Laboratory and Stanford University. My research covers
+multi-loop Feynman integrals and the applied mathematics behind them, as well
+as effective field theories, model building, Higgs physics and the search for
+New Physics beyond the Standard Model at particle colliders.</p>
+<p class="about-links"><a href="cv.html">Read the full CV <span aria-hidden="true">→</span></a>
 <a href="contact.html">Get in touch <span aria-hidden="true">→</span></a></p>
 </div>
 </div>
