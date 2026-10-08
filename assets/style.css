@@ -1478,10 +1478,22 @@ main > #contact.chapter::before {
   }
 }
 
-/* Event display: the current process and a legend of line styles (home hero) */
-.hero > .ev {
-  position: absolute; z-index: 1; bottom: 1.6rem; right: max(1.5rem, calc((100vw - 68rem) / 2 + 1.5rem));
+/* Event display: the current process and a legend of line styles (home hero), under the detector in the
+   right-hand column, its last row level with the last row of links on the left */
+.hero-inner > .ev {
+  position: relative; z-index: 1; grid-area: 1 / 2; align-self: end; justify-self: end; margin-bottom: var(--ev-drop, 0px);
   display: flex; flex-direction: column; align-items: flex-end; gap: .55rem; pointer-events: none; text-align: right;
+}
+@media (min-width: 52.01rem) {
+  .hero:not(.page-hero) .hero-text { grid-area: 1 / 1; }
+  .hero:not(.page-hero) .hero-stage { grid-area: 1 / 2; }
+  /* the first screen: the home header fills it down to the red menu bar, which shows at once */
+  .hero:not(.page-hero) { min-height: min(calc(100vh - 3.75rem), 56rem); padding: 2rem 0 3.25rem; }
+  @supports (min-height: 100svh) { .hero:not(.page-hero) { min-height: min(calc(100svh - 3.75rem), 56rem); } }
+  .hero:not(.page-hero) .scroll-cue { bottom: .9rem; }
+  /* the two rows of the legend at the pitch of the two rows of profile links, each level with one */
+  .hero-inner > .ev { --ev-drop: .5rem; }
+  .hero-inner > .ev .ev-legend { row-gap: 1.66rem; }
 }
 .ev-label { margin: 0; min-height: 1.5em; font-family: var(--display); font-style: italic; font-weight: 500;
             font-size: 1.35rem; color: var(--head); opacity: 0; transform: translateY(6px);
@@ -1500,8 +1512,8 @@ main > #contact.chapter::before {
 .lg-m { stroke: rgba(140,21,21, .95); stroke-width: 2.2; }
 .lg-n { stroke: rgba(1,104,149, .95); stroke-width: 1.5; stroke-dasharray: 1.5 4; }
 .ev-legend .lg-n-head { fill: rgba(1,104,149, .95); stroke: none; }
-@media (max-width: 52rem) { .hero > .ev { display: none; } }
-@media print { .hero > .ev { display: none; } }
+@media (max-width: 52rem) { .hero .ev { display: none; } }
+@media print { .hero .ev { display: none; } }
 
 /* Six research domains: one accent each, three across, two on tablets, one on phones */
 .themes.six { grid-template-columns: repeat(3, 1fr); }

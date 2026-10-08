@@ -25,7 +25,7 @@
 <link rel="preload" href="/assets/fonts/source-serif-4-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/fonts/fonts.css?v=6ac7587c">
-<link rel="stylesheet" href="/assets/style.css?v=6ac76b11">
+<link rel="stylesheet" href="/assets/style.css?v=6ac79687">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "Person", "name": "Sumit Banik", "givenName": "Sumit", "familyName": "Banik", "honorificSuffix": "PhD", "jobTitle": "Postdoctoral Researcher", "worksFor": [{"@type": "Organization", "name": "SLAC National Accelerator Laboratory"}, {"@type": "CollegeOrUniversity", "name": "Stanford University"}], "alumniOf": [{"@type": "CollegeOrUniversity", "name": "Indian Institute of Science"}, {"@type": "CollegeOrUniversity", "name": "University of Calcutta"}], "email": "mailto:banik@stanford.edu", "url": "https://sumitbanikgit.github.io/", "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "GKZ hypergeometric systems", "Higgs physics", "two-Higgs-doublet models", "Higgs triplets", "leptoquarks", "beyond the Standard Model", "collider phenomenology", "effective field theory", "SMEFT", "renormalization group", "computer algebra"], "workLocation": {"@type": "Place", "name": "SLAC National Accelerator Laboratory", "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park", "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}}, "image": "https://sumitbanikgit.github.io/assets/portrait.jpg", "sameAs": ["https://orcid.org/0000-0002-5869-5293", "https://inspirehep.net/authors/1810309", "https://scholar.google.com/citations?user=dNGju0YAAAAJ&hl=en", "https://github.com/SumitBanikGit", "https://www.linkedin.com/in/waytosumitbanik"]}</script>
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
@@ -1168,6 +1168,11 @@
         CX = p.left - r.left + p.width / 2; CY = p.top - r.top + p.height / 2;
         var stacked = window.matchMedia('(max-width: 52rem)').matches;   // phones and tablets: detector above the name
         RO = stacked ? Math.min(p.width * 0.4, p.height * 0.62, 240) : Math.min(p.width * 0.6, H * 0.44);
+        if (!stacked) {                                 // the legend sits under the detector: the rings stay clear of it and of the top edge
+          var ev = hero.querySelector('.hero-inner > .ev'), cap = ev && ev.offsetParent ? ev.getBoundingClientRect().top - r.top : H;
+          RO = Math.max(60, Math.min(RO, (cap - 42) / 2));
+          CY = Math.max(RO + 20, Math.min(CY, cap - RO - 22));
+        }
         var out = stacked ? Math.max(0, Math.round(CY + RO + 14 - (p.top - r.top + p.height))) : 0;   // how far the rings reach below the stage
         if (out !== overhang) {                        // the caption under the detector starts below the rings
           overhang = out; stage.style.setProperty('--ro-out', out + 'px'); requestAnimationFrame(size);

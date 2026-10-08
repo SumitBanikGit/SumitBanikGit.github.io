@@ -26,7 +26,7 @@
 <link rel="preload" href="assets/fonts/source-serif-4-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts/fonts.css?v=6ac7587c">
-<link rel="stylesheet" href="assets/style.css?v=6ac76b11">
+<link rel="stylesheet" href="assets/style.css?v=6ac79687">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-funding">
@@ -1143,6 +1143,11 @@
         CX = p.left - r.left + p.width / 2; CY = p.top - r.top + p.height / 2;
         var stacked = window.matchMedia('(max-width: 52rem)').matches;   // phones and tablets: detector above the name
         RO = stacked ? Math.min(p.width * 0.4, p.height * 0.62, 240) : Math.min(p.width * 0.6, H * 0.44);
+        if (!stacked) {                                 // the legend sits under the detector: the rings stay clear of it and of the top edge
+          var ev = hero.querySelector('.hero-inner > .ev'), cap = ev && ev.offsetParent ? ev.getBoundingClientRect().top - r.top : H;
+          RO = Math.max(60, Math.min(RO, (cap - 42) / 2));
+          CY = Math.max(RO + 20, Math.min(CY, cap - RO - 22));
+        }
         var out = stacked ? Math.max(0, Math.round(CY + RO + 14 - (p.top - r.top + p.height))) : 0;   // how far the rings reach below the stage
         if (out !== overhang) {                        // the caption under the detector starts below the rings
           overhang = out; stage.style.setProperty('--ro-out', out + 'px'); requestAnimationFrame(size);

@@ -16,6 +16,10 @@ from pathlib import Path
 
 ME = "S. Banik"
 
+# The moving row of research topics under the menu bar of the home page. Switched off on 2026-10-08
+# for a calmer, more professional first screen. True brings it back.
+SHOW_TICKER = False
+
 PROFILE = {
     "name": "Sumit Banik",
     "title": "Postdoctoral Researcher",
@@ -3146,7 +3150,7 @@ def write_pages(html, n_articles, n_proc):
         body = (f'<body id="top" class="page-{slug}">\n{INTRO}<a class="skip" href="#main">Skip to content</a>\n\n'
                 + (hero if file == "index.html" else page_hero(label, title, sub, file, tour_index() if file == "research.html" else ""))
                 + navbar(file)
-                + (ticker if file == "index.html" else "")
+                + (ticker if file == "index.html" and SHOW_TICKER else "")
                 + '<main id="main" class="wrap">\n\n' + "\n\n".join(parts) + "\n\n" + tail)
         if file in scenes:                                # the page scenes live in their own script
             body = body.replace("</body>", f'<script src="assets/scenes.js?v={_ver("assets/scenes.js")}" defer></script>\n</body>', 1)
@@ -3390,14 +3394,14 @@ TEMPLATE = """<!doctype html>
     </div>
    </div>
    <div class="hero-stage" aria-hidden="true" title="Click for a new collision"><div class="ev-mini"><p class="ev-kicker">At the Large Hadron Collider</p><p class="ev-label"></p><p class="ev-say"></p></div></div>
+   <div class="ev" aria-hidden="true">
+     <p class="ev-kicker">At the Large Hadron Collider</p>
+     <p class="ev-label"></p>
+     <p class="ev-say"></p>
+     <ul class="ev-legend"><li><svg viewBox="0 0 36 10"><path class="lg-q" d="M1 7 Q18 1 35 5"/></svg>Quark</li><li><svg viewBox="0 0 36 10"><path class="lg-g" d="M1.00 5.00 L1.18 5.93 L1.03 6.74 L0.62 7.32 L0.06 7.59 L-0.54 7.51 L-1.04 7.09 L-1.34 6.40 L-1.35 5.52 L-1.01 4.57 L-0.34 3.68 L0.64 2.96 L1.83 2.52 L3.12 2.41 L4.39 2.64 L5.52 3.19 L6.39 3.98 L6.95 4.91 L7.16 5.85 L7.04 6.67 L6.66 7.28 L6.10 7.58 L5.50 7.53 L4.99 7.15 L4.66 6.48 L4.62 5.61 L4.92 4.66 L5.57 3.76 L6.51 3.02 L7.69 2.55 L8.98 2.40 L10.26 2.60 L11.40 3.12 L12.30 3.90 L12.89 4.81 L13.14 5.76 L13.05 6.60 L12.69 7.23 L12.15 7.56 L11.55 7.55 L11.01 7.20 L10.67 6.55 L10.60 5.70 L10.86 4.75 L11.47 3.84 L12.39 3.08 L13.55 2.58 L14.83 2.40 L16.12 2.57 L17.28 3.06 L18.21 3.81 L18.84 4.72 L19.11 5.67 L19.05 6.53 L18.71 7.18 L18.19 7.54 L17.59 7.57 L17.04 7.25 L16.67 6.63 L16.57 5.79 L16.80 4.85 L17.38 3.92 L18.28 3.15 L19.41 2.61 L20.69 2.40 L21.98 2.54 L23.16 3.00 L24.12 3.73 L24.77 4.63 L25.08 5.58 L25.06 6.45 L24.74 7.13 L24.23 7.52 L23.63 7.58 L23.07 7.29 L22.68 6.70 L22.55 5.88 L22.75 4.94 L23.30 4.01 L24.16 3.21 L25.28 2.65 L26.55 2.41 L27.84 2.51 L29.04 2.94 L30.02 3.65 L30.71 4.54 L31.05 5.49 L31.06 6.37"/></svg>Gluon</li><li><svg viewBox="0 0 36 10"><path class="lg-a" d="M1 5 q2.25 -4 4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0"/></svg>Photon</li><li><svg viewBox="0 0 36 10"><path class="lg-e" d="M1 6 Q18 2 35 4"/></svg>Electron</li><li><svg viewBox="0 0 36 10"><path class="lg-m" d="M1 5 H35"/></svg>Muon</li><li><svg viewBox="0 0 36 10"><path class="lg-n" d="M1 5 H31"/><path class="lg-n-head" d="M30 2 L35 5 L30 8 Z"/></svg>Neutrino</li></ul>
+   </div>
   </div>
   <a class="scroll-cue" href="#about" aria-label="Scroll to the About section"><span></span></a>
-  <div class="ev" aria-hidden="true">
-    <p class="ev-kicker">At the Large Hadron Collider</p>
-    <p class="ev-label"></p>
-    <p class="ev-say"></p>
-    <ul class="ev-legend"><li><svg viewBox="0 0 36 10"><path class="lg-q" d="M1 7 Q18 1 35 5"/></svg>Quark</li><li><svg viewBox="0 0 36 10"><path class="lg-g" d="M1.00 5.00 L1.18 5.93 L1.03 6.74 L0.62 7.32 L0.06 7.59 L-0.54 7.51 L-1.04 7.09 L-1.34 6.40 L-1.35 5.52 L-1.01 4.57 L-0.34 3.68 L0.64 2.96 L1.83 2.52 L3.12 2.41 L4.39 2.64 L5.52 3.19 L6.39 3.98 L6.95 4.91 L7.16 5.85 L7.04 6.67 L6.66 7.28 L6.10 7.58 L5.50 7.53 L4.99 7.15 L4.66 6.48 L4.62 5.61 L4.92 4.66 L5.57 3.76 L6.51 3.02 L7.69 2.55 L8.98 2.40 L10.26 2.60 L11.40 3.12 L12.30 3.90 L12.89 4.81 L13.14 5.76 L13.05 6.60 L12.69 7.23 L12.15 7.56 L11.55 7.55 L11.01 7.20 L10.67 6.55 L10.60 5.70 L10.86 4.75 L11.47 3.84 L12.39 3.08 L13.55 2.58 L14.83 2.40 L16.12 2.57 L17.28 3.06 L18.21 3.81 L18.84 4.72 L19.11 5.67 L19.05 6.53 L18.71 7.18 L18.19 7.54 L17.59 7.57 L17.04 7.25 L16.67 6.63 L16.57 5.79 L16.80 4.85 L17.38 3.92 L18.28 3.15 L19.41 2.61 L20.69 2.40 L21.98 2.54 L23.16 3.00 L24.12 3.73 L24.77 4.63 L25.08 5.58 L25.06 6.45 L24.74 7.13 L24.23 7.52 L23.63 7.58 L23.07 7.29 L22.68 6.70 L22.55 5.88 L22.75 4.94 L23.30 4.01 L24.16 3.21 L25.28 2.65 L26.55 2.41 L27.84 2.51 L29.04 2.94 L30.02 3.65 L30.71 4.54 L31.05 5.49 L31.06 6.37"/></svg>Gluon</li><li><svg viewBox="0 0 36 10"><path class="lg-a" d="M1 5 q2.25 -4 4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0 t4.5 0"/></svg>Photon</li><li><svg viewBox="0 0 36 10"><path class="lg-e" d="M1 6 Q18 2 35 4"/></svg>Electron</li><li><svg viewBox="0 0 36 10"><path class="lg-m" d="M1 5 H35"/></svg>Muon</li><li><svg viewBox="0 0 36 10"><path class="lg-n" d="M1 5 H31"/><path class="lg-n-head" d="M30 2 L35 5 L30 8 Z"/></svg>Neutrino</li></ul>
-  </div>
 </header>
 
 <div class="navbar">
@@ -4408,6 +4412,11 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
         CX = p.left - r.left + p.width / 2; CY = p.top - r.top + p.height / 2;
         var stacked = window.matchMedia('(max-width: 52rem)').matches;   // phones and tablets: detector above the name
         RO = stacked ? Math.min(p.width * 0.4, p.height * 0.62, 240) : Math.min(p.width * 0.6, H * 0.44);
+        if (!stacked) {{                                 // the legend sits under the detector: the rings stay clear of it and of the top edge
+          var ev = hero.querySelector('.hero-inner > .ev'), cap = ev && ev.offsetParent ? ev.getBoundingClientRect().top - r.top : H;
+          RO = Math.max(60, Math.min(RO, (cap - 42) / 2));
+          CY = Math.max(RO + 20, Math.min(CY, cap - RO - 22));
+        }}
         var out = stacked ? Math.max(0, Math.round(CY + RO + 14 - (p.top - r.top + p.height))) : 0;   // how far the rings reach below the stage
         if (out !== overhang) {{                        // the caption under the detector starts below the rings
           overhang = out; stage.style.setProperty('--ro-out', out + 'px'); requestAnimationFrame(size);
