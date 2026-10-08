@@ -3336,6 +3336,7 @@ TEMPLATE = """<!doctype html>
 <link rel="canonical" href="{url}">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#8c1515">
+<meta name="google-site-verification" content="J_Jvw2FJX-3FkRbdrWuaTEjCMIrBDiNggvvBCp2Pl-k">
 <meta property="og:type" content="profile">
 <meta property="og:title" content="Sumit Banik">
 <meta property="og:description" content="{desc}">
