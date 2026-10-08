@@ -1,6 +1,6 @@
 /* Page scenes for the inner pages.
    Each page header has its own animation, drawn on the header canvas inside the
-   stage on the right, in the brass and green palette of the site:
+   stage on the right, in the Stanford palette of the site:
      Research       a tour of the papers, one small animation for each
      Publications   a constellation of the papers, by year and field
      Talks          the talks around the world, one after another
@@ -16,17 +16,19 @@
   if (!host || !window.requestAnimationFrame) return;
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var TAU = Math.PI * 2, D2R = Math.PI / 180;
-  /* the inks by day and by night (dark mode is <html data-theme="dark">), and the map and globe colours */
+  /* the inks by day and by night (dark mode is <html data-theme="dark">), and the map and globe colours.
+     The ink names are the roles of the first palette: green is the main ink (Stanford black), pine is
+     Palo Alto green, brass Cardinal red, brassD Brick, slate Sky, crimson digital red and plum Plum. */
   var INKS = {
-    light: { green: '28,53,47', pine: '46,92,78', brass: '168,137,79', brassD: '122,95,42', slate: '74,90,102',
-             crimson: '110,44,52', cream: '238,231,214', paper: '252,251,248', plum: '90,61,85' },
-    dark:  { green: '232,226,208', pine: '127,184,163', brass: '201,168,104', brassD: '214,180,110', slate: '170,182,186',
-             crimson: '216,132,142', cream: '238,231,214', paper: '14,23,20', plum: '200,160,192' }
+    light: { green: '46,45,41', pine: '23,94,84', brass: '140,21,21', brassD: '101,28,50', slate: '1,104,149',
+             crimson: '177,4,14', cream: '255,255,255', paper: '255,255,255', plum: '98,0,89' },
+    dark:  { green: '244,244,244', pine: '89,179,169', brass: '244,121,91', brassD: '244,121,91', slate: '103,175,210',
+             crimson: '244,121,91', cream: '255,255,255', paper: '23,22,18', plum: '193,150,196' }
   };
   var TONES = {
-    light: { land: '#e1e5d5', coast: '#b3bc9f', sea0: '#fbfaf4', sea1: '#e6eadf', gland: '#d9e0cc', gcoast: '#a9b596',
-             shadeHi: 'rgba(255,255,255,.18)', shadeLo: 'rgba(28,53,47,.12)' },
-    dark:  { land: '#1f2d27', coast: '#3b5047', sea0: '#17241f', sea1: '#0f1916', gland: '#26372f', gcoast: '#4a6155',
+    light: { land: '#e7e5df', coast: '#b6b1a9', sea0: '#ffffff', sea1: '#f0efec', gland: '#dedad2', gcoast: '#a9a39a',
+             shadeHi: 'rgba(255,255,255,.18)', shadeLo: 'rgba(46,45,41,.12)' },
+    dark:  { land: '#262522', coast: '#4a4844', sea0: '#1b1b1a', sea1: '#131313', gland: '#2e2d29', gcoast: '#55524c',
              shadeHi: 'rgba(255,255,255,.05)', shadeLo: 'rgba(0,0,0,.35)' }
   };
   var RGB = {}, TC = {};
@@ -72,10 +74,10 @@
     ctx.save();
     ctx.globalCompositeOperation = 'destination-in';
     var g = ctx.createLinearGradient(x, 0, x + w, 0);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(fx, '#000'); g.addColorStop(1 - fx, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(fx, '#000000'); g.addColorStop(1 - fx, '#000000'); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
     g = ctx.createLinearGradient(0, y, 0, y + h);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(fy, '#000'); g.addColorStop(1 - fy, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(fy, '#000000'); g.addColorStop(1 - fy, '#000000'); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.fillRect(x - 2, y - 2, w + 4, h + 4);
     ctx.restore();
   }
@@ -3358,12 +3360,12 @@
       ctx.closePath(); ctx.fill();
     };
     tail(-1, ink('pine', 0.9)); tail(1, ink('crimson', 0.85));
-    if (lift > 0) { ctx.shadowColor = 'rgba(122,95,42,' + (0.45 * lift) + ')'; ctx.shadowBlur = 12 * lift; }
+    if (lift > 0) { ctx.shadowColor = 'rgba(140,21,21,' + (0.45 * lift) + ')'; ctx.shadowBlur = 12 * lift; }
     var g = ctx.createRadialGradient(x - 0.35 * r, y - 0.4 * r, 0.1 * r, x, y, r);
     g.addColorStop(0, '#f6ebc6'); g.addColorStop(0.55, '#d6bb7c'); g.addColorStop(1, '#9a7a3c');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
     ctx.shadowBlur = 0;
-    ring(ctx, x, y, r, ink('brassD', 1), 1.1); ring(ctx, x, y, r * 0.8, 'rgba(122,95,42,.5)', 0.8);
+    ring(ctx, x, y, r, ink('brassD', 1), 1.1); ring(ctx, x, y, r * 0.8, 'rgba(140,21,21,.5)', 0.8);
     var fs = r * 0.5; ctx.font = font(fs, SANS, 700);
     var w = ctx.measureText(label).width;
     if (w > r * 1.35) { fs *= r * 1.35 / w; ctx.font = font(fs, SANS, 700); }
@@ -3662,7 +3664,7 @@
       c.font = font(fs, DISPLAY, 600, true);
       var lw = c.measureText(lab).width;
       if (lw > bw - 40) { fs *= (bw - 40) / lw; c.font = font(fs, DISPLAY, 600, true); lw = c.measureText(lab).width; }
-      c.fillStyle = 'rgba(238,231,214,.62)'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(lab, 18, 26);
+      c.fillStyle = 'rgba(255,255,255,.62)'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.fillText(lab, 18, 26);
       c.fillRect(18, 31, lw, 0.8);
       rects.push({ r: [16, 26 - fs, lw + 4, fs + 8], t0: T, dur: 0.5 }); T += 0.6;
     }
@@ -3673,12 +3675,12 @@
         prims.forEach(function (p) {
           var r, dur;
           if (p.t === 'rule') {
-            c.fillStyle = 'rgba(238,231,214,.93)'; c.fillRect(ox + p.x, oy + p.y, p.w, p.h);
+            c.fillStyle = 'rgba(255,255,255,.93)'; c.fillRect(ox + p.x, oy + p.y, p.w, p.h);
             r = [ox + p.x - 1, oy + p.y - 2, p.w + 2, p.h + 4]; dur = 0.14 + p.w / 520;
           } else {
             c.font = p.f;
-            c.fillStyle = 'rgba(238,231,214,.93)'; c.fillText(p.s, ox + p.x, oy + p.y);
-            c.fillStyle = 'rgba(238,231,214,.28)'; c.fillText(p.s, ox + p.x + 0.45, oy + p.y - 0.35);
+            c.fillStyle = 'rgba(255,255,255,.93)'; c.fillText(p.s, ox + p.x, oy + p.y);
+            c.fillStyle = 'rgba(255,255,255,.28)'; c.fillText(p.s, ox + p.x + 0.45, oy + p.y - 0.35);
             r = [ox + p.x - 1.5, oy + p.y - p.a - 2, p.w + 3, p.a + p.d + 4]; dur = 0.05 + p.w / 320;
           }
           rects.push({ r: r, t0: T, dur: dur }); T += dur + 0.012;
@@ -3691,7 +3693,7 @@
       stroke: function (pts, speed) {                  // a chalk line through pts, revealed from the first point on
         c.lineCap = 'round'; c.lineJoin = 'round';
         [[0, 0, 1.7, 0.9], [0.5, -0.4, 1.2, 0.25]].forEach(function (k) {
-          c.lineWidth = k[2]; c.strokeStyle = 'rgba(238,231,214,' + k[3] + ')'; c.beginPath();
+          c.lineWidth = k[2]; c.strokeStyle = 'rgba(255,255,255,' + k[3] + ')'; c.beginPath();
           pts.forEach(function (p, i) { if (i) c.lineTo(p[0] + k[0], p[1] + k[1]); else c.moveTo(p[0] + k[0], p[1] + k[1]); });
           c.stroke();
         });
@@ -3768,7 +3770,7 @@
     ctx.save(); ctx.translate(ox, oy);
     ctx.setLineDash([q.box.per * k, q.box.per + 20]);
     ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.strokeStyle = 'rgba(220,197,143,' + alpha + ')';        // yellow chalk
+    ctx.strokeStyle = 'rgba(218,215,203,' + alpha + ')';        // yellow chalk
     ctx.beginPath();
     q.box.pts.forEach(function (p, i) { if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); });
     ctx.stroke(); ctx.restore();
@@ -3776,28 +3778,28 @@
   function board(e) {
     var L = layer(e.w + 60, e.h + 60, e.dpr), c = L.ctx, x = e.bx - e.x + 30, y = e.by - e.y + 30, w = e.bw, h = e.bh;
     c.save();
-    c.shadowColor = 'rgba(20,38,33,.3)'; c.shadowBlur = 22; c.shadowOffsetY = 10;
+    c.shadowColor = 'rgba(103,29,26,.3)'; c.shadowBlur = 22; c.shadowOffsetY = 10;
     var g = c.createLinearGradient(x, y, x + w, y + h);
-    g.addColorStop(0, '#28473e'); g.addColorStop(1, '#1b3530');
+    g.addColorStop(0, '#3d3c38'); g.addColorStop(1, '#262522');
     roundRect(c, x, y, w, h, 7); c.fillStyle = g; c.fill();
     c.restore();
     c.save(); roundRect(c, x, y, w, h, 7); c.clip();
     var r = seeded(42);
     for (var i = 0; i < 7; i++) {                      // the haze of old chalk
       var sx = x + r() * w, sy = y + r() * h, sr = 40 + r() * 90, sg = c.createRadialGradient(sx, sy, 0, sx, sy, sr);
-      sg.addColorStop(0, 'rgba(238,231,214,.045)'); sg.addColorStop(1, 'rgba(238,231,214,0)');
+      sg.addColorStop(0, 'rgba(255,255,255,.045)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
       c.fillStyle = sg; c.fillRect(sx - sr, sy - sr, 2 * sr, 2 * sr);
     }
     var lg = c.createRadialGradient(x + w * 0.2, y, 0, x + w * 0.2, y, w * 0.9);
     lg.addColorStop(0, 'rgba(255,255,255,.05)'); lg.addColorStop(1, 'rgba(255,255,255,0)');
     c.fillStyle = lg; c.fillRect(x, y, w, h);
     c.restore();
-    c.lineWidth = 2; c.strokeStyle = 'rgba(168,137,79,.95)'; roundRect(c, x + 1, y + 1, w - 2, h - 2, 6); c.stroke();
-    c.lineWidth = 1; c.strokeStyle = 'rgba(238,231,214,.1)'; roundRect(c, x + 6, y + 6, w - 12, h - 12, 3); c.stroke();
-    c.lineCap = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(168,137,79,.9)';          // chalk tray
+    c.lineWidth = 2; c.strokeStyle = 'rgba(182,177,169,.95)'; roundRect(c, x + 1, y + 1, w - 2, h - 2, 6); c.stroke();
+    c.lineWidth = 1; c.strokeStyle = 'rgba(255,255,255,.1)'; roundRect(c, x + 6, y + 6, w - 12, h - 12, 3); c.stroke();
+    c.lineCap = 'round'; c.lineWidth = 3; c.strokeStyle = 'rgba(182,177,169,.9)';          // chalk tray
     c.beginPath(); c.moveTo(x + 16, y + h + 8); c.lineTo(x + w - 16, y + h + 8); c.stroke();
-    c.fillStyle = '#efe9da'; roundRect(c, x + w - 76, y + h + 2.4, 22, 4.2, 2); c.fill();
-    c.fillStyle = '#e4dcc8'; roundRect(c, x + w - 47, y + h + 2.4, 9, 4.2, 2); c.fill();
+    c.fillStyle = '#f4f3ed'; roundRect(c, x + w - 76, y + h + 2.4, 22, 4.2, 2); c.fill();
+    c.fillStyle = '#f3f2ee'; roundRect(c, x + w - 47, y + h + 2.4, 9, 4.2, 2); c.fill();
     return L.c;
   }
   SCENES.chalkboard = {
@@ -3834,9 +3836,9 @@
         boxStroke(ctx, q, boxK, e.bx, e.by, 0.75);
         if (tip) {
           var g = ctx.createRadialGradient(tip[0], tip[1], 0, tip[0], tip[1], 7);
-          g.addColorStop(0, 'rgba(238,231,214,.35)'); g.addColorStop(1, 'rgba(238,231,214,0)');
+          g.addColorStop(0, 'rgba(255,255,255,.35)'); g.addColorStop(1, 'rgba(255,255,255,0)');
           ctx.fillStyle = g; ctx.fillRect(tip[0] - 7, tip[1] - 7, 14, 14);
-          ctx.fillStyle = 'rgba(246,241,229,.95)'; ctx.beginPath(); ctx.arc(tip[0], tip[1], 1.7, 0, TAU); ctx.fill();
+          ctx.fillStyle = 'rgba(252,251,246,.95)'; ctx.beginPath(); ctx.arc(tip[0], tip[1], 1.7, 0, TAU); ctx.fill();
         }
       } else if (tau < tEnd) {                         // the eraser sweeps from left to right
         var front = e.bx - 20 + (e.bw + 40) * easeInOut((tau - tErase) / 0.9);
@@ -3847,7 +3849,7 @@
         ctx.restore();
         ctx.save(); roundRect(ctx, e.bx + 2, e.by + 2, e.bw - 4, e.bh - 4, 6); ctx.clip();
         var dust = ctx.createLinearGradient(front - 30, 0, front + 4, 0);
-        dust.addColorStop(0, 'rgba(238,231,214,0)'); dust.addColorStop(1, 'rgba(238,231,214,.11)');
+        dust.addColorStop(0, 'rgba(255,255,255,0)'); dust.addColorStop(1, 'rgba(255,255,255,.11)');
         ctx.fillStyle = dust; ctx.fillRect(front - 30, e.by, 34, e.bh);
         ctx.restore();
       } else {                                         // a faint smear stays behind, as on a real board
