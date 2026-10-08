@@ -901,9 +901,9 @@ main > #contact.chapter::before { border-color: transparent; }
 #contact .contact-lede { color: #ffffff; }
 #contact .contact-alt { color: rgba(255,255,255,.7); }
 #contact .contact-alt a { color: #dad7cb; text-decoration-color: rgba(218,215,203,.4); }
-#contact .button { background-color: #b6b1a9; color: #2e2d29; border-color: #b6b1a9;
-                   background-image: linear-gradient(#dad7cb, #dad7cb); }
-#contact .button:hover { background-color: #b6b1a9; color: #2e2d29; }
+#contact .button { background-color: #ffffff; color: #8c1515; border-color: #ffffff;
+                   background-image: linear-gradient(#f4f4f4, #f4f4f4); }
+#contact .button:hover { background-color: #ffffff; color: #8c1515; }
 footer { border-top-color: rgba(182,177,169,.35); }
 
 /* ---------- hover lift for the new cards ---------- */
@@ -1370,7 +1370,7 @@ main > #contact.chapter::before {
 }
 .masthead { background:
     radial-gradient(55rem 22rem at 90% -30%, rgba(182,177,169, .16), transparent 70%),
-    radial-gradient(40rem 20rem at 0% 100%, rgba(177,4,14, .07), transparent 70%),
+    radial-gradient(40rem 20rem at 0% 100%, rgba(46,45,41, .04), transparent 70%),
     linear-gradient(180deg, #f8f6f1 0%, var(--paper) 100%); }
 .hero-text .tagline, .page-sub { color: #8c1515; }
 
@@ -1641,12 +1641,12 @@ main > #contact.chapter::before {
 .ex-num { top: 3.62rem; bottom: auto; right: 1.15rem; font-size: 1.85rem; opacity: .5; letter-spacing: .02em; }
 @media (hover: hover) { .ex-card:hover .ex-num { transform: translateY(-2px); opacity: .9; } }
 
-/* Home: slow colour washes of Cardinal red and Fog grey behind the hero */
+/* Home: slow washes of grey behind the hero */
 .hero .aurora { position: absolute; inset: -18%; z-index: 0; pointer-events: none; filter: blur(28px);
   background:
-    radial-gradient(32% 36% at 18% 28%, rgba(177,4,14, .17), transparent 70%),
+    radial-gradient(32% 36% at 18% 28%, rgba(46,45,41, .06), transparent 70%),
     radial-gradient(30% 34% at 80% 58%, rgba(182,177,169, .26), transparent 70%),
-    radial-gradient(26% 28% at 58% 12%, rgba(101,28,50, .08), transparent 70%),
+    radial-gradient(26% 28% at 58% 12%, rgba(46,45,41, .04), transparent 70%),
     radial-gradient(28% 30% at 34% 86%, rgba(182,177,169, .14), transparent 72%); }
 @media (prefers-reduced-motion: no-preference) {
   .hero .aurora { animation: aurora 28s ease-in-out infinite alternate; }
@@ -1828,8 +1828,8 @@ footer .wrap.foot { row-gap: 1.6rem; }
   .js .releases:not(.drawn) .rel-line li::after { transform: scaleY(0); }
 }
 
-/* Background, as asked: a soft white page with warm neutral headers and bands, no green tint.
-   Oxford green stays for the menu bar and the dark contact band and footer. */
+/* Background, as asked: a soft white page with neutral headers and bands, no tint.
+   Cardinal red stays for the menu bar, the contact band and the footer. */
 :root { --paper: #ffffff; --panel: #fbfaf5; }
 .masthead { background:
     radial-gradient(55rem 22rem at 90% -30%, rgba(182,177,169, .15), transparent 70%),
@@ -1841,9 +1841,9 @@ main > .chapter:nth-of-type(even)::before {
   border-top-color: rgba(182,177,169, .2); border-bottom-color: rgba(182,177,169, .2);
 }
 .hero .aurora { background:
-    radial-gradient(32% 36% at 18% 28%, rgba(177,4,14, .08), transparent 70%),
+    radial-gradient(32% 36% at 18% 28%, rgba(46,45,41, .05), transparent 70%),
     radial-gradient(30% 34% at 80% 58%, rgba(182,177,169, .26), transparent 70%),
-    radial-gradient(26% 28% at 58% 12%, rgba(101,28,50, .07), transparent 70%),
+    radial-gradient(26% 28% at 58% 12%, rgba(46,45,41, .04), transparent 70%),
     radial-gradient(28% 30% at 34% 86%, rgba(182,177,169, .14), transparent 72%); }
 
 /* =====================================================================
@@ -1872,13 +1872,13 @@ html[data-theme="dark"] .navbar { box-shadow: 0 2px 14px -6px rgba(0,0,0, .7); }
 
 /* headers, the ticker and the alternate bands */
 html[data-theme="dark"] .masthead { background:
-    radial-gradient(55rem 22rem at 90% -30%, rgba(244,121,91, .11), transparent 70%),
+    radial-gradient(55rem 22rem at 90% -30%, rgba(255,255,255, .05), transparent 70%),
     linear-gradient(180deg, #1f1e1b 0%, var(--paper) 100%); }
 html[data-theme="dark"] .hero .aurora { background:
-    radial-gradient(32% 36% at 18% 28%, rgba(130,192,176, .09), transparent 70%),
-    radial-gradient(30% 34% at 80% 58%, rgba(244,121,91, .15), transparent 70%),
-    radial-gradient(26% 28% at 58% 12%, rgba(222,138,157, .07), transparent 70%),
-    radial-gradient(28% 30% at 34% 86%, rgba(244,121,91, .08), transparent 72%); }
+    radial-gradient(32% 36% at 18% 28%, rgba(255,255,255, .04), transparent 70%),
+    radial-gradient(30% 34% at 80% 58%, rgba(182,177,169, .10), transparent 70%),
+    radial-gradient(26% 28% at 58% 12%, rgba(255,255,255, .03), transparent 70%),
+    radial-gradient(28% 30% at 34% 86%, rgba(182,177,169, .06), transparent 72%); }
 html[data-theme="dark"] .ticker { background: #1c1b17; }
 html[data-theme="dark"] main > .chapter:nth-of-type(even)::before {
   background: #1d1c18; border-top-color: rgba(244,121,91, .15); border-bottom-color: rgba(244,121,91, .15); }
@@ -1932,7 +1932,7 @@ html[data-theme="dark"] .btn.solid { background-color: #f4795b; color: #171612; 
 html[data-theme="dark"] .btn.solid:hover { color: #171612; }
 html[data-theme="dark"] .button { background-color: var(--band); color: #ffffff; }
 html[data-theme="dark"] .button:hover { background-color: var(--band); color: #171612; }
-html[data-theme="dark"] #contact .button, html[data-theme="dark"] #contact .button:hover { color: #2e2d29; }
+html[data-theme="dark"] #contact .button, html[data-theme="dark"] #contact .button:hover { background-color: #ffffff; color: #8c1515; }
 html[data-theme="dark"] .filters button[aria-pressed="true"], html.js[data-theme="dark"] .pub-more:hover,
 html[data-theme="dark"] .j-now { color: #171612; }
 html[data-theme="dark"] .scroll-cue { border-color: rgba(255,255,255, .4); }
@@ -2059,11 +2059,12 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 }
 @keyframes ix-focus { 0%, 100% { transform: scale(1); } 50% { transform: scale(.5); } }
 
-/* Publications: a Download PDF button for every paper on arXiv, a small version of the CV button */
+/* Publications: a Download PDF button for every paper on arXiv, a small version of the CV button.
+   Outlined in Cardinal and filled on hover, so that red stays an accent on the long lists. */
 .links a.button.pdf { display: inline-flex; align-items: center; gap: .42rem; margin-right: .1rem;
                       font-size: .6rem; letter-spacing: .12em; padding: .36rem .72rem .34rem;
-                      border: 1px solid var(--gold); color: #ffffff; }
-.links a.button.pdf:hover { color: #ffffff; border-color: var(--gold); }
+                      background-color: transparent; border: 1px solid rgba(140,21,21, .5); color: var(--navy); }
+.links a.button.pdf:hover { color: #ffffff; border-color: var(--navy); }
 .links a.button.pdf .dl { width: .8rem; height: .8rem; flex: none; fill: none; stroke: currentColor;
                           stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
@@ -2089,8 +2090,10 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 .pkg-what { margin: .95rem 0 .9rem; max-width: 46rem; }
 .pkg-actions { margin-top: .2rem; gap: .5rem .9rem; }
 .links a.button.gh { display: inline-flex; align-items: center; gap: .45rem; font-size: .6rem; letter-spacing: .12em;
-                     padding: .36rem .75rem .34rem; border: 1px solid var(--gold); color: #ffffff; }
-.links a.button.gh:hover { color: #ffffff; border-color: var(--gold); }
+                     padding: .36rem .75rem .34rem; background-color: transparent; border: 1px solid rgba(140,21,21, .5); color: var(--navy); }
+.links a.button.gh:hover { color: #ffffff; border-color: var(--navy); }
+html[data-theme="dark"] .links a.button.pdf, html[data-theme="dark"] .links a.button.gh { background-color: transparent; color: #f4795b; border-color: rgba(244,121,91, .5); }
+html[data-theme="dark"] .links a.button.pdf:hover, html[data-theme="dark"] .links a.button.gh:hover { color: #171612; border-color: #f4795b; }
 .links a.button.gh .ico { width: .9rem; height: .9rem; }
 .pkg .releases { margin-top: 1.7rem; }
 .rel-when { display: block; margin-top: .15rem; font-family: var(--sans); font-size: .62rem; font-weight: 600;

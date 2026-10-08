@@ -13,16 +13,19 @@
 <meta property="og:title" content="Talks | Sumit Banik">
 <meta property="og:description" content="Talks of Sumit Banik, theoretical particle physicist at SLAC and Stanford. Invited seminars and conference talks since 2020.">
 <meta property="og:url" content="https://sumitbanikgit.github.io/talks.html">
-<meta property="og:image" content="https://sumitbanikgit.github.io/assets/portrait.jpg">
-<meta name="twitter:card" content="summary">
-<link rel="icon" href="favicon.ico?v=6ac74255" sizes="32x32">
-<link rel="icon" href="assets/favicon.svg?v=6ac74203" type="image/svg+xml">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=6ac74254">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap"></noscript>
-<link rel="stylesheet" href="assets/style.css?v=6ac74371">
+<meta property="og:image" content="https://sumitbanikgit.github.io/assets/card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sumit Banik, Postdoctoral Researcher, Fundamental Physics Directorate, SLAC National Accelerator Laboratory and Stanford University">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.ico?v=6ac7440e" sizes="32x32">
+<link rel="icon" href="assets/favicon.svg?v=6ac7440e" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=6ac7440e">
+<link rel="preload" href="assets/fonts/cormorant-garamond-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/source-serif-4-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css?v=6ac7587c">
+<link rel="stylesheet" href="assets/style.css?v=6ac7584c">
 <script>document.documentElement.classList.add("js");try{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}catch(e){}try{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}catch(e){}try{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 </head>
 <body id="top" class="page-talks">
@@ -110,7 +113,7 @@
     <a class="foot-mail" href="mailto:banik@stanford.edu">banik@stanford.edu</a>
   </div>
   <div class="visitors" hidden>
-    <div class="vis-map" role="group" tabindex="0" aria-label="Visits by country. The arrow keys go through the countries."><img src="/assets/map/world-dots.svg?v=6ac7425d" alt="" width="1200" height="482" loading="lazy"><svg class="vis-dots" aria-hidden="true" focusable="false"><defs><radialGradient id="vis-glow"><stop offset="0" stop-color="#e8e4d5" stop-opacity=".55"/><stop offset="1" stop-color="#e8e4d5" stop-opacity="0"/></radialGradient></defs></svg><span class="vis-tag" aria-hidden="true"></span></div>
+    <div class="vis-map" role="group" tabindex="0" aria-label="Visits by country. The arrow keys go through the countries."><img src="/assets/map/world-dots.svg?v=6ac7440e" alt="" width="1200" height="482" loading="lazy"><svg class="vis-dots" aria-hidden="true" focusable="false"><defs><radialGradient id="vis-glow"><stop offset="0" stop-color="#e8e4d5" stop-opacity=".55"/><stop offset="1" stop-color="#e8e4d5" stop-opacity="0"/></radialGradient></defs></svg><span class="vis-tag" aria-hidden="true"></span></div>
     <div class="vis-count" aria-hidden="true"></div>
     <div class="vis-share" aria-hidden="true"><i></i></div>
     <div class="vis-label" aria-hidden="true"></div>
@@ -1128,9 +1131,9 @@
     var t0 = performance.now(), TAU = Math.PI * 2, evIndex = 0;
     var COL = {}, PAL = {                       // line colours by day and by night
       light: { hadron: 'rgba(182,177,169,', gluon: 'rgba(177,4,14,', photon: 'rgba(140,21,21,', electron: 'rgba(101,28,50,',
-               muon: 'rgba(46,45,41,', nu: 'rgba(1,104,149,', pine: 'rgba(177,4,14,' },
+               muon: 'rgba(46,45,41,', nu: 'rgba(1,104,149,', pine: 'rgba(46,45,41,' },
       dark: { hadron: 'rgba(195,191,177,', gluon: 'rgba(130,192,176,', photon: 'rgba(211,206,191,', electron: 'rgba(222,138,157,',
-              muon: 'rgba(244,244,244,', nu: 'rgba(188,187,182,', pine: 'rgba(130,192,176,' }
+              muon: 'rgba(244,244,244,', nu: 'rgba(188,187,182,', pine: 'rgba(232,230,225,' }
     };
     function palette() { var src = PAL[document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light']; for (var k in src) COL[k] = src[k]; }
     palette(); document.addEventListener('themechange', palette);
@@ -1386,7 +1389,7 @@
   }
 })();
 </script>
-<script src="assets/scenes.js?v=6ac74249" defer></script>
+<script src="assets/scenes.js?v=6ac7440e" defer></script>
 <script>(function () {                      // visit statistics, on the live site only
   if (location.hostname !== 'sumitbanikgit.github.io') return;
   var s = document.createElement('script');

@@ -3218,7 +3218,7 @@ def main():
         referee="\n".join(f'<a class="journal" href="{url}"><span class="j-name">{name}</span><span class="j-pub">{pub}</span><span class="j-go" aria-hidden="true">→</span></a>' for name, pub, url in REFEREE),
         ix_pheno=_ix(DOMAIN_ICONS[2]), ix_fi=_ix(DOMAIN_ICONS[0]),
         ix_article=_ix(NEWS_ICONS['paper']), ix_proc=_ix(NEWS_ICONS['proc']), ix_talk=_ix(NEWS_ICONS['talk']), ix_code=_ix(TOOL_ICONS[0][1]),
-        n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), **ICONS,
+        n_total=len(PUBS), name_letters=name_letters, hero_portrait=hero_portrait, v_css=_ver("assets/style.css"), fonts_v=_ver("assets/fonts/fonts.css"), **ICONS,
         updated=date.today().strftime("%B %Y"), year=date.today().year, visitors=render_visitors(), search_v=search_v,
     )
     write_vcard()
@@ -3316,15 +3316,18 @@ TEMPLATE = """<!doctype html>
 <meta property="og:title" content="Sumit Banik">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{url}assets/portrait.jpg">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="{url}assets/card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sumit Banik, Postdoctoral Researcher, Fundamental Physics Directorate, SLAC National Accelerator Laboratory and Stanford University">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="favicon.ico?v={ico_v}" sizes="32x32">
 <link rel="icon" href="assets/favicon.svg?v={fav_v}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v={touch_v}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap"></noscript>
+<link rel="preload" href="assets/fonts/cormorant-garamond-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/source-serif-4-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/inter-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css?v={fonts_v}">
 <link rel="stylesheet" href="assets/style.css?v={v_css}">
 <script type="application/ld+json">{jsonld}</script>
 <script>document.documentElement.classList.add("js");try{{if(!sessionStorage.getItem("sb-intro")&&!matchMedia("(prefers-reduced-motion: reduce)").matches){{document.documentElement.classList.add("intro-on");sessionStorage.setItem("sb-intro","1")}}}}catch(e){{}}try{{if(localStorage.getItem("sb-still")==="1")document.documentElement.classList.add("still")}}catch(e){{}}try{{var t=localStorage.getItem("sb-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark")}}catch(e){{}}</script>
@@ -4363,9 +4366,9 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     var t0 = performance.now(), TAU = Math.PI * 2, evIndex = 0;
     var COL = {{}}, PAL = {{                       // line colours by day and by night
       light: {{ hadron: 'rgba(182,177,169,', gluon: 'rgba(177,4,14,', photon: 'rgba(140,21,21,', electron: 'rgba(101,28,50,',
-               muon: 'rgba(46,45,41,', nu: 'rgba(1,104,149,', pine: 'rgba(177,4,14,' }},
+               muon: 'rgba(46,45,41,', nu: 'rgba(1,104,149,', pine: 'rgba(46,45,41,' }},
       dark: {{ hadron: 'rgba(195,191,177,', gluon: 'rgba(130,192,176,', photon: 'rgba(211,206,191,', electron: 'rgba(222,138,157,',
-              muon: 'rgba(244,244,244,', nu: 'rgba(188,187,182,', pine: 'rgba(130,192,176,' }}
+              muon: 'rgba(244,244,244,', nu: 'rgba(188,187,182,', pine: 'rgba(232,230,225,' }}
     }};
     function palette() {{ var src = PAL[document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light']; for (var k in src) COL[k] = src[k]; }}
     palette(); document.addEventListener('themechange', palette);
