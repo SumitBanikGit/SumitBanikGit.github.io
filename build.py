@@ -3420,10 +3420,10 @@ TEMPLATE = """<!doctype html>
 {portrait}
 <div class="about-text">
 <p class="statement" data-hold="2600">I am a postdoctoral researcher in theoretical particle physics at SLAC
-National Accelerator Laboratory and Stanford University. My research covers
-multi-loop Feynman integrals and the applied mathematics behind them, as well
-as effective field theories, model building, Higgs physics and the search for
-New Physics beyond the Standard Model at particle colliders.</p>
+National Accelerator Laboratory and Stanford University. My research interests
+are in multi-loop Feynman integrals and the applied mathematics behind them, as
+well as effective field theories, model building, Higgs physics and the search
+for New Physics beyond the Standard Model at particle colliders.</p>
 <p class="about-links"><a href="cv.html">Read the full CV <span aria-hidden="true">→</span></a>
 <a href="contact.html">Get in touch <span aria-hidden="true">→</span></a></p>
 </div>
