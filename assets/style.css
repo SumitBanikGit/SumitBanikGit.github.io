@@ -578,9 +578,12 @@ footer { margin-top: 0; }
 .contact-lede { font-family: var(--display); font-style: italic; font-weight: 500;
                 font-size: 1.45rem; line-height: 1.35; color: var(--head); }
 
-/* Letterhead: a Cardinal red edge with a Fog hairline across the top of the page. */
-body { border-top: 4px solid var(--navy); }
-.masthead { box-shadow: inset 0 1px 0 var(--gold); }
+/* Letterhead, on paper: a Cardinal red edge with a Fog hairline across the top of the page
+   (on screen the menu bar at the top is the edge). */
+@media print {
+  body { border-top: 4px solid var(--navy); }
+  .masthead { box-shadow: inset 0 1px 0 var(--gold); }
+}
 
 /* Footer as a signature block. */
 footer .wrap.foot {
@@ -1487,9 +1490,9 @@ main > #contact.chapter::before {
 @media (min-width: 52.01rem) {
   .hero:not(.page-hero) .hero-text { grid-area: 1 / 1; }
   .hero:not(.page-hero) .hero-stage { grid-area: 1 / 2; }
-  /* the first screen: the home header fills it down to the red menu bar, which shows at once */
-  .hero:not(.page-hero) { min-height: min(calc(100vh - 3.75rem), 56rem); padding: 2rem 0 3.25rem; }
-  @supports (min-height: 100svh) { .hero:not(.page-hero) { min-height: min(calc(100svh - 3.75rem), 56rem); } }
+  /* the first screen: the red menu bar at the top, and under it the home header down to the bottom edge */
+  .hero:not(.page-hero) { min-height: min(calc(100vh - 3.8rem), 56rem); padding: 2rem 0 3.25rem; }
+  @supports (min-height: 100svh) { .hero:not(.page-hero) { min-height: min(calc(100svh - 3.8rem), 56rem); } }
   .hero:not(.page-hero) .scroll-cue { bottom: .9rem; }
   /* the two rows of the legend at the pitch of the two rows of profile links, each level with one */
   .hero-inner > .ev { --ev-drop: .5rem; }
@@ -2014,13 +2017,6 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
   @keyframes tt-hint { 0% { box-shadow: 0 0 0 0 rgba(218,215,203, .6); } 100% { box-shadow: 0 0 0 11px rgba(218,215,203, 0); } }
 }
 
-/* a second theme switch in the top corner while the header is on screen (the menu bar sits below the header) */
-.theme-toggle.corner { position: fixed; top: .85rem; right: .95rem; z-index: 30; width: 2.3rem; height: 2.3rem; margin: 0;
-                       background: rgba(140,21,21, .88); border-color: rgba(218,215,203, .6);
-                       box-shadow: 0 6px 16px -8px rgba(0,0,0, .5); transition: opacity .3s ease, transform .3s ease, border-color .2s, background .2s; }
-.theme-toggle.corner:hover { background: rgba(140,21,21, 1); border-color: #dad7cb; }
-.theme-toggle.corner.away { opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden;
-                            transition: opacity .3s ease, transform .3s ease, visibility 0s .3s; }   /* hidden from the keyboard too */
 @media print { .theme-toggle { display: none !important; } }
 
 /* Research tour: horizontal swipes go to the tour, vertical ones still scroll the page */
@@ -2402,13 +2398,20 @@ details.pkg-more > summary:hover .pkg-toggle { color: var(--head); border-color:
 }
 @media (prefers-reduced-motion: reduce) { .pkg-toggle .chev { transition: none; } }
 
-/* The menu bar, a size larger, with About first, as wide as the page header above it */
-.navbar .nav-inner { max-width: 68rem; }
-.navbar nav { font-size: .78rem; padding: .62rem 0; }
-.brand { font-size: 1.42rem; }
+/* The menu bar at the top of every page, a little wider than the page header below it: the name on the left, and
+   the ten pages in ordinary capitals (as in the menus of Stanford and SLAC), spread evenly up to the two buttons.
+   The pages grow to 1rem as the window widens to the full width of the bar. */
+.navbar .nav-inner { max-width: 76rem; }
+.navbar nav { font-size: .94rem; letter-spacing: .01em; text-transform: none; padding: .62rem 0; }
+.navbar nav .nav-item > a { line-height: 1.6rem; }   /* the same height at every size of the type: 3.8rem with its rule */
+.brand { font-size: 1.5rem; }
+@media (min-width: 51.01rem) {
+  .nav-inner nav { justify-content: space-between; }
+  .navbar nav .nav-item:first-child > a { margin-left: -.36rem; }
+}
+@media (min-width: 66.01rem) { .navbar nav { font-size: clamp(.94rem, calc(.94rem + (100vw - 66rem) * .006), 1rem); } }
 @media (min-width: 51.01rem) and (max-width: 66rem) { .brand { display: none; } }   /* the ten pages need the room */
-@media (min-width: 51.01rem) and (max-width: 58rem) { .navbar nav { font-size: .72rem; letter-spacing: .05em; } }
-@media (min-width: 51.01rem) and (max-width: 54rem) { .navbar nav { font-size: .7rem; } }
+@media (min-width: 51.01rem) and (max-width: 56rem) { .navbar nav { font-size: .8rem; } }
 
 /* Publications: a click on a paper (its title, authors or journal) opens its abstract, its length, its preprint
    numbers and its arXiv category, as for the packages on the Software page */
@@ -2564,16 +2567,7 @@ a.stat:hover .l, a.stat:focus-visible .l { color: var(--accent); }
 .nav-tools { flex: none; display: flex; align-items: center; gap: .45rem; }
 .nav-tools .ss-btn, .nav-tools .theme-toggle { margin-left: 0; }
 @media (min-width: 51.01rem) and (max-width: 62rem) { .nav-inner { gap: 1.1rem; } .nav-tools { gap: .35rem; } }
-@media (min-width: 51.01rem) and (max-width: 54rem) { .navbar nav { letter-spacing: .04em; }
-                                                      .navbar nav .nav-item > a { padding-left: .3rem; padding-right: .3rem; } }
-.ss-btn.corner { position: fixed; top: .85rem; right: 3.75rem; z-index: 30; width: 2.3rem; height: 2.3rem; margin: 0;
-                 background: rgba(140,21,21, .88); border-color: rgba(218,215,203, .6);
-                 box-shadow: 0 6px 16px -8px rgba(0,0,0, .5); transition: opacity .3s ease, transform .3s ease, border-color .2s, background .2s; }
-.ss-btn.corner:hover { background: rgba(140,21,21, 1); border-color: #dad7cb; }
-.ss-btn.corner.away { opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden;
-                      transition: opacity .3s ease, transform .3s ease, visibility 0s .3s; }
-/* on phones and tablets the corner switches scroll away with the header, rather than float over its text (the menu bar has its own) */
-@media (max-width: 52rem) { .theme-toggle.corner, .ss-btn.corner { position: absolute; } }
+@media (min-width: 51.01rem) and (max-width: 54rem) { .navbar nav .nav-item > a { padding-left: .3rem; padding-right: .3rem; } }
 
 dialog.ss { width: min(42rem, calc(100vw - 1.5rem)); max-width: none;
             max-height: calc(100vh - max(.75rem, 8vh) - .75rem); max-height: calc(100dvh - max(.75rem, 8vh) - .75rem);
@@ -2981,14 +2975,10 @@ html:not(.js) .motion-toggle { display: none; }
 @media print { .motion-toggle { display: none; } }
 html.still .scroll-cue span, html.still .news li:first-child::before, html.still .ticker-track, html.still .stop.now .stop-node::after,
 html.still .stop.now .logo-disc::after, html.still .jm-ping, html.still .hero .aurora, html.still .visitors .ring { animation-play-state: paused; }
-@media (max-width: 52rem) {                         /* on a phone or tablet: at the top, beside the search and theme buttons */
-  /* (4 px higher than theirs, since the header starts below the 4 px rule at the top of the page) */
-  .motion-toggle { top: calc(.85rem - 4px); bottom: auto; left: auto; right: 6.55rem; width: 2.3rem; height: 2.3rem; opacity: 1; color: #dad7cb;
-                   background: rgba(140,21,21, .88); border-color: rgba(218,215,203, .6); box-shadow: 0 6px 16px -8px rgba(0,0,0, .5); }
-  html.still .motion-toggle { border-color: #dad7cb; }
+@media (max-width: 52rem) {                         /* on a phone or tablet: at the top of the header, under the menu bar */
+  .motion-toggle { top: .85rem; bottom: auto; width: 2.3rem; height: 2.3rem; }
 }
 .hero:not(.page-hero) > .motion-toggle { right: auto; left: .95rem; }   /* home: clear of the legend of the event display */
-@media (max-width: 24rem) { .page-hero .crumb { margin-top: .9rem; } }  /* the narrowest phones: the crumb below the buttons */
 
 /* Footer: on a phone the two institutions go on lines of their own, rather than leaving the dot at a line end. */
 @media (max-width: 26rem) { .foot-aff .aff-sep { display: none; } .foot-aff .aff-a { display: block; } }

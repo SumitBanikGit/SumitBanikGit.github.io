@@ -16,7 +16,7 @@ from pathlib import Path
 
 ME = "S. Banik"
 
-# The moving row of research topics under the menu bar of the home page. Switched off on 2026-10-08
+# The moving row of research topics under the header of the home page. Switched off on 2026-10-08
 # for a calmer, more professional first screen. True brings it back.
 SHOW_TICKER = False
 
@@ -3081,9 +3081,7 @@ def write_pages(html, n_articles, n_proc):
                 '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></button>')
         return (f'<div class="navbar">\n  <div class="wrap nav-inner">\n'
                 f'    <a class="brand" href="index.html">{P["name"]}</a>\n'
-                f'    <nav aria-label="Pages">{links}</nav>\n    <div class="nav-tools">{find}{toggle}</div>\n  </div>\n</div>\n'
-                + find.replace('class="ss-btn"', 'class="ss-btn corner"', 1)
-                + toggle.replace('class="theme-toggle"', 'class="theme-toggle corner"', 1) + '\n')
+                f'    <nav aria-label="Pages">{links}</nav>\n    <div class="nav-tools">{find}{toggle}</div>\n  </div>\n</div>\n\n')
 
     def letters(text):
         out, i = [], 0
@@ -3148,8 +3146,8 @@ def write_pages(html, n_articles, n_proc):
                 block = re.sub(r'<h2 class="chapter-title">.*?</h2>\n?', "", block, count=1, flags=re.S)
             parts.append(block)
         body = (f'<body id="top" class="page-{slug}">\n{INTRO}<a class="skip" href="#main">Skip to content</a>\n\n'
+                + navbar(file)                      # the menu bar first, at the top of every page
                 + (hero if file == "index.html" else page_hero(label, title, sub, file, tour_index() if file == "research.html" else ""))
-                + navbar(file)
                 + (ticker if file == "index.html" and SHOW_TICKER else "")
                 + '<main id="main" class="wrap">\n\n' + "\n\n".join(parts) + "\n\n" + tail)
         if file in scenes:                                # the page scenes live in their own script
@@ -3169,11 +3167,11 @@ def write_pages(html, n_articles, n_proc):
 
     # a friendly 404 page for mistyped addresses
     nf = (head.replace("<title>Sumit Banik | Theoretical Particle Physics</title>", "<title>Page not found | Sumit Banik</title>")
-          + '<body id="top" class="page-404">\n' + INTRO + '<a class="skip" href="#main">Skip to content</a>\n\n' + page_hero("Not found", "Page not found",
+          + '<body id="top" class="page-404">\n' + INTRO + '<a class="skip" href="#main">Skip to content</a>\n\n' + navbar("") + page_hero("Not found", "Page not found",
             "The page you are looking for does not exist. Like a neutrino, it left the detector without a trace.",
             extra='    <div class="ev-note" aria-hidden="true"><p class="ev-kicker">At the Large Hadron Collider</p>'
                   '<p class="ev-label"></p><p class="ev-say"></p></div>\n')
-          + navbar("") + '<main id="main" class="wrap">\n<section class="chapter nf-help">'
+          + '<main id="main" class="wrap">\n<section class="chapter nf-help">'
           '<p class="nf-guess" hidden>Perhaps you were looking for <a class="nf-page" href="index.html">the home page</a>.</p>'
           '<p class="nf-find" hidden><button class="button nf-search" type="button">Search the site for “<span class="nf-q"></span>”</button></p>'
           '<p class="about-links"><a href="index.html">Go to the home page <span aria-hidden="true">→</span></a></p></section>\n'
@@ -4031,21 +4029,6 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
       vt.finished.then(function () {{ root.classList.remove('theme-vt'); }}, function () {{ root.classList.remove('theme-vt'); }});
     }});
   }});
-  var corner = document.querySelector('.theme-toggle.corner'), navbar = document.querySelector('.navbar'),
-      cornerFind = document.querySelector('.ss-btn.corner');
-  if (corner && navbar) {{                           // the corner switches step aside as the menu bar with its own reaches them
-    var edge = 0, queued = false;                     // where the corner buttons end (measured once per size, not on every scroll)
-    var measure = function () {{ edge = corner.offsetTop + corner.offsetHeight + 8; }};
-    var place = function () {{
-      queued = false;
-      var away = navbar.getBoundingClientRect().top <= edge;
-      corner.classList.toggle('away', away);
-      if (cornerFind) cornerFind.classList.toggle('away', away);
-    }};
-    window.addEventListener('scroll', function () {{ if (!queued) {{ queued = true; requestAnimationFrame(place); }} }}, {{ passive: true }});
-    window.addEventListener('resize', function () {{ measure(); place(); }});
-    requestAnimationFrame(function () {{ measure(); place(); }});   // after the first layout, so as not to force one
-  }}
   var dq = window.matchMedia('(prefers-color-scheme: dark)'), follow = function (ev) {{
     var saved = null; try {{ saved = localStorage.getItem('sb-theme'); }} catch (e) {{}}
     if (!saved) setTheme(ev.matches, false);
