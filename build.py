@@ -38,15 +38,16 @@ PROFILE = {
 
 # --------------------------------------------------------------------------
 # Publications. kind: article | proceedings | thesis
-# topic: fi (Feynman integrals & mathematical methods) | pheno (BSM & collider)
-#        | soft (software)   -- a paper may carry several, space separated
+# topic: fi (mathematical physics: Mellin-Barnes integrals, GKZ systems, hypergeometric functions, Feynman integrals)
+#        | pheno (BSM & collider) | soft (software). A paper may carry several, space separated.
 # --------------------------------------------------------------------------
 PUBS = [
-    dict(kind="article", year=2026, topic="fi",
+    dict(kind="article", year=2026, topic="fi soft",
          title="Multiple Mellin-Barnes integrals with polygamma functions",
          authors="S. Banik, S. Friot",
          ref="Phys. Rev. D <b>114</b>, 056004 (2026)",
-         arxiv="2512.19803", doi="10.1103/yfvl-dfk2", inspire="3095311"),
+         arxiv="2512.19803", doi="10.1103/yfvl-dfk2", inspire="3095311",
+         code="https://github.com/SumitBanikGit/MBConicHulls"),
     dict(kind="article", year=2026, topic="fi soft",
          title="HyperPrecision: A Mathematica package for high-precision numerical evaluation of multivariate hypergeometric functions",
          authors="S. Banik, S. Bera",
@@ -105,7 +106,7 @@ PUBS = [
          ref="Phys. Rev. D <b>110</b>, 036002 (2024)",
          arxiv="2309.00409", doi="10.1103/PhysRevD.110.036002", inspire="2692835",
          code="https://github.com/SumitBanikGit/MBConicHulls"),
-    dict(kind="article", year=2023, topic="pheno",
+    dict(kind="article", year=2023, topic="pheno soft",
          title="Renormalization group evolution with scalar leptoquarks",
          authors="S. Banik, A. Crivellin",
          ref="JHEP <b>11</b> (2023) 121",
@@ -160,11 +161,12 @@ PUBS = [
          arxiv="1909.00962", inspire="1752370"),
 
     # ---- conference proceedings
-    dict(kind="proceedings", year=2026, topic="fi",
+    dict(kind="proceedings", year=2026, topic="fi soft",
          title="Automated computation of multiple Mellin-Barnes integrals having polygamma functions in their integrand",
          authors="S. Banik, S. Friot",
          ref="Acta Phys. Pol. B Proc. Suppl. <b>19</b>, 2-A8 (2026)", venue="MTTD 2025",
-         doi="10.5506/APhysPolBSupp.19.2-A8", inspire="3153391", tour="2512.19803"),
+         doi="10.5506/APhysPolBSupp.19.2-A8", inspire="3153391", tour="2512.19803",
+         code="https://github.com/SumitBanikGit/MBConicHulls"),
     dict(kind="proceedings", year=2026, topic="pheno",
          title="Indications for new Higgs bosons",
          authors="A. Crivellin, S. Ashanujjaman, S. Banik, S. P. Maharathy, G. Coloretti",
@@ -256,24 +258,30 @@ TICKER = ["Feynman integrals", "Hypergeometric functions", "Special functions", 
 # Research domains on the Research page (one card each).
 DOMAINS = [
     ("Mathematical physics",
-     "Multivariable hypergeometric functions and their analytic continuation, GKZ systems, convex geometry of conic hulls and triangulations, and the method of brackets.",
-     "Hypergeometric functions · GKZ systems · Convex geometry"),
+     "Multiple Mellin-Barnes integrals, GKZ hypergeometric systems and multivariate hypergeometric functions, with series "
+     "representations from conic hulls and triangulations, analytic continuation, high-precision evaluation and the method of brackets.",
+     "Mellin-Barnes integrals · GKZ systems · Hypergeometric functions"),
     ("Feynman integrals",
-     "Analytic and numerical evaluation of multi-loop and multi-scale Feynman integrals through <i>N</i>-fold Mellin-Barnes representations, including conformal and sunset integrals.",
-     "Mellin-Barnes · Conformal integrals · Multi-loop"),
+     "Analytic and numerical evaluation of multi-loop, multi-scale Feynman integrals, such as conformal hexagon, double box and "
+     "one-loop <i>n</i>-point integrals, sunset integrals in chiral perturbation theory, and their <i>ε</i>-expansion in dimensional regularization.",
+     "Multi-loop · Multi-scale · Conformal integrals"),
     ("Multi-Higgs physics",
-     "Extended scalar sectors such as the 2HDM, the N2HDM and Higgs triplets confronted with LHC data, the di-photon excesses near 95 and 152 GeV, and correlations with EDMs.",
+     "Extended scalar sectors such as the 2HDM, the N2HDM and Higgs triplets, confronted with the di-photon excesses near 95 and "
+     "152 GeV at the LHC, differential top-quark distributions, the W mass and electric dipole moments.",
      "2HDM · Higgs triplets · LHC excesses"),
     ("Computational tools",
-     "Open-source <i>Mathematica</i> packages for precision calculations: <a href=\"software.html#mbconichulls\">MBConicHulls</a>, "
-     "<a href=\"software.html#feyngkz\">FeynGKZ</a> and <a href=\"software.html#hyperprecision\">HyperPrecision</a>.",
+     "Open-source <i>Mathematica</i> packages: <a href=\"software.html#mbconichulls\">MBConicHulls</a> for multiple Mellin-Barnes integrals, "
+     "<a href=\"software.html#feyngkz\">FeynGKZ</a> for Feynman integrals via GKZ systems, and "
+     "<a href=\"software.html#hyperprecision\">HyperPrecision</a> for multivariate hypergeometric functions.",
      "Mathematica · Computer algebra · High precision"),
     ("Effective field theory",
-     "The Standard Model effective field theory, two-loop anomalous dimensions of baryon-number-violating operators, and renormalization group evolution.",
+     "The Standard Model effective field theory and the renormalization group: two-loop anomalous dimensions of baryon-number-violating "
+     "operators for proton decay, two-loop running with scalar leptoquarks, and the summation of large logarithms.",
      "SMEFT · RG evolution · Proton decay"),
     ("Exotic particles",
-     "Leptoquarks and new scalars beyond the Standard Model, their signatures at the LHC, and their imprint on low-energy observables.",
-     "Leptoquarks · New scalars · LHC signatures"),
+     "Scalar leptoquarks beyond the Standard Model: two-loop renormalization group evolution, the unification of gauge and Yukawa "
+     "couplings, and one-loop matching onto the SMEFT.",
+     "Leptoquarks · Unification · SMEFT matching"),
 ]
 
 # The research domain of each paper (by arXiv number, or INSPIRE number where there is none), so that each
@@ -281,10 +289,10 @@ DOMAINS = [
 DOMAIN_KEYS = ["math", "fi", "higgs", "tools", "eft", "exotic"]
 PAPER_DOMAINS = {
     "2512.19803": "fi math tools", "2605.30216": "tools math", "2512.07727": "fi math", "2510.08682": "eft exotic",
-    "3081108": "fi eft", "2412.00523": "higgs", "2404.14492": "higgs", "2411.18618": "higgs", "2402.00101": "higgs",
-    "2308.07953": "higgs", "2407.06267": "higgs", "2309.00409": "fi math tools", "2307.06800": "exotic eft",
+    "3081108": "fi math eft", "2412.00523": "higgs", "2404.14492": "higgs", "2411.18618": "higgs", "2402.00101": "higgs",
+    "2308.07953": "higgs", "2407.06267": "higgs", "2309.00409": "fi math tools", "2307.06800": "exotic eft tools",
     "2306.15722": "higgs", "2303.11351": "higgs", "2212.11839": "fi math tools", "2211.01285": "tools fi math",
-    "2112.09679": "math fi", "2012.15108": "fi math tools", "2012.15646": "fi math", "2007.08360": "fi",
+    "2112.09679": "math fi", "2012.15108": "fi math tools", "2012.15646": "fi math", "2007.08360": "fi math",
     "1909.00962": "math", "3153391": "fi math tools", "2605.04233": "higgs", "2865718": "higgs",
     "2407.20120": "fi math", "2809580": "fi math tools", "2402.04174": "fi math", "2312.01458": "higgs",
     "2614373": "fi math",
@@ -567,7 +575,7 @@ def authors_html(s):
                      f'<span class="au">{keep(a)}</span>' if "-" in a else keep(a) for a in parts)   # nor "U.-G. Meißner" at its hyphen
 
 
-TOPIC_LABEL = {"fi": "Feynman integrals", "pheno": "Phenomenology", "soft": "Software"}
+TOPIC_LABEL = {"fi": "Mathematical physics", "pheno": "Phenomenology", "soft": "Software"}
 
 
 _TOUR = None
@@ -804,7 +812,7 @@ def paper_map_data():
     l2, v2 = leading([v1])
     xs = [a * math.sqrt(max(l1, 0)) for a in v1]
     ys = [a * math.sqrt(max(l2, 0)) for a in v2]
-    ph = [x for x, p in zip(xs, order) if p["topic"] == "pheno"]
+    ph = [x for x, p in zip(xs, order) if _group(p) == "pheno"]
     if ph and sum(ph) / len(ph) > 0:
         xs = [-x for x in xs]
     if ys[max(range(n), key=lambda i: abs(ys[i]))] < 0:
@@ -816,7 +824,7 @@ def paper_map_data():
         lo, hi = min(a), max(a)
         return [round((v - lo) / ((hi - lo) or 1), 4) for v in a]
     X, Y, place = unit(xs), unit(ys), {k: i for i, k in enumerate(ids)}
-    return [dict(x=X[i], y=Y[i], t="pheno" if p["topic"] == "pheno" else "fi", k=p["kind"], yr=int(p["year"]),
+    return [dict(x=X[i], y=Y[i], t=_group(p), k=p["kind"], yr=int(p["year"]),
                  n=p["title"].strip(), r=_plain(p["ref"]).strip(), u=f"publications.html#{_pub_id(p)}",
                  e=[place[_pub_id(q)] for q in _related(p)]) for i, p in enumerate(order)]
 
@@ -831,7 +839,7 @@ def render_paper_map():
             '<div class="pmap-box"><canvas class="pmap-plot" role="img" aria-label="A map of the papers by subject, '
             'from the search for new Higgs bosons on the left to the mathematics of Feynman integrals on the right."></canvas></div>\n'
             '<div class="pmap-foot"><p class="pmap-read" id="pmap-cap"></p>'
-            '<ul class="pmap-key" aria-hidden="true"><li class="k-fi">Feynman integrals</li><li class="k-ph">Phenomenology</li>'
+            '<ul class="pmap-key" aria-hidden="true"><li class="k-fi">Mathematical physics</li><li class="k-ph">Phenomenology</li>'
             '<li class="k-pr">Proceedings</li></ul></div>\n'
             f'<script type="application/json" class="pmap-data">{blob}</script>\n'
             '</figure>\n' + PMAP_JS)
@@ -1000,6 +1008,11 @@ def render_coauthors(least=4):
 def _html_attr(text):
     import html as _html
     return _html.escape(text, quote=True)
+
+
+def _group(p):
+    """The two groups of the maps of the papers: mathematical physics ("fi") or phenomenology ("pheno")."""
+    return "fi" if "fi" in p["topic"].split() else "pheno"
 
 
 def _domain_slugs():
@@ -1542,7 +1555,7 @@ def pub_scene_data():
     order = sorted(reversed(PUBS), key=lambda p: (int(p["year"]), p.get("arxiv") or "9999.99999"))
     place = {_pub_id(p): i for i, p in enumerate(order)}
     for p in order:
-        pubs.append(dict(y=int(p["year"]), t="pheno" if p["topic"] == "pheno" else "fi",   # a star opens its paper in the list below
+        pubs.append(dict(y=int(p["year"]), t=_group(p),   # a star opens its paper in the list below
                          k=p["kind"], n=p["title"], u=f"#{_pub_id(p)}", p=_plain(p["title"]).strip(),
                          r=[place[_pub_id(q)] for q in _related(p)]))
     return dict(pubs=pubs)
@@ -3474,7 +3487,7 @@ for New Physics beyond the Standard Model at particle colliders.</p>
 <a href="{inspire}" style="white-space: nowrap">INSPIRE-HEP</a> · <a href="{arxiv}">arXiv</a> · <a href="https://orcid.org/{orcid}">ORCID</a>.</p>
 <div class="filters" role="group" aria-label="Filter publications by topic">
   <button type="button" data-filter="all" aria-pressed="true">All ({n_total})</button>
-  <button type="button" data-filter="fi" aria-pressed="false">Feynman integrals</button>
+  <button type="button" data-filter="fi" aria-pressed="false">Mathematical physics</button>
   <button type="button" data-filter="pheno" aria-pressed="false">Phenomenology</button>
   <button type="button" data-filter="soft" aria-pressed="false">Software</button>
   <input class="pub-search" id="pub-search" name="q" type="search" placeholder="Search publications" aria-label="Search publications">
