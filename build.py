@@ -2751,10 +2751,11 @@ PAGES = [
 ]
 
 def _intro():
-    """Opening reveal, once per visit (see <head>): two proton beams meet at the centre of the screen and the
-    collision sends charged particles out through the faint layers of a detector, each track bent into a
-    circle by the magnetic field (the softer the particle, the tighter its curl), with two neutral ones
-    straight. The page then opens from the collision point."""
+    """Opening reveal, once per visit (see <head>): two protons, each a ball with its three quarks inside (two up
+    quarks and a down quark), fly in from the sides and collide at the centre of the screen. The collision sends
+    charged particles out through the faint layers of a detector, each track bent into a circle by the magnetic
+    field (the softer the particle, the tighter its curl), with two neutral ones straight. The page then opens
+    from the collision point."""
     import math
     import random
     rnd = random.Random(7)                      # the same collision every time
@@ -2777,10 +2778,16 @@ def _intro():
     for i, phi in enumerate((0.9, 3.9)):     # two neutral particles, straight
         tracks.append(f'<path class="tr nu" pathLength="1" style="--d:{0.7 + i * 0.03:.2f}s;--t:.5s" d="M0 0L{95 * math.cos(phi):.1f} {95 * math.sin(phi):.1f}"/>')
     rings = "".join(f'<circle class="ly" cx="0" cy="0" r="{r}" style="--d:{0.12 + k * 0.08:.2f}s"/>' for k, r in enumerate((9, 21, 34, 52)))
+
+    def proton(side):                         # each drawn on its own, so that it sets off near the edge of any screen
+        m = 1 if side == "l" else -1          # the two mirror each other, the down quark low on the outer side
+        quarks = "".join(f'<circle class="q{" d" if k == 2 else ""}" cx="{m * 4.3 * math.sin(2 * math.pi * k / 3):.2f}" '
+                         f'cy="{-4.3 * math.cos(2 * math.pi * k / 3):.2f}" r="1.9"/>' for k in range(3))
+        return f'<div class="pr {side}"><svg viewBox="-10 -10 20 20"><circle class="pr-body" r="9"/><g class="qs">{quarks}</g></svg></div>'
     return ('<div class="intro" aria-hidden="true"><svg viewBox="-100 -60 200 120" preserveAspectRatio="xMidYMid slice">'
             f'<g class="det">{rings}</g>'
-            '<path class="beam l" pathLength="1" d="M-104 0H-0.6"/><path class="beam r" pathLength="1" d="M104 0H0.6"/>'
-            f'<g class="trs">{"".join(tracks)}</g><circle class="flash" cx="0" cy="0" r="6"/></svg></div>\n')
+            f'<g class="trs">{"".join(tracks)}</g><circle class="flash" cx="0" cy="0" r="6"/></svg>'
+            f'{proton("l")}{proton("r")}</div>\n')
 
 
 # Opening reveal: a collision at the centre of the screen opens the page (shown once per visit, see <head>).
@@ -3969,7 +3976,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
     }});
   }}
 
-  /* ---------- opening reveal: lift the curtain, then let the page animations run ---------- */
+  /* ---------- opening reveal: once the collision has opened the page, let the page animations run ---------- */
   if (document.documentElement.classList.contains('intro-on')) {{
     var endIntro = function () {{ document.documentElement.classList.remove('intro-on'); }};
     setTimeout(endIntro, 2150);

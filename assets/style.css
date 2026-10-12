@@ -87,8 +87,6 @@ a:focus-visible, button:focus-visible, .skip:focus {
     linear-gradient(180deg, #f8f6f1 0%, var(--paper) 100%);
 }
 
-.intro { display: block; }
-
 h1 { margin: 0; font-weight: inherit; font-size: inherit; line-height: inherit; }
 
 .name {
@@ -435,13 +433,6 @@ details.more > summary:hover { background: color-mix(in srgb, var(--accent) 8%, 
 @media (max-width: 34rem) { .contact-alt { display: block; margin: .8rem 0 0; } }
 
 
-
-/* Gentle entrance for the masthead; nothing moves if the reader prefers not. */
-@media (prefers-reduced-motion: no-preference) {
-  .intro > * { animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
-  .intro > :last-child { animation-delay: .12s; }
-  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-}
 
 @media print { details.more > summary { display: none; } details.more > * { display: block; } }
 
@@ -1390,20 +1381,7 @@ main > #contact.chapter::before {
    Smart motion
    ===================================================================== */
 
-/* 1. opening reveal: a monogram draws itself, then the curtain lifts (once per visit) */
-.intro { display: none; }
-.intro-on .intro {
-  display: grid; place-items: center; position: fixed; inset: 0; z-index: 100; background: #8c1515;
-  animation: curtain .9s cubic-bezier(.76, 0, .24, 1) 1.55s forwards;
-}
-.intro svg { width: 6.5rem; height: 6.5rem; overflow: visible; }
-.intro circle { fill: none; stroke: #b6b1a9; stroke-width: 1.2; stroke-dasharray: 1; stroke-dashoffset: 1;
-                animation: draw-ring 1.1s cubic-bezier(.6, .05, .3, 1) .1s forwards; }
-.intro text { font-family: var(--display); font-weight: 600; font-size: 34px; fill: #dad7cb; letter-spacing: .06em;
-              opacity: 0; animation: mono-in .8s ease .55s forwards; }
-@keyframes draw-ring { to { stroke-dashoffset: 0; } }
-@keyframes mono-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-@keyframes curtain { to { transform: translateY(-100%); } }
+/* 1. opening reveal, once per visit (the collision, below): the header waits for it before it rises */
 .intro-on .hero-text > *, .intro-on .name .ch { animation-play-state: paused; }
 
 /* 2. page transitions between pages (browsers that support cross-document view transitions) */
@@ -2214,12 +2192,14 @@ html[data-theme="dark"] .logo-disc { border-color: rgba(244,121,91,.55); }
 }
 
 /* =====================================================================
-   Opening reveal, once per visit: two proton beams meet at the centre and
-   the collision sends particles out through the layers of a detector,
-   their tracks bent by the magnetic field. Then the page opens from the
+   Opening reveal, once per visit: two protons, each with its three
+   quarks, fly in from the sides and collide at the centre, and the
+   collision sends particles out through the layers of a detector, their
+   tracks bent by the magnetic field. Then the page opens from the
    collision point.
    ===================================================================== */
 @property --hole { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.intro { display: none; --u: max(.5vw, .8333vh); }   /* one unit of the drawing, which is scaled to cover the screen */
 .intro-on .intro {
   display: block; position: fixed; inset: 0; z-index: 100; background: #880b0f; transform: none;
   --hole: 0px;
@@ -2231,10 +2211,8 @@ html[data-theme="dark"].intro-on .intro { background: #171612; }
 .intro svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .intro path, .intro circle { fill: none; }          /* strokes in drawing units: one unit is about 6 to 9 pixels */
 .intro .ly { stroke: rgba(244,121,91, .2); stroke-width: .16; opacity: 0; animation: intro-in .6s ease var(--d) forwards; }
-.intro .beam { stroke: #dad7cb; stroke-width: .24; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
-               animation: intro-draw .55s cubic-bezier(.55, 0, .9, .4) .05s forwards, intro-out .4s ease .62s forwards; }
 .intro .tr { stroke: rgba(255,255,255, .8); stroke-width: .15; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1;
-             animation: intro-draw var(--t) cubic-bezier(.2, .6, .3, 1) var(--d) forwards; }
+             opacity: 0; animation: intro-draw var(--t) cubic-bezier(.2, .6, .3, 1) var(--d) forwards; }
 .intro .tr.hard { stroke: #e7e4d6; stroke-width: .21; }
 .intro .tr.nu { stroke: rgba(244,121,91, .6); stroke-dasharray: .012 .018; stroke-dashoffset: 0; opacity: 0;
                 animation: intro-in .25s ease var(--d) forwards; }
@@ -2248,11 +2226,30 @@ html[data-theme="dark"].intro-on .intro { background: #171612; }
 @keyframes intro-open { to { --hole: 150vmax; } }
 @keyframes intro-fade { to { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .intro-on .intro { display: none; } }
-.intro .ly { stroke-dasharray: none; stroke-dashoffset: 0; }
-.intro > svg { animation: none; }
 
-.intro .beam, .intro .tr { opacity: 0; }
-.intro .tr.nu { opacity: 0; }
+/* the two protons: a ball of light with two up quarks (white) and a down quark (coral) inside, turning as the
+   protons speed up towards each other from near the edges of the screen, and bursting where they meet */
+.intro .pr { --r: calc(4.2 * var(--u)); position: absolute; left: 50%; top: 50%; width: calc(2 * var(--r)); height: calc(2 * var(--r));
+             margin: calc(-1 * var(--r)) 0 0 calc(-1 * var(--r)); opacity: 0;
+             filter: drop-shadow(0 0 calc(.6 * var(--u)) rgba(255,255,255, .3));
+             animation: pr-fly-l .55s cubic-bezier(.55, 0, .9, .4) .05s both, intro-in .2s ease both; }
+.intro .pr.r { animation-name: pr-fly-r, intro-in; }
+.intro .pr-body { fill: rgba(255,255,255, .13); stroke: rgba(255,255,255, .85); stroke-width: .45;
+                  animation: pr-burst .3s ease-out .6s forwards; }
+.intro .q { fill: #ffffff; }
+.intro .q.d { fill: #f4795b; }
+.intro .qs { animation: q-turn .6s linear both, intro-out .12s ease .6s forwards; }
+.intro .pr.r .qs { animation-name: q-turn-r, intro-out; }
+/* the two flights, written out in full since older Safari does not read variables in keyframes: a proton's
+   half-width (--r) is 4.2 drawing units and its edge is at .9 of that, so each sets off 10.08 units in from its
+   side of the screen and stops 3.78 units from the centre, edge to edge with the other */
+@keyframes pr-fly-l { from { transform: translateX(calc(-50vw + 10.08 * max(.5vw, .8333vh))); }
+                      to { transform: translateX(calc(-3.78 * max(.5vw, .8333vh))); } }
+@keyframes pr-fly-r { from { transform: translateX(calc(50vw - 10.08 * max(.5vw, .8333vh))); }
+                      to { transform: translateX(calc(3.78 * max(.5vw, .8333vh))); } }
+@keyframes pr-burst { to { transform: scale(1.7); opacity: 0; stroke-width: .15; } }
+@keyframes q-turn { to { transform: rotate(120deg); } }
+@keyframes q-turn-r { to { transform: rotate(-120deg); } }
 
 /* the copy button of each block of commands, in the corner of the block */
 .pkg-codebox { position: relative; }
