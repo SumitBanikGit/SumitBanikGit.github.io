@@ -37,11 +37,16 @@ PROFILE = {
 }
 
 # --------------------------------------------------------------------------
-# Publications. kind: article | proceedings | thesis
+# Publications. kind: preprint (on arXiv, not yet in a journal) | article | proceedings | thesis
 # topic: fi (mathematical physics: Mellin-Barnes integrals, GKZ systems, hypergeometric functions, Feynman integrals)
 #        | pheno (BSM & collider) | soft (software). A paper may carry several, space separated.
 # --------------------------------------------------------------------------
 PUBS = [
+    dict(kind="preprint", year=2026, topic="fi pheno",
+         title="Triple exchange at the cosmological collider in closed form",
+         authors="T. Ahmed, S. Banik, S. M. Hasan, A. Rapakoulias",
+         ref="Preprint (2026)",
+         arxiv="2611.20356", inspire="3229987"),
     dict(kind="article", year=2026, topic="fi soft",
          title="Multiple Mellin-Barnes integrals with polygamma functions",
          authors="S. Banik, S. Friot",
@@ -209,6 +214,8 @@ PUBS = [
 # Recent news shown on the front page (newest first; keep ~5).
 # Each item links to where the site says more about it.
 NEWS = [
+    ("2026", "New preprint on arXiv: the triple exchange at the <b>cosmological collider</b> in closed form.",
+     "publications.html#arxiv-2611.20356"),
     ("2026", "Invited virtual talk at <b>CERN</b>, FCC Precision Calculations Working Group.", "talk:FCC Precision Calculations"),
     ("2026", "Multiple Mellin-Barnes integrals with polygamma functions, the paper of <b>MBConicHulls</b> 1.3, "
              "published in <i>Physical Review D</i>.", "publications.html#arxiv-2512.19803"),
@@ -262,8 +269,9 @@ DOMAINS = [
      "representations from conic hulls and triangulations, analytic continuation, high-precision evaluation and the method of brackets.",
      "Mellin-Barnes integrals · GKZ systems · Hypergeometric functions"),
     ("Feynman integrals",
-     "Analytic and numerical evaluation of multi-loop, multi-scale Feynman integrals, such as conformal hexagon, double box and "
-     "one-loop <i>n</i>-point integrals, sunset integrals in chiral perturbation theory, and their <i>ε</i>-expansion in dimensional regularization.",
+     "Analytic and numerical evaluation of multi-loop, multi-scale Feynman integrals and their <i>ε</i>-expansion in dimensional "
+     "regularization, such as conformal hexagon, double box and one-loop <i>n</i>-point integrals, sunset integrals in chiral "
+     "perturbation theory, and exchange diagrams at the cosmological collider.",
      "Multi-loop · Multi-scale · Conformal integrals"),
     ("Multi-Higgs physics",
      "Extended scalar sectors such as the 2HDM, the N2HDM and Higgs triplets, confronted with the di-photon excesses near 95 and "
@@ -288,7 +296,7 @@ DOMAINS = [
 # domain card on the Research page opens its own papers on the Publications page. Keys, in the order of DOMAINS:
 DOMAIN_KEYS = ["math", "fi", "higgs", "tools", "eft", "exotic"]
 PAPER_DOMAINS = {
-    "2512.19803": "fi math tools", "2605.30216": "tools math", "2512.07727": "fi math", "2510.08682": "eft exotic",
+    "2611.20356": "fi math", "2512.19803": "fi math tools", "2605.30216": "tools math", "2512.07727": "fi math", "2510.08682": "eft exotic",
     "3081108": "fi math eft", "2412.00523": "higgs", "2404.14492": "higgs", "2411.18618": "higgs", "2402.00101": "higgs",
     "2308.07953": "higgs", "2407.06267": "higgs", "2309.00409": "fi math tools", "2307.06800": "exotic eft tools",
     "2306.15722": "higgs", "2303.11351": "higgs", "2212.11839": "fi math tools", "2211.01285": "tools fi math",
@@ -1083,7 +1091,8 @@ def pub_entry(n, p):
 
 
 def render_pubs():
-    groups = [("article", "Journal articles"),
+    groups = [("preprint", "Preprints"),
+              ("article", "Journal articles"),
               ("proceedings", "Conference proceedings"),
               ("thesis", "Thesis")]
     total = len(PUBS)
@@ -1091,6 +1100,8 @@ def render_pubs():
     out = []
     for kind, label in groups:
         items = [p for p in PUBS if p["kind"] == kind]
+        if not items:                              # (no heading for an empty group, as for the preprints once all are published)
+            continue
         out.append(f'<h3 class="sect" data-group="{kind}">{label}</h3>')
         for p in items:
             out.append(pub_entry(n, p))
@@ -2401,6 +2412,7 @@ def tour_index():
 
 def nav_drops():
     """What opens under each item of the menu: the parts of its page, with a line about some of them."""
+    pres = sum(1 for p in PUBS if p["kind"] == "preprint")
     arts = sum(1 for p in PUBS if p["kind"] == "article")
     procs = sum(1 for p in PUBS if p["kind"] == "proceedings")
     rest = len(TALKS) - TALK_CARDS
@@ -2412,7 +2424,8 @@ def nav_drops():
                           ("Selected work", "research.html#selected-work", ""),
                           ("A map of the papers", "research.html#a-map-of-the-papers", "Placed by what they are about"),
                           ("One integral, two series", "research.html#one-integral-two-series", "Two series on a slider")],
-        "publications.html": [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
+        "publications.html": ([("Preprints", "publications.html#preprints", f"{pres} papers" if pres != 1 else "One paper")] if pres else [])
+                             + [("Journal articles", "publications.html#journal-articles", f"{arts} papers"),
                               ("Conference proceedings", "publications.html#conference-proceedings", f"{procs} contributions"),
                               ("PhD thesis", "publications.html#thesis", "IISc, 2022")],
         "software.html": [(pk["name"], f'software.html#{pk["slug"]}', pk["tagline"]) for pk in PACKAGES]
@@ -2659,7 +2672,7 @@ def software_jsonld():
 def pubs_jsonld():
     """Each paper as a ScholarlyArticle (the thesis as a Thesis), with its authors, year, journal and identifiers,
     for search engines."""
-    kinds = {"article": "ScholarlyArticle", "proceedings": "ScholarlyArticle", "thesis": "Thesis"}
+    kinds = {"preprint": "ScholarlyArticle", "article": "ScholarlyArticle", "proceedings": "ScholarlyArticle", "thesis": "Thesis"}
     graph = []
     for q in PUBS:
         e = {"@type": kinds[q["kind"]], "name": _text(q["title"]).strip(), "datePublished": str(q["year"]),
@@ -2675,7 +2688,7 @@ def pubs_jsonld():
         if ids:
             e["identifier"] = ids
         ref = _plain(q["ref"]).strip()
-        if ref and q["kind"] != "thesis":           # the journal, or the meeting for proceedings without a volume
+        if ref and q["kind"] not in ("thesis", "preprint"):   # the journal, or the meeting for proceedings without a volume
             name = q.get("venue") if "proceedings" in ref else re.split(r"\s+\d", ref)[0].strip().rstrip(",")
             e["isPartOf"] = {"@type": "Periodical", "name": name}
         graph.append(e)                            # (the abstracts are in the page itself, so not repeated here)
@@ -2722,7 +2735,7 @@ def jsonld():
         "knowsAbout": ["Feynman integrals", "Mellin-Barnes integrals", "hypergeometric functions", "GKZ hypergeometric systems",
                        "Higgs physics", "two-Higgs-doublet models", "Higgs triplets", "leptoquarks",
                        "beyond the Standard Model", "collider phenomenology", "effective field theory", "SMEFT",
-                       "renormalization group", "computer algebra"],
+                       "renormalization group", "cosmological collider physics", "computer algebra"],
         "workLocation": {"@type": "Place", "name": "SLAC National Accelerator Laboratory",
                          "address": {"@type": "PostalAddress", "streetAddress": "2575 Sand Hill Road", "addressLocality": "Menlo Park",
                                      "addressRegion": "CA", "postalCode": "94025", "addressCountry": "US"}},
@@ -2740,7 +2753,8 @@ PAGES = [
     # file,              menu label,     page title,              subtitle,                                                         sections
     ("index.html",        None,           None,                    None,                                                             ["about", "explore"]),
     ("research.html",     "Research",     "Research",              "Feynman integrals, effective field theories and physics beyond the Standard Model.", ["research", "software"]),
-    ("publications.html", "Publications", "Publications",          "Journal articles, conference proceedings and my PhD thesis.",   ["publications"]),
+    ("publications.html", "Publications", "Publications",          ("Preprints, journal articles" if any(p["kind"] == "preprint" for p in PUBS) else "Journal articles")
+                                                                   + ", conference proceedings and my PhD thesis.",                  ["publications"]),
     ("software.html",     "Software",     "Software",              "Open-source packages and a library for precision calculations.", ["packages", "library"]),
     ("talks.html",        "Talks",        "Talks",                 "Invited seminars and conference talks since 2020.",             ["talks"]),
     ("funding.html",      "Funding",      "Research Funding",      "Fellowships and grants awarded for my research.",               ["funding"]),
@@ -3286,7 +3300,7 @@ def search_index():
     for f, label, title, sub, _secs in PAGES:
         if label:
             add("Page", "", title, sub, f)
-    kinds = {"article": "Paper", "proceedings": "Proceedings", "thesis": "Thesis"}
+    kinds = {"preprint": "Preprint", "article": "Paper", "proceedings": "Proceedings", "thesis": "Thesis"}
     for p in PUBS:
         det = PUB_DETAILS.get(p.get("inspire", ""), {})
         topics = " ".join(TOPIC_LABEL[t] for t in p["topic"].split())

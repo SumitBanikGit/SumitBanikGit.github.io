@@ -2872,7 +2872,54 @@
     }
   };
 
-  var TOUR = [CONIC, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR, TT95,
+  /* The triple exchange of quasi-single-field inflation, the diagram of the paper: three inflaton lines from the
+     late-time boundary (tau = 0), where the bispectrum is measured, each turn into the massive field sigma at a
+     quadratic mixing (a cross), and the three sigma lines meet at its cubic self-interaction. The paper gives the full
+     shape in closed form, exact in the momenta, as multiple polylogarithms around the massless (m^2 = 0) and
+     conformally coupled (m^2 = 2H^2) limits, and finds that the template of the Planck analyses overestimates the
+     amplitude by up to a factor of 1.8 (its abstract). */
+  var CC_D = { n: { k1: [0.3, 0.1, 1], k2: [0.95, 0.1, 1], k3: [1.6, 0.1, 1],
+                    m1: [0.56, 0.44], m2: [0.95, 0.44], m3: [1.34, 0.44], v: [0.95, 0.78, 1] },
+               e: [{ a: 'k1', b: 'm1', t: 'p', lab: 'φ', lo: [-11, -2] }, { a: 'k2', b: 'm2', t: 'p' }, { a: 'k3', b: 'm3', t: 'p' },
+                   { a: 'm1', b: 'v', t: 's', lab: 'σ', lo: [-11, 7] }, { a: 'm2', b: 'v', t: 's' }, { a: 'm3', b: 'v', t: 's' }],
+               stagger: 0.32, edgeDur: 0.5, pad: 20 };
+  var COSMO = diagramVignette({
+    key: 'cosmo', paper: '2611.20356', dur: 11, cap: 'Triple exchange at the cosmological collider', ref: 'arXiv:2611.20356 [hep-th]', D: CC_D,
+    extra: function (v, t) {
+      var ctx = v.ctx, R = v.reduce, F = v.F, n = CC_D.n, k0 = R ? 1 : ease(t / 0.6);
+      function P(id) { return [F.x + n[id][0] * F.s, F.y + n[id][1] * F.s]; }
+      var y0 = F.y + n.k1[1] * F.s, xa = F.x + 0.04 * F.s, xb = F.x + 1.86 * F.s;   // (through the three end points)
+      ctx.save(); ctx.globalAlpha *= k0;               // the late-time boundary, where the three momenta are measured
+      caps(ctx, 'QUASI-SINGLE-FIELD INFLATION', v.x + 4, v.y + 12, ink('crimson', 0.85), 8);
+      line(ctx, xa, y0, xa + (xb - xa) * k0, y0, ink('slate', 0.75), 1.2);
+      drawMath(ctx, 'τ=0', xb, y0 + 15, 11, ink('slate', 0.9), 'right');
+      ['k1', 'k2', 'k3'].forEach(function (id, i) { drawMath(ctx, 'k_' + (i + 1), P(id)[0], y0 - 7, 12, ink('green', 0.95), 'center'); });
+      ctx.restore();
+      ['m1', 'm2', 'm3'].forEach(function (id, i) {    // the mixing of the inflaton into sigma, as each line reaches it
+        var kx = R ? 1 : ease((t - 0.35 - i * CC_D.stagger - CC_D.edgeDur) / 0.3), p = P(id), d = 3.4;
+        if (kx <= 0) return;
+        ctx.save(); ctx.globalAlpha *= kx;
+        line(ctx, p[0] - d, p[1] - d, p[0] + d, p[1] + d, ink('brassD', 1), 1.5);
+        line(ctx, p[0] - d, p[1] + d, p[0] + d, p[1] - d, ink('brassD', 1), 1.5);
+        ctx.restore();
+      });
+      var k1 = R ? 1 : ease((t - 3) / 0.6), k2 = R ? 1 : ease((t - 5.6) / 0.7);
+      if (k1 <= 0) return;                             // then what the paper finds (its abstract), in two lines under the diagram
+      var l1 = '\\rm{multiple\\,polylogarithms\\,around}\\,\\,m^2=0,\\,2H^2';
+      var l2 = '\\rm{Planck\\,template:\\,amplitude\\,up\\,to}\\,1.8×\\,\\rm{too\\,large}', S = 11.5, room = v.w - 8;
+      var wide = Math.max(mathBox(ctx, l1, S).w, mathBox(ctx, l2, S).w);
+      if (wide > room) S *= room / wide;               // (smaller on a phone)
+      ctx.save(); ctx.globalAlpha *= k1;
+      drawMath(ctx, l1, v.x + 4, v.y + v.h - 9 - 1.6 * S, S, ink('slate', 0.95), 'left');
+      ctx.restore();
+      if (k2 <= 0) return;
+      ctx.save(); ctx.globalAlpha *= k2;
+      drawMath(ctx, l2, v.x + 4, v.y + v.h - 9, S, ink('crimson', 0.95), 'left');
+      ctx.restore();
+    }
+  });
+
+  var TOUR = [CONIC, COSMO, SPECV, TRIF, BNV, MBINTRO, CONTOUR, TRIPLET, CONFORMAL, BARRZEE, FEYNGKZ, DIHIGGS, MASSCONF, TTBAR, TT95,
               HYPERPREC, HDM152, POLYGAMMA, RUNNING, POLYLOG, SUNSET, EVIDENCE, BRACKETS, TOPDELTA, QUADRATIC, ANATOMY, NPOINT, PTSPEC, REVIEW, THESIS];
 
   function tourStart(e) {                           // research.html#tour-<arXiv id> opens the tour at that paper
@@ -3063,8 +3110,8 @@
       // the two fields by colour, and the kinds of paper when there is room
       tracking(ctx, 1.2); ctx.font = font(8.5, SANS, 600); ctx.textAlign = 'left';
       SCENES.constellation.star(ctx, e.L + 3, e.y + 9, 'article', 'brassD', 1, 0.95);
-      ctx.fillStyle = ink('brassD', 0.9); ctx.fillText('FEYNMAN INTEGRALS', e.L + 11, e.y + 12);
-      var fw = ctx.measureText('FEYNMAN INTEGRALS').width;
+      ctx.fillStyle = ink('brassD', 0.9); ctx.fillText('MATHEMATICAL PHYSICS', e.L + 11, e.y + 12);   // as the topic is named on the page
+      var fw = ctx.measureText('MATHEMATICAL PHYSICS').width;
       SCENES.constellation.star(ctx, e.L + fw + 27, e.y + 9, 'article', 'pine', 1, 0.95);
       ctx.fillStyle = ink('pine', 0.9); ctx.fillText('PHENOMENOLOGY', e.L + fw + 35, e.y + 12);
       if (e.w > 300) {                                // the kinds of paper, in the empty corner above the early years
