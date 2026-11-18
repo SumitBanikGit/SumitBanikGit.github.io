@@ -211,19 +211,20 @@ PUBS = [
          inspire="2614373", tour="inspire:2614373"),
 ]
 
-# Recent news shown on the front page (newest first; keep ~5).
+# Recent news shown on the front page, newest first. The list keeps its length: a new item replaces the older item
+# about the same thing (the arXiv item of a paper when the paper is published), or else the oldest. Paper titles are
+# written exactly as on arXiv, and the wording has no colons, semicolons or dashes.
 # Each item links to where the site says more about it.
 NEWS = [
-    ("2026", "New preprint on arXiv: the triple exchange at the <b>cosmological collider</b> in closed form.",
+    ("2026", "Triple Exchange at the Cosmological Collider in Closed Form, a new preprint on arXiv.",
      "publications.html#arxiv-2611.20356"),
     ("2026", "Invited virtual talk at <b>CERN</b>, FCC Precision Calculations Working Group.", "talk:FCC Precision Calculations"),
     ("2026", "Multiple Mellin-Barnes integrals with polygamma functions, the paper of <b>MBConicHulls</b> 1.3, "
              "published in <i>Physical Review D</i>.", "publications.html#arxiv-2512.19803"),
     ("2026", "<b>HyperPrecision</b> published in <i>Computer Physics Communications</i>.", "software.html#hyperprecision"),
-    ("2026", "Two-loop anomalous dimensions of baryon-number-violating operators in SMEFT published in <i>JHEP</i>.",
+    ("2026", "Two-loop anomalous dimensions for baryon-number-violating operators in SMEFT published in <i>JHEP</i>.",
      "publications.html#arxiv-2510.08682"),
     ("2026", "Joined the <b>Fundamental Physics Directorate</b> at SLAC, Stanford as a postdoctoral researcher.", "cv.html#positions"),
-    ("2025", "Awarded the <b>SNSF Postdoc.Mobility Fellowship</b>.", "funding.html#postdoc-mobility-fellowship"),
 ]
 
 # The "Path" timeline in About (oldest first). logos: files in assets/logos/.
@@ -278,17 +279,17 @@ DOMAINS = [
      "152 GeV at the LHC, differential top-quark distributions, the W mass and electric dipole moments.",
      "2HDM · Higgs triplets · LHC excesses"),
     ("Computational tools",
-     "Open-source <i>Mathematica</i> packages: <a href=\"software.html#mbconichulls\">MBConicHulls</a> for multiple Mellin-Barnes integrals, "
-     "<a href=\"software.html#feyngkz\">FeynGKZ</a> for Feynman integrals via GKZ systems, and "
-     "<a href=\"software.html#hyperprecision\">HyperPrecision</a> for multivariate hypergeometric functions.",
+     "Open-source <i>Mathematica</i> packages for multiple Mellin-Barnes integrals (<a href=\"software.html#mbconichulls\">MBConicHulls</a>), "
+     "Feynman integrals via GKZ systems (<a href=\"software.html#feyngkz\">FeynGKZ</a>) and multivariate hypergeometric functions "
+     "(<a href=\"software.html#hyperprecision\">HyperPrecision</a>).",
      "Mathematica · Computer algebra · High precision"),
     ("Effective field theory",
-     "The Standard Model effective field theory and the renormalization group: two-loop anomalous dimensions of baryon-number-violating "
-     "operators for proton decay, two-loop running with scalar leptoquarks, and the summation of large logarithms.",
+     "The Standard Model effective field theory and the renormalization group, with two-loop anomalous dimensions of baryon-number-violating "
+     "operators for proton decay, two-loop running with scalar leptoquarks and the summation of large logarithms.",
      "SMEFT · RG evolution · Proton decay"),
     ("Exotic particles",
-     "Scalar leptoquarks beyond the Standard Model: two-loop renormalization group evolution, the unification of gauge and Yukawa "
-     "couplings, and one-loop matching onto the SMEFT.",
+     "Scalar leptoquarks beyond the Standard Model, with their two-loop renormalization group evolution, the unification of gauge and "
+     "Yukawa couplings, and one-loop matching onto the SMEFT.",
      "Leptoquarks · Unification · SMEFT matching"),
 ]
 
@@ -538,7 +539,7 @@ EDUCATION = [
     dict(when="Aug 2019 to Feb 2023", where="Bengaluru, India", logos=[("iisc", "Indian Institute of Science")],
          title="PhD in High Energy Physics",
          org='<a href="https://chep.iisc.ac.in/">Centre for High Energy Physics</a>, Indian Institute of Science',
-         note='Thesis: <a href="https://inspirehep.net/literature/2614373"><i>On hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals with applications</i></a>',
+         note='Thesis titled <a href="https://inspirehep.net/literature/2614373"><i>On hypergeometric solutions of Feynman integrals using Mellin-Barnes integrals with applications</i></a>',
          facts=[("Supervisor", "Prof.&nbsp;B.&nbsp;Ananthanarayan"), ("Defended", "December 2022"), ("Awarded", "March 2023")]),
     dict(when="Aug 2017 to Jul 2019", where="Bengaluru, India", logos=[("iisc", "Indian Institute of Science")],
          title="MS in Physics",
@@ -1219,7 +1220,7 @@ def render_domains():
             href, go = f"publications.html?domain={slug}#publications", f"{n} papers" if n != 1 else "One paper"
         out.append(f'<div class="theme d{i}"><svg class="th-icon" viewBox="0 0 48 30" aria-hidden="true">{DOMAIN_ICONS[i - 1]}</svg>'
                    f'<h4>{name}</h4><p>{text}</p><div class="keys">{keys}</div>'
-                   f'<a class="th-go" href="{href}" aria-label="{name}: {go}">{go} <span aria-hidden="true">→</span></a></div>')
+                   f'<a class="th-go" href="{href}" aria-label="{name}, {go}">{go} <span aria-hidden="true">→</span></a></div>')
     return "\n".join(out)
 
 
@@ -1768,7 +1769,7 @@ def render_journey_map():
     VIEW = "96 16 930 344"          # crop: the Americas to East Asia, Arctic to the tropics of Capricorn
     label = ", ".join(f"{c} {y}" for y, c, *_ in JOURNEY)
     return (f'<figure class="journey-map" data-hold="5600">'
-            f'<svg viewBox="{VIEW}" role="img" aria-label="Academic journey: {label}">'
+            f'<svg viewBox="{VIEW}" role="img" aria-label="Academic journey through {label}">'
             f'<path class="jm-grat" d="{m["graticule"]}"/>'
             f'<path class="jm-land" d="{m["land"]}"/>'
             f'<path id="jm-route" class="jm-route" d="{route}"/>'
@@ -1844,9 +1845,9 @@ def render_continuation():
         '<output class="cont-n" for="cont-n" aria-live="off">30</output>'
         '<button class="cont-play" type="button">Play again</button></div>\n'
         '<ul class="cont-key">'
-        f'<li class="k-r"><span class="sw" aria-hidden="true"></span><span>Closing to the right, on the poles of {g}(−<i>z</i>): '
+        f'<li class="k-r"><span class="sw" aria-hidden="true"></span><span>Closing to the right, on the poles of {g}(−<i>z</i>), gives '
         f'<span class="nw">{right}</span>, which converges for |<i>x</i>| ≤ 1</span></li>'
-        f'<li class="k-l"><span class="sw" aria-hidden="true"></span><span>Closing to the left, on the poles of {g}(−{half} + <i>z</i>): '
+        f'<li class="k-l"><span class="sw" aria-hidden="true"></span><span>Closing to the left, on the poles of {g}(−{half} + <i>z</i>), gives '
         f'<span class="nw">{left}</span>, which converges for |<i>x</i>| ≥ 1</span></li>'
         f'<li class="k-f"><span class="sw" aria-hidden="true"></span><span>The function itself, <span class="nw">{func}</span></span></li>'
         '</ul>\n'
@@ -3256,7 +3257,7 @@ def main():
     portrait = (f'<figure class="portrait-frame" data-hold="1500"><img class="portrait" src="{P["portrait"]}?v={_ver(P["portrait"])}" alt="Portrait of Sumit Banik" width="560" height="700"></figure>'
                 if P["portrait"] and Path(P["portrait"]).exists()
                 else '')
-    desc = ("Sumit Banik, theoretical particle physicist at SLAC and Stanford: "
+    desc = ("Sumit Banik, theoretical particle physicist at SLAC and Stanford, working on "
             "Feynman integrals, Mellin-Barnes and hypergeometric methods, Higgs physics "
             "and physics beyond the Standard Model.")
 
@@ -3504,8 +3505,8 @@ for New Physics beyond the Standard Model at particle colliders.</p>
 
 <section class="chapter" id="publications">
 <h2 class="chapter-title">Publications</h2>
-<p class="muted" style="margin-bottom:0">Complete and up-to-date records:
-<a href="{inspire}" style="white-space: nowrap">INSPIRE-HEP</a> · <a href="{arxiv}">arXiv</a> · <a href="https://orcid.org/{orcid}">ORCID</a>.</p>
+<p class="muted" style="margin-bottom:0">Complete and up-to-date records on
+<a href="{inspire}" style="white-space: nowrap">INSPIRE-HEP</a>, <a href="{arxiv}">arXiv</a> and <a href="https://orcid.org/{orcid}">ORCID</a>.</p>
 <div class="filters" role="group" aria-label="Filter publications by topic">
   <button type="button" data-filter="all" aria-pressed="true">All ({n_total})</button>
   <button type="button" data-filter="fi" aria-pressed="false">Mathematical physics</button>
@@ -3668,7 +3669,7 @@ Each one opens on the <a href="software.html">Software page</a>, with its versio
   <dl class="kh-list">
    <div><dt><kbd>/</kbd> or <kbd>Ctrl</kbd> <kbd>K</kbd></dt><dd>Search the whole site</dd></div>
    <div><dt><kbd>↑</kbd> <kbd>↓</kbd> <kbd>Enter</kbd></dt><dd>Choose and open a result</dd></div>
-   <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Step through the animation at the top of a page: the papers of the tour, the awards, the equations on the board, the students or the stages of the CV</dd></div>
+   <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Step through the animation at the top of a page, such as the papers of the tour, the awards, the equations on the board, the students or the stages of the CV</dd></div>
    <div><dt><kbd>J</kbd> <kbd>K</kbd></dt><dd>The next or previous paper of the list, on the Publications page</dd></div>
    <div><dt><kbd>O</kbd></dt><dd>Open or fold the abstract of that paper</dd></div>
    <div><dt><kbd>P</kbd></dt><dd>Pause or play the animations, on every page</dd></div>

@@ -1890,7 +1890,7 @@
       });
       var rk = R ? 1 : ease((t - t0 - 0.1) / 0.6);   // then what the paper finds (its abstract): Mellin-Barnes does better on both counts
       if (rk > 0) {
-        var res = '\\rm{With}\\,\\rm{Mellin-Barnes}:\\quad\\rm{no}\\,\\rm{convergence}\\,\\rm{analysis},\\,\\rm{and}\\,\\rm{logarithmic}\\,\\rm{cases}\\,\\rm{too}';
+        var res = '\\rm{With}\\,\\rm{Mellin-Barnes},\\,\\rm{no}\\,\\rm{convergence}\\,\\rm{analysis},\\,\\rm{and}\\,\\rm{logarithmic}\\,\\rm{cases}\\,\\rm{too}';
         var S2 = 11, w = mathBox(ctx, res, S2).w;
         if (w > v.w - 8) S2 *= (v.w - 8) / w;
         ctx.save(); ctx.globalAlpha *= rk; drawMath(ctx, res, v.x + 4, v.y + v.h - 9, S2, ink('crimson', 0.95), 'left'); ctx.restore();
@@ -2072,9 +2072,9 @@
                stagger: 0.36, edgeDur: 0.5 };
   var AN_STEPS = [
     { D: AN_W, top: 'DRELL-YAN, CHARGED CURRENT', note: 'Δ^±Δ^0→W^±Z\\,W^+W^−\\quad\\rm{or}\\quad Δ^0→γγ', len: 6,
-      res: 'Δ^0→γγ:\\quad\\rm{Br}≈0.7\\,%\\quad(≈4σ\\,\\rm{near}\\,152\\,\\rm{GeV})', rc: 'green' },     // the abstract, (iii)
+      res: 'Δ^0→γγ,\\quad\\rm{Br}≈0.7\\,%\\quad(≈4σ\\,\\rm{near}\\,152\\,\\rm{GeV})', rc: 'green' },     // the abstract, (iii)
     { D: AN_Z, top: 'DRELL-YAN, NEUTRAL CURRENT', note: 'Δ^+Δ^−→τ^+τ^−ν\\bar{ν}\\quad\\rm{or}\\quad W^+W^−ZZ', len: 6,
-      res: 'τ^+τ^−ν\\bar{ν}:\\quad m_{Δ^±}<110\\,\\rm{GeV}\\,\\rm{excluded}\\,(95\\,%\\,\\rm{CL})', rc: 'crimson' },   // (i)
+      res: 'τ^+τ^−ν\\bar{ν},\\quad m_{Δ^±}<110\\,\\rm{GeV}\\,\\rm{excluded}\\,(95\\,%\\,\\rm{CL})', rc: 'crimson' },   // (i)
     { D: AN_G, top: 'GLUON FUSION, ONLY THROUGH MIXING', note: 'σ(gg→Δ^0)=\\rm{sin}^2α\\,σ_{\\rm{SM}}' }
   ];
   var ANATOMY = {
@@ -2906,7 +2906,7 @@
       var k1 = R ? 1 : ease((t - 3) / 0.6), k2 = R ? 1 : ease((t - 5.6) / 0.7);
       if (k1 <= 0) return;                             // then what the paper finds (its abstract), in two lines under the diagram
       var l1 = '\\rm{multiple\\,polylogarithms\\,around}\\,\\,m^2=0,\\,2H^2';
-      var l2 = '\\rm{Planck\\,template:\\,amplitude\\,up\\,to}\\,1.8×\\,\\rm{too\\,large}', S = 11.5, room = v.w - 8;
+      var l2 = '\\rm{amplitude\\,of\\,the\\,Planck\\,template\\,up\\,to}\\,1.8×\\,\\rm{too\\,large}', S = 11.5, room = v.w - 8;
       var wide = Math.max(mathBox(ctx, l1, S).w, mathBox(ctx, l2, S).w);
       if (wide > room) S *= room / wide;               // (smaller on a phone)
       ctx.save(); ctx.globalAlpha *= k1;
