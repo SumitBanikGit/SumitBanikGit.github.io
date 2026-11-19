@@ -192,25 +192,29 @@ main.wrap { padding-bottom: 3rem; }
 
 /* ----------------------------------------------------- stats strip */
 
-.stats {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem;
+.stats {                                          /* one equal column for each number (four, or five with preprints) */
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: .75rem;
   margin: 1.8rem 0 .5rem;
 }
 .stat {
   padding: .95rem .6rem; text-align: center; border-radius: 4px;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: flex-start;   /* the icons and numbers level, with a label on two lines */
   background: rgba(255,255,255, .5); border: 1px solid var(--hair);
   border-top: 2px solid var(--c, var(--accent));
 }
-.stat:nth-child(1) { --c: var(--c-fi); }
-.stat:nth-child(2) { --c: var(--c-soft); }
-.stat:nth-child(3) { --c: var(--gold); }
-.stat:nth-child(4) { --c: var(--c-pheno); }
+.stat.art  { --c: var(--c-fi); }
+.stat.pre  { --c: #651c32; }                      /* preprints: Brick, beside the Cardinal of the journal articles */
+.stat.proc { --c: var(--c-soft); }
+.stat.talk { --c: var(--gold); }
+.stat.code { --c: var(--c-pheno); }
 .stat .n { display: block; font-family: var(--display); font-weight: 600;
            font-size: 2.3rem; line-height: 1.05; color: var(--c); font-variant-numeric: lining-nums; }
 .stat .l { font-family: var(--sans); font-size: .64rem; color: var(--grey); line-height: 1.5;
            text-transform: uppercase; letter-spacing: .1em; text-wrap: balance; }
-@media (max-width: 44rem) { .stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 44rem) {                       /* two in a row, and an odd one out across the whole width */
+  .stats { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
 .stats-note { font-size: .85rem; color: var(--grey); margin: 0; font-family: var(--sans); }
 
 /* ----------------------------------------------------- research themes */
@@ -1911,6 +1915,7 @@ html[data-theme="dark"] .tool:nth-child(5), html[data-theme="dark"] .ex-card:nth
 html[data-theme="dark"] .tool:nth-child(6), html[data-theme="dark"] .ex-card:nth-child(4) { --c: #f9a44a; }
 html[data-theme="dark"] .ex-card:nth-child(1) { --c: #9fd0bb; }
 html[data-theme="dark"] .ex-card:nth-child(2) { --c: #e0a1af; }
+html[data-theme="dark"] .stat.pre { --c: #e0a1af; }
 html[data-theme="dark"] .fund .fund-medal { color: #f9a44a; }
 
 /* cards and panels */

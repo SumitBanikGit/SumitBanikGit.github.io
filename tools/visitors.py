@@ -19,7 +19,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 API = "https://sumitbanik.goatcounter.com/api/v0"
-START = "2026-10-07T10:00:00Z"                 # counting started again on 7 October 2026 at 12:00 in Zürich, as asked
+START = "2026-11-19T19:00:00Z"                 # counting started again on 19 November 2026 at 11:00 in California, as asked
+                                               # (before that, from 7 October 2026 at 12:00 in Zürich)
                                                # (GoatCounter keeps its numbers by the hour, so a start is on the hour)
 OUT = Path("assets/visitors.json")
 

@@ -1785,6 +1785,7 @@ def render_ticker():
 
 NEWS_ICONS = {
     "paper": _p("M13 2H29L35 8V28H13Z") + _p("M29 2V8H35M17 13H31M17 17H31M17 21H27", "thin"),
+    "preprint": _p("M13 2H29L35 8V28H13Z") + _p("M29 2V8H35M24 24V12.5M19.5 17L24 12.5L28.5 17", "thin"),   # a paper sent out (to arXiv)
     "proc": _p("M11 6H29V28H11Z") + _p("M16 2H34V24M15 12H25M15 16H25M15 20H22", "thin"),
     "talk": _p("M7 3H41V20H7Z") + _p("M24 20V27M16 27H32M11 15Q17 6 23 11T37 7", "thin"),
     "join": _p("M24 28C24 28 14 18 14 11A10 10 0 1 1 34 11C34 18 24 28 24 28Z") + _p("M24 7.5A3.5 3.5 0 1 1 23.9 7.5Z", "thin"),
@@ -2418,8 +2419,8 @@ def nav_drops():
     procs = sum(1 for p in PUBS if p["kind"] == "proceedings")
     rest = len(TALKS) - TALK_CARDS
     return {
-        "#about": [("About me", "index.html#about", ""), ("Academic journey", "index.html#academic-journey", "Kolkata to San Francisco"),
-                   ("Recent news", "index.html#recent-news", ""), ("Explore the site", "index.html#explore", "")],
+        "#about": [("About me", "index.html#about", ""), ("Recent news", "index.html#recent-news", ""),
+                   ("Academic journey", "index.html#academic-journey", "Kolkata to San Francisco"), ("Explore the site", "index.html#explore", "")],
         "research.html": [("A tour of my papers", "research.html#top", f"{_tour_slides()} animated slides"),
                           ("Research domains", "research.html#research-domains", ""),
                           ("Selected work", "research.html#selected-work", ""),
@@ -3246,6 +3247,9 @@ def main():
     visitor_assets()
     n_articles = sum(p["kind"] == "article" for p in PUBS)
     n_proc = sum(p["kind"] == "proceedings" for p in PUBS)
+    n_pre = sum(p["kind"] == "preprint" for p in PUBS)
+    stat_pre = (f'  <a class="stat pre" href="publications.html#preprints">{_ix(NEWS_ICONS["preprint"])}<span class="n">{n_pre}</span>'
+                f'<span class="l">{"preprint" if n_pre == 1 else "preprints"}</span></a>\n' if n_pre else "")   # beside the journal articles, while there are any
     n_invited = sum(t[5] for t in TALKS)
     name_letters = "".join(
         f'<span class="w" aria-hidden="true">' + "".join(
@@ -3271,7 +3275,7 @@ def main():
         desc=desc, url=P["url"], jsonld=jsonld(), portrait=portrait,
         email=P["email"], orcid=P["orcid"], inspire=P["inspire"], scholar=P["scholar"],
         arxiv=P["arxiv"], github=P["github"], linkedin=P["linkedin"],
-        n_articles=n_articles, n_proc=n_proc, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
+        n_articles=n_articles, n_proc=n_proc, stat_pre=stat_pre, n_talks=len(TALKS), n_packages=len(PACKAGES), n_domains=NUMBER_WORDS[len(DOMAINS)], n_invited=n_invited,
         domain_names=_html_attr(json.dumps({_slug(d[0]): d[0] for d in DOMAINS}, ensure_ascii=False)), coauthors=render_coauthors(),
         pubs=render_pubs(), talks=render_talks(), news=render_news(), selected=render_selected(), continuation=render_continuation(), paper_map=render_paper_map(), journey=render_journey(), domains=render_domains(), journey_map=render_journey_map(), ticker=render_ticker(), funding=render_funding(),
         teaching=render_teaching(), supervision=render_supervision(),
@@ -3464,23 +3468,23 @@ for New Physics beyond the Standard Model at particle colliders.</p>
 </div>
 </div>
 
-<h3 class="sect">Academic journey</h3>
-{journey_map}
-<ol class="journey legend" data-hold="2900">
-{journey}
-</ol>
-
 <div class="stats">
-  <a class="stat" href="publications.html#journal-articles">{ix_article}<span class="n">{n_articles}</span><span class="l">journal articles</span></a>
-  <a class="stat" href="publications.html#conference-proceedings">{ix_proc}<span class="n">{n_proc}</span><span class="l">conference proceedings</span></a>
-  <a class="stat" href="talks.html#talks">{ix_talk}<span class="n">{n_talks}</span><span class="l">talks &amp; seminars</span></a>
-  <a class="stat" href="software.html#packages">{ix_code}<span class="n">{n_packages}</span><span class="l">software packages</span></a>
+  <a class="stat art" href="publications.html#journal-articles">{ix_article}<span class="n">{n_articles}</span><span class="l">journal articles</span></a>
+{stat_pre}  <a class="stat proc" href="publications.html#conference-proceedings">{ix_proc}<span class="n">{n_proc}</span><span class="l">conference proceedings</span></a>
+  <a class="stat talk" href="talks.html#talks">{ix_talk}<span class="n">{n_talks}</span><span class="l">talks &amp; seminars</span></a>
+  <a class="stat code" href="software.html#packages">{ix_code}<span class="n">{n_packages}</span><span class="l">software packages</span></a>
 </div>
 
 <h3 class="sect">Recent news</h3>
 <ul class="news">
 {news}
 </ul>
+
+<h3 class="sect">Academic journey</h3>
+{journey_map}
+<ol class="journey legend" data-hold="2900">
+{journey}
+</ol>
 </section>
 
 <section class="chapter" id="research">
